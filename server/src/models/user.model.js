@@ -1,83 +1,25 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+
 const userSchema = new mongoose.Schema(
   {
-    username: {
+    clerkId: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
       trim: true,
     },
-
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    fullName: {
+    name: {
       type: String,
       required: true,
       trim: true,
-      index: true,
     },
-    avatar: {
+    role: {
       type: String,
-      required: true,
-    },
-    coverImage: {
-      type: String,
-    },
-    watchHistory: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Video",
-      },
-    ],
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-    },
-    refreshToken: {
-      type: String,
+      enum: ["admin", "employee"],
+      default: "employee",
     },
   },
-  { timestamps: true }
+  { timestamps: true } // Automatically adds createdAt and updatedAt fields
 );
-userSchema.pre("save", async function (next) {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 8);
-  }
-  next();
-});
-
-userSchema.methods.isPasswordMatch = async function (password) {
-  const user = this;
-  return await bcrypt.compare(password, user.password);
-};
-
-userSchema.methods.generateAccessToken = function () {
-  return jwt.sign(
-    {
-      id: this.id,
-      username: this.username,
-      fullname: this.fullname,
-      email: this.email,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    }
-  );
-};
-
-userSchema.methods.generateRefreshToken = function () {
-  return jwt.sign({ id: this.id }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-  });
-};
 
 export const User = mongoose.model("User", userSchema);
