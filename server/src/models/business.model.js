@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const businessSchema = new mongoose.Schema(
   {
+    businessName:{
+      type: String,
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -15,10 +19,7 @@ const businessSchema = new mongoose.Schema(
       required: true,
     },
     employees: [
-      {
-        clerkId: {
-          type: String,
-        },
+      {        
         email: {
           type: String,
         },

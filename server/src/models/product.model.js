@@ -35,11 +35,17 @@ const productSchema = new mongoose.Schema(
     barcode: {
       type: String,
       unique: true,
-    }, 
+    },
   },
   { timestamps: true }
 );
 
+productSchema.index({
+  brand: "text",
+  type: "text",
+  subtype: "text",
+  colour: "text",
+});
 // Generate unique barcode before saving
 productSchema.pre("save", async function (next) {
   if (!this.barcode) {
