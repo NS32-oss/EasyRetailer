@@ -1,55 +1,77 @@
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import cors from 'cors';
-import dotenv from 'dotenv';
+import express from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 
+// Secure HTTP headers with Helmet
+app.use(helmet());
+
+// Disable the "X-Powered-By" header to hide Express info
+app.disable("x-powered-by");
+
+// Rate Limiting: limit each IP to 100 requests per 15 minutes
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: "Too many requests from this IP, please try again later.",
+});
+app.use(limiter);
+
 // Hardcoded allowed origins (for local development or specific environments)
 const allowedOrigins = [
-  'http://127.0.0.1:5500',
-  'http://localhost:3000',
-  'https://example.com',
-  'https://mytubestream.vercel.app',
-  'https://mytubestream.vercel.app/login.html' // Add your Vercel URL here
+  "http://127.0.0.1:5500",
+  "http://localhost:3000",
+  "https://example.com",
+  "https://mytubestream.vercel.app",
+  "https://mytubestream.vercel.app/login.html",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin) || origin === 'null') {
+      if (!origin || allowedOrigins.includes(origin) || origin === "null") {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // Allows cookies to be sent and received
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type,Authorization',
+    credentials: true, // Allow cookies to be sent and received
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    allowedHeaders: "Content-Type,Authorization",
   })
 );
 
-app.use(express.json({ limit: '16kb' }));
+app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static("public"));
 app.use(cookieParser());
 
 // Import and declare routes
-import userRouter from './routes/user.router.js';
-import subscriptionRouter from './routes/subscription.router.js';
-import videoRouter from './routes/video.router.js';
-import commentRouter from './routes/comment.router.js';
+import businessRouter from "./routes/business.router.js";
+import productRouter from "./routes/product.router.js";
+import salesRouter from "./routes/sales.router.js";
 
-app.use('/api/v1/users', userRouter);
-app.use('/api/v1/subscription', subscriptionRouter);
-app.use('/api/v1/video', videoRouter);
-app.use('/api/v1/comment', commentRouter);
+app.use("/api/v1/business", businessRouter);
+app.use("/api/v1/product", productRouter);
+app.use("/api/v1/sales", salesRouter);
+
+// Centralized error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
+});
 
 // Log a message indicating the app is running
-console.log('App.js is running');
+console.log("App.js is running");
 
-// Export the app instance
 export default app;
