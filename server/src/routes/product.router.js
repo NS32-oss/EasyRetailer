@@ -6,10 +6,11 @@ import {
   updateProduct,
   deleteProduct,
 } from "../controllers/product.controller.js";
+import { requireAuth } from "@clerk/clerk-sdk-node"; // Correct import
 
 const router = Router();
 
-router.use(clerkExpressRequireAuth()); // Apply verifyJWT middleware to all routes in this file
+router.use(requireAuth()); // Apply verifyJWT middleware to all routes in this file
 
 // Route to get all products or create a new product
 router
