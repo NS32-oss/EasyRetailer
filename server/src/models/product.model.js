@@ -35,21 +35,31 @@ const productSchema = new mongoose.Schema(
     barcode: {
       type: String,
       unique: true,
+    }, // Store barcode number
+    created_at: {
+      type: Date,
+      default: Date.now,
     },
   },
-  {
-    timestamps: {
-      createdAt: "created_at",
-      updatedAt: "updated_at",
-    },
-  }
+  { timestamps: true }
 );
 
-// Pre-save hook to auto-generate a barcode if not provided.
-productSchema.pre("save", function (next) {
+// Generate unique barcode before saving
+productSchema.pre("save", async function (next) {
   if (!this.barcode) {
-    // This is a simple example; consider a more robust approach in production.
-    this.barcode = `${this.brand}-${Date.now()}`;
+    let isUnique = false;
+    let newBarcode;
+
+    while (!isUnique) {
+      newBarcode = `P${Date.now().toString().slice(-10)}`; // Example: P + last 10 digits of timestamp
+      const existing = await mongoose.models.Product.findOne({
+        barcode: newBarcode,
+      });
+      if (!existing) {
+        isUnique = true;
+      }
+    }
+    this.barcode = newBarcode;
   }
   next();
 });
