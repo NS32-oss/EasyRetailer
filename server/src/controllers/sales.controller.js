@@ -1,0 +1,127 @@
+import asyncHandler from "express-async-handler";
+import { Sales } from "../models/Sales.js";
+import apiError from "../utils/apiError.js";
+import apiResponse from "../utils/apiResponse.js";
+
+// Create a new sale transaction
+export const createSale = asyncHandler(async (req, res) => {
+  const {
+    products, // Array of products { product_id, quantity, unit_price, discount, selling_price }
+    final_discount, // Final discount on total bill (optional)
+    payment_method, // "Cash", "Card", or "UPI"
+    customer_mobile, // Optional for e-bill
+    bill_generated, // Optional flag; default is false
+  } = req.body;
+
+  // Validate required fields
+  if (!products || !Array.isArray(products) || products.length === 0) {
+    throw new apiError(400, "At least one product is required for a sale.");
+  }
+  if (!payment_method) {
+    throw new apiError(400, "Payment method is required.");
+  }
+
+  // Calculate the total price dynamically based on each product's selling price and quantity.
+  let computedTotalPrice = 0;
+  products.forEach((product) => {
+    // Multiply selling price by quantity for each product.
+    computedTotalPrice += product.selling_price * product.quantity;
+  });
+
+  // Apply the final discount if provided
+  computedTotalPrice -= final_discount || 0;
+
+  // Create the sale transaction document
+  const sale = await Sales.create({
+    products,
+    total_price: computedTotalPrice,
+    final_discount,
+    payment_method,
+    customer_mobile,
+    bill_generated,
+  });
+
+  return res
+    .status(201)
+    .json(new apiResponse(201, "Sale created successfully", sale));
+});
+
+// Get all sales transactions
+export const getAllSales = asyncHandler(async (req, res) => {
+  // Extract query parameters with defaults
+  const {
+    page = 1,
+    limit = 100,
+    query,
+    sortBy,
+    sortType = "desc",
+    payment_method,
+    startDate,
+    endDate,
+  } = req.query;
+
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(limit, 10);
+
+  // Build filter object
+  const filter = {};
+
+  // Filter by search query against customer_mobile (using regex)
+  if (query) {
+    filter.customer_mobile = { $regex: query, $options: "i" };
+  }
+
+  // Filter by payment method if provided
+  if (payment_method) {
+    filter.payment_method = payment_method;
+  }
+
+  // Filter by date range if both startDate and endDate are provided
+  if (startDate && endDate) {
+    filter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
+    };
+  }
+
+  // Build sort criteria. If not specified, sort by createdAt descending.
+  let sortCriteria = {};
+  if (sortBy) {
+    sortCriteria[sortBy] = sortType === "desc" ? -1 : 1;
+  } else {
+    sortCriteria = { createdAt: -1 };
+  }
+
+  // Get the total count of sales matching the filter
+  const totalItems = await Sales.countDocuments(filter);
+  const totalPages = Math.ceil(totalItems / limitNumber);
+
+  // Retrieve sales with filters, pagination, and sorting
+  const sales = await Sales.find(filter)
+    .sort(sortCriteria)
+    .skip((pageNumber - 1) * limitNumber)
+    .limit(limitNumber);
+
+  // Respond with sales and pagination info
+  return res.status(200).json(
+    new apiResponse(200, "Sales fetched successfully", {
+      sales,
+      pagination: {
+        currentPage: pageNumber,
+        totalPages,
+        totalItems,
+      },
+    })
+  );
+});
+
+// Get a single sale transaction by ID
+export const getSaleById = asyncHandler(async (req, res) => {
+  const sale = await Sales.findById(req.params.id);
+  if (!sale) {
+    throw new apiError(404, "Sale not found");
+  }
+  return res
+    .status(200)
+    .json(new apiResponse(200, "Sale fetched successfully", sale));
+});
