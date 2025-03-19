@@ -1,5 +1,5 @@
-import asyncHandler from "express-async-handler";
-import { Product } from "../models/Product.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import { Product } from "../models/product.model.js";
 import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
 

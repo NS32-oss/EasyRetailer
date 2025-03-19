@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   createProduct,
-  getProducts,
+  getAllProducts,
   getProductById,
   updateProduct,
   deleteProduct,
@@ -14,7 +14,7 @@ router.use(clerkExpressRequireAuth()); // Apply verifyJWT middleware to all rout
 // Route to get all products or create a new product
 router
   .route("/")
-  .get(getProducts) // Retrieve all products (with filtering, pagination, etc.)
+  .get(getAllProducts) // Retrieve all products (with filtering, pagination, etc.)
   .post(createProduct); // Create a new product
 
 // Route to get, update, or delete a single product by ID
