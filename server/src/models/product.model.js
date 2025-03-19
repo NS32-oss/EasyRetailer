@@ -35,11 +35,7 @@ const productSchema = new mongoose.Schema(
     barcode: {
       type: String,
       unique: true,
-    }, // Store barcode number
-    created_at: {
-      type: Date,
-      default: Date.now,
-    },
+    }, 
   },
   { timestamps: true }
 );
