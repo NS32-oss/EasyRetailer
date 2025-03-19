@@ -28,7 +28,7 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    sales_price: {
+    unit_price: {
       type: Number,
       required: true,
     },
