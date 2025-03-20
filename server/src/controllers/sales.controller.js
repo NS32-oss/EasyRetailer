@@ -1,9 +1,9 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import { Sales } from "../models/sales.model.js";
+import { Product } from "../models/product.model.js"; // Import the Product model
 import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
 
-// Create a new sale transaction
 export const createSale = asyncHandler(async (req, res) => {
   const {
     products, // Array of products { product_id, quantity, unit_price, discount, selling_price }
@@ -24,7 +24,6 @@ export const createSale = asyncHandler(async (req, res) => {
   // Calculate the total price dynamically based on each product's selling price and quantity.
   let computedTotalPrice = 0;
   products.forEach((product) => {
-    // Multiply selling price by quantity for each product.
     computedTotalPrice += product.selling_price * product.quantity;
   });
 
@@ -41,9 +40,38 @@ export const createSale = asyncHandler(async (req, res) => {
     bill_generated,
   });
 
+  // Update inventory: For each product sold, subtract the sold quantity from inventory
+  for (const item of products) {
+    const productRecord = await Product.findById(item.product_id);
+    if (!productRecord) {
+      throw new apiError(404, `Product with id ${item.product_id} not found`);
+    }
+    // Optional: Check if there is enough quantity available
+    if (productRecord.quantity < item.quantity) {
+      throw new apiError(
+        400,
+        `Not enough inventory for product ${item.product_id}`
+      );
+    }
+    productRecord.quantity -= item.quantity;
+
+    // If the updated quantity is 0, remove the product from the database
+    if (productRecord.quantity === 0) {
+      await productRecord.remove();
+    } else {
+      await productRecord.save();
+    }
+  }
+
   return res
     .status(201)
-    .json(new apiResponse(201, "Sale created successfully", sale));
+    .json(
+      new apiResponse(
+        201,
+        "Sale created and inventory updated successfully",
+        sale
+      )
+    );
 });
 
 // Get all sales transactions
