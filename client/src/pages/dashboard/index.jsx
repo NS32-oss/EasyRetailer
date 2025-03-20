@@ -1,10 +1,18 @@
-import  React from "react"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
-import { DollarSign, Package, Users, TrendingUp } from "lucide-react"
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
+import { DollarSign, Package, Users, TrendingUp } from "lucide-react";
 
 // Mock data - would be fetched from API in real app
 const mockData = {
@@ -32,22 +40,24 @@ const mockData = {
     { name: "Sat", profit: 750 },
     { name: "Sun", profit: 500 },
   ],
-}
+};
 
 export default function DashboardPage() {
-  const [data, setData] = useState(mockData)
+  const [data, setData] = useState(mockData);
 
   // In a real app, you would fetch data here
   useEffect(() => {
     // Fetch data from API
     // setData(fetchedData);
-  }, [])
+  }, []);
 
   return (
     <div className="container mx-auto p-4 md:p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome to your business overview</p>
+        <p className="text-muted-foreground">
+          Welcome to your business overview
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -57,8 +67,12 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${data.stats.totalSales.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
+            <div className="text-2xl font-bold">
+              ${data.stats.totalSales.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              +12% from last month
+            </p>
           </CardContent>
         </Card>
 
@@ -68,7 +82,9 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${data.stats.totalProfit.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              ${data.stats.totalProfit.toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">+8% from last month</p>
           </CardContent>
         </Card>
@@ -90,7 +106,9 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.stats.totalEmployees}</div>
+            <div className="text-2xl font-bold">
+              {data.stats.totalEmployees}
+            </div>
             <p className="text-xs text-muted-foreground">+1 since last month</p>
           </CardContent>
         </Card>
@@ -147,6 +165,5 @@ export default function DashboardPage() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }
-

@@ -1,14 +1,15 @@
-import { cn } from "@/lib/utils"
+import React from 'react';
+import { cn } from '@/lib/utils';
 
-export function Spinner({ size = "md", className }) {
+export function Spinner({ size = 'md', className }) {
   return (
     <div
       className={cn(
-        "inline-block animate-spin rounded-full border-2 border-solid border-current border-r-transparent",
+        'inline-block animate-spin rounded-full border-2 border-solid border-current border-r-transparent',
         {
-          "h-4 w-4": size === "sm",
-          "h-8 w-8": size === "md",
-          "h-12 w-12": size === "lg",
+          'h-4 w-4': size === 'sm',
+          'h-8 w-8': size === 'md',
+          'h-12 w-12': size === 'lg',
         },
         className,
       )}
@@ -16,5 +17,5 @@ export function Spinner({ size = "md", className }) {
     >
       <span className="sr-only">Loading...</span>
     </div>
-  )
+  );
 }
