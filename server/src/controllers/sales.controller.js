@@ -57,7 +57,7 @@ export const createSale = asyncHandler(async (req, res) => {
 
     // If the updated quantity is 0, remove the product from the database
     if (productRecord.quantity === 0) {
-      await productRecord.remove();
+      await productRecord.deleteOne();
     } else {
       await productRecord.save();
     }

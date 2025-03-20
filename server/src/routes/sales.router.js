@@ -8,7 +8,7 @@ import { requireAuth } from "@clerk/clerk-sdk-node"; // Correct import
 
 const router = Router();
 
-router.use(requireAuth()); // Apply verifyJWT middleware to all routes in this file
+// router.use(requireAuth()); 
 
 // Route to get all sales or create a new sale
 router.route("/").get(getAllSales).post(createSale);
