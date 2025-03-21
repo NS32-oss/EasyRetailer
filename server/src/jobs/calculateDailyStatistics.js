@@ -1,7 +1,7 @@
 // src/jobs/calculateDailyStatistics.js
 import { Sales } from "../models/sales.model.js";
 import { Statistics } from "../models/statistics.model.js";
-import asyncHandler from "../utils/asyncHandler.js";
+import asyncHandler from "express-async-handler";
 
 export const calculateDailyStatistics = asyncHandler(async () => {
   try {
