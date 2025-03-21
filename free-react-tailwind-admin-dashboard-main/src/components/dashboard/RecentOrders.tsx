@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -5,57 +6,52 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import Badge from "../ui/badge/Badge";
 
 // Define the TypeScript interface for the table rows
 interface Sale {
-  id: number; // Unique identifier for each sale
-  totalAmount: string; // Total amount of the sale (as a string with currency symbol)
-  discount: string; // Discount applied to the sale (as a string with currency symbol)
-  finalPrice: string; // Final price after discount (as a string with currency symbol)
-  profit: string; // Profit from the sale (as a string with currency symbol)
+  id: string; // Unique identifier for each sale
+  date: string; // Date of the sale
+  subtotal: string; // Subtotal before discount (as a string with currency symbol)
+  discount: string; // Discount applied to the sale (as a percentage)
+  netAmount: string; // Final price after discount (as a string with currency symbol)
+  paymentMethod: string; // Payment method used for the sale
 }
 
-// Define the table data using the interface
-const tableData: Sale[] = [
-  {
-    id: 1,
-    totalAmount: "$2399.00",
-    discount: "$200.00",
-    finalPrice: "$2199.00",
-    profit: "$500.00",
-  },
-  {
-    id: 2,
-    totalAmount: "$879.00",
-    discount: "$50.00",
-    finalPrice: "$829.00",
-    profit: "$150.00",
-  },
-  {
-    id: 3,
-    totalAmount: "$1869.00",
-    discount: "$100.00",
-    finalPrice: "$1769.00",
-    profit: "$400.00",
-  },
-  {
-    id: 4,
-    totalAmount: "$1699.00",
-    discount: "$150.00",
-    finalPrice: "$1549.00",
-    profit: "$300.00",
-  },
-  {
-    id: 5,
-    totalAmount: "$240.00",
-    discount: "$20.00",
-    finalPrice: "$220.00",
-    profit: "$50.00",
-  },
-];
-
 export default function RecentOrders() {
+  const [tableData, setTableData] = useState<Sale[]>([]);
+
+  useEffect(() => {
+    // Fetch data from the API
+    fetch("http://localhost:8000/api/v1/sales")
+      .then((response) => response.json())
+      .then((responseData) => {
+        const salesData = responseData.data.sales;
+
+        // Process the sales data to extract the required fields
+        const processedData = salesData.slice(0, 5).map((sale: any) => {
+          const subtotal = sale.total_price;
+          const discount = sale.final_discount;
+          const netAmount = subtotal - discount;
+          const discountPercentage = ((discount / subtotal) * 100).toFixed(2);
+
+          return {
+            id: sale._id,
+            date: new Date(sale.createdAt).toLocaleDateString(),
+            subtotal: `$${subtotal.toFixed(2)}`,
+            discount: `${discountPercentage}%`,
+            netAmount: `$${netAmount.toFixed(2)}`,
+            paymentMethod: sale.payment_method,
+          };
+        });
+
+        // Update state
+        setTableData(processedData);
+      })
+      .catch((error) => {
+        console.error("Error fetching sales data:", error);
+      });
+  }, []);
+
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -118,13 +114,19 @@ export default function RecentOrders() {
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                Sales ID
+                Transaction ID
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                Total Amount
+                Date
+              </TableCell>
+              <TableCell
+                isHeader
+                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+              >
+                Subtotal
               </TableCell>
               <TableCell
                 isHeader
@@ -136,13 +138,13 @@ export default function RecentOrders() {
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                Final Price
+                Net Amount
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                Profit
+                Payment Method
               </TableCell>
             </TableRow>
           </TableHeader>
@@ -155,16 +157,19 @@ export default function RecentOrders() {
                   {sale.id}
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {sale.totalAmount}
+                  {sale.date}
+                </TableCell>
+                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  {sale.subtotal}
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   {sale.discount}
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {sale.finalPrice}
+                  {sale.netAmount}
                 </TableCell>
-                <TableCell className="py-3 text-green-500 text-theme-sm dark:text-green-400">
-                  {sale.profit}
+                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  {sale.paymentMethod}
                 </TableCell>
               </TableRow>
             ))}
