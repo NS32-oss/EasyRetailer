@@ -19,33 +19,34 @@ export default function MonthlyRevenueChart() {
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
           .toISOString()
           .split("T")[0];
-        console.log(startDate);
+        // console.log(startDate);
         endDate = startDate;
-        console.log(endDate);
+        // console.log(endDate);
       } else if (range === "Monthly") {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1)
           .toISOString()
           .split("T")[0];
-        console.log(startDate);
+        // console.log(startDate);
         endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
           .toISOString()
           .split("T")[0];
-        console.log(endDate);
+        // console.log(endDate);
       } else if (range === "Yearly") {
         startDate = new Date(now.getFullYear() - 10, 0, 1)
           .toISOString()
           .split("T")[0];
-        console.log(startDate);
+        // console.log(startDate);
         endDate = new Date(now.getFullYear(), 11, 31)
           .toISOString()
           .split("T")[0];
-        console.log(endDate);
+        // console.log(endDate);
       }
       
 
       const url = new URL("http://localhost:8000/api/v1/statistics");
       url.searchParams.append("startDate", startDate);
       url.searchParams.append("endDate", endDate);
+      url.searchParams.append("groupBy", timeRange);
 
       const response = await fetch(url);
 

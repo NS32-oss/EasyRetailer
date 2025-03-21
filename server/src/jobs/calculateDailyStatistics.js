@@ -1,15 +1,22 @@
-// src/jobs/calculateDailyStatistics.js
 import { Sales } from "../models/sales.model.js";
 import { Statistics } from "../models/statistics.model.js";
-import asyncHandler from "express-async-handler";
+import asyncHandler from "../utils/asyncHandler.js";
 
 export const calculateDailyStatistics = asyncHandler(async () => {
   try {
-    // Define the start and end of today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Define the start and end of today in local time
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const endOfDay = new Date(today);
     endOfDay.setHours(23, 59, 59, 999);
+
+    // Format today's date as "YYYY-MM-DD" using local time with the "en-CA" locale
+    const todayString = today.toLocaleDateString("en-CA");
+    console.log("Today:", todayString);
+
+    // (Optional) Log end-of-day date for debugging
+    const endDateString = endOfDay.toLocaleDateString("en-CA");
+    console.log("End of Day:", endDateString);
 
     // Aggregate revenue and profit for today
     const aggregatedData = await Sales.aggregate([
@@ -48,15 +55,15 @@ export const calculateDailyStatistics = asyncHandler(async () => {
 
     const data = aggregatedData[0] || { totalRevenue: 0, totalProfit: 0 };
 
-    // Upsert the aggregated data into the Statistics collection for today
+    // Upsert the aggregated data into the Statistics collection using todayString as the key
     await Statistics.findOneAndUpdate(
-      { date: today },
-      { totalRevenue: data.totalRevenue, totalProfit: data.totalProfit },
+      { date: todayString },
+      { totalRevenue: data.totalRevenue, totalProfit: data.totalProfit, date: todayString },
       { upsert: true, new: true }
     );
 
     console.log(
-      `Daily Statistics saved: Revenue = ${data.totalRevenue}, Profit = ${data.totalProfit}`
+      `Daily Statistics saved for ${todayString}: Revenue = ${data.totalRevenue}, Profit = ${data.totalProfit}`
     );
   } catch (error) {
     console.error("Error calculating daily statistics:", error);
