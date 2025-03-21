@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  BoxIconLine,
-  GroupIcon,
-} from "../../icons";
+import { ArrowUpIcon, BoxIconLine, GroupIcon } from "../../icons";
 import Badge from "../ui/badge/Badge";
 
 // Define interfaces for the product and sale data
@@ -33,6 +28,8 @@ interface Sale {
 export default function EcommerceMetrics() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [totalProductsSold, setTotalProductsSold] = useState(0);
+  const [ordersToday, setOrdersToday] = useState(0);
+  const [customersToday, setCustomersToday] = useState(0);
 
   useEffect(() => {
     // Fetch data from the API
@@ -50,9 +47,21 @@ export default function EcommerceMetrics() {
           );
         }, 0);
 
+        // Calculate orders and customers gained today
+        const today = new Date().toISOString().split("T")[0];
+        const salesToday = salesData.filter((sale) =>
+          sale.createdAt.startsWith(today)
+        );
+        const ordersToday = salesToday.length;
+        const customersToday = new Set(
+          salesToday.map((sale) => sale.customer_mobile)
+        ).size;
+
         // Update state
         setTotalCustomers(totalCustomers);
         setTotalProductsSold(totalProductsSold);
+        setOrdersToday(ordersToday);
+        setCustomersToday(customersToday);
       })
       .catch((error) => {
         console.error("Error fetching sales data:", error);
@@ -78,7 +87,7 @@ export default function EcommerceMetrics() {
           </div>
           <Badge color="success">
             <ArrowUpIcon />
-            11.01%
+            {customersToday} customers today
           </Badge>
         </div>
       </div>
@@ -99,9 +108,9 @@ export default function EcommerceMetrics() {
             </h4>
           </div>
 
-          <Badge color="error">
-            <ArrowDownIcon />
-            9.05%
+          <Badge color="success">
+            <ArrowUpIcon />
+            {ordersToday} orders today
           </Badge>
         </div>
       </div>

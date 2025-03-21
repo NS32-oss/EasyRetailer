@@ -153,3 +153,30 @@ export const getSaleById = asyncHandler(async (req, res) => {
     .status(200)
     .json(new apiResponse(200, "Sale fetched successfully", sale));
 });
+
+//calculate revenue for any time period
+export const getRevenue = asyncHandler(async (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  // Build filter object
+  const filter = {};
+
+  // Filter by date range if both startDate and endDate are provided
+  if (startDate && endDate) {
+    filter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
+    };
+  }
+
+  // Get the total revenue for the given time period
+  const sales = await Sales.find(filter);
+  let totalRevenue = 0;
+  sales.forEach((sale) => {
+    totalRevenue += sale.total_price;
+  });
+
+  return res
+    .status(200)
+    .json(new apiResponse(200, "Revenue calculated successfully", totalRevenue));
+});

@@ -24,7 +24,11 @@ const salesSchema = new mongoose.Schema(
         selling_price: {
           type: Number,
           required: true,
-        }, // Final selling price after discount
+        },
+        cost_price: { // Added field: cost price at time of sale
+          type: Number,
+          required: true,
+        },
       },
     ],
     total_price: {
