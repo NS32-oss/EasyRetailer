@@ -25,15 +25,16 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Hardcoded allowed origins (for local development or specific environments)
-// const allowedOrigins = [
-//   "http://127.0.0.1:5500",
-//   "http://localhost:3000",
-//   "https://example.com",
-//   "https://mytubestream.vercel.app",
-//   "https://mytubestream.vercel.app/login.html",
-// ];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5500",
+  "http://localhost:3000",
+  "https://example.com",
+  "https://mytubestream.vercel.app",
+  "https://mytubestream.vercel.app/login.html",
+];
 //Allow from all origins
-const allowedOrigins = ["*"];
+// const allowedOrigins = ["*"];
 
 app.use(
   cors({

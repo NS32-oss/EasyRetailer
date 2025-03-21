@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -6,7 +7,58 @@ import {
 } from "../../icons";
 import Badge from "../ui/badge/Badge";
 
+// Define interfaces for the product and sale data
+interface Product {
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  discount: number;
+  selling_price: number;
+  _id: string;
+}
+
+interface Sale {
+  _id: string;
+  products: Product[];
+  total_price: number;
+  final_discount: number;
+  payment_method: string;
+  customer_mobile: string;
+  bill_generated: boolean;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 export default function EcommerceMetrics() {
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const [totalProductsSold, setTotalProductsSold] = useState(0);
+
+  useEffect(() => {
+    // Fetch data from the API
+    fetch("http://localhost:8000/api/v1/sales/")
+      .then((response) => response.json())
+      .then((responseData) => {
+        const salesData: Sale[] = responseData.data.sales;
+
+        // Calculate total number of customers and products sold
+        const totalCustomers = salesData.length;
+        const totalProductsSold = salesData.reduce((acc, sale) => {
+          return (
+            acc +
+            sale.products.reduce((sum, product) => sum + product.quantity, 0)
+          );
+        }, 0);
+
+        // Update state
+        setTotalCustomers(totalCustomers);
+        setTotalProductsSold(totalProductsSold);
+      })
+      .catch((error) => {
+        console.error("Error fetching sales data:", error);
+      });
+  }, []);
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {/* <!-- Metric Item Start --> */}
@@ -21,7 +73,7 @@ export default function EcommerceMetrics() {
               Customers
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              3,782
+              {totalCustomers}
             </h4>
           </div>
           <Badge color="success">
@@ -40,10 +92,10 @@ export default function EcommerceMetrics() {
         <div className="flex items-end justify-between mt-5">
           <div>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Orders
+              Products Sold
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              5,359
+              {totalProductsSold}
             </h4>
           </div>
 
