@@ -14,7 +14,7 @@ const statisticsSchema = new mongoose.Schema(
       required: true,
     },
     // Count of sales transactions (number of sales documents)
-    totalSales: {
+    totalProfit: {
       type: Number,
       required: true,
     },

@@ -1,33 +1,49 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { MoreDotIcon } from "../../icons";
+// import { Dropdown } from "../ui/dropdown/Dropdown";
+// import { DropdownItem } from "../ui/dropdown/DropdownItem";
+// import { MoreDotIcon } from "../../icons";
+import ChartTab from "../common/ChartTab";
 // import { useToast } from "@/components/ui/use-toast";
 
 export default function MonthlyRevenueChart() {
   // const { toast } = useToast();
-  const [seriesData, setSeriesData] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
+  const [seriesData, setSeriesData] = useState<number[]>([]);
 
   const fetchMonthlyRevenue = async () => {
     try {
-      const response = await fetch("/api/statistics/monthly");
+      // Calculate dynamic startDate and endDate for the current month
+      const now = new Date();
+      // First day of the current month
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      // Last day of the current month
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      // Format dates as "YYYY-MM-DD"
+      const startDate = start.toISOString().split("T")[0];
+      const endDate = end.toISOString().split("T")[0];
+
+      // Build URL with query parameters
+      const url = new URL("http://localhost:8000/api/v1/statistics");
+      url.searchParams.append("startDate", startDate);
+      url.searchParams.append("endDate", endDate);
+
+      const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error("Failed to fetch monthly revenue data");
       }
-      const data = await response.json();
-      console.log("REVENUE DATA: ",data);
-      // Assuming your API returns an array of numbers corresponding to each month
-      setSeriesData(data);
+
+      const jsonData = await response.json();
+      if (jsonData.data && jsonData.data.length > 0) {
+        const monthlyRevenue = jsonData.data[0].totalRevenue;
+        setSeriesData([monthlyRevenue]);
+      } else {
+        setSeriesData([0]);
+      }
     } catch (error) {
-      console.error(error);
-      // toast({
-      //   title: "Error",
-      //   description: "Unable to load monthly revenue data",
-      //   variant: "destructive",
-      // });
+      console.error("Error fetching monthly revenue data:", error);
     }
   };
 
@@ -63,8 +79,18 @@ export default function MonthlyRevenueChart() {
     },
     xaxis: {
       categories: [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ],
       axisBorder: { show: false },
       axisTicks: { show: false },
@@ -87,18 +113,14 @@ export default function MonthlyRevenueChart() {
   const series = [
     {
       name: "Revenue",
-      data: seriesData.length > 0 ? seriesData : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      data:
+        seriesData.length > 0
+          ? seriesData
+          : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
   ];
 
-  function toggleDropdown() {
-    setIsOpen(!isOpen);
-  }
-
-  function closeDropdown() {
-    setIsOpen(false);
-  }
-
+  
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex items-center justify-between">
@@ -106,24 +128,12 @@ export default function MonthlyRevenueChart() {
           Monthly Revenue
         </h3>
         <div className="relative inline-block">
-          <button className="dropdown-toggle" onClick={toggleDropdown}>
+          {/* <button className="dropdown-toggle" onClick={toggleDropdown}>
             <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
-          </button>
-          <Dropdown isOpen={isOpen} onClose={closeDropdown} className="w-40 p-2">
-            <DropdownItem
-              onItemClick={closeDropdown}
-              className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              View More
-            </DropdownItem>
-            <DropdownItem
-              onItemClick={closeDropdown}
-              className="flex w-full font-normal text-left text-gray-500 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              Delete
-            </DropdownItem>
-          </Dropdown>
+          </button> */}
+          
         </div>
+        <ChartTab />
       </div>
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">

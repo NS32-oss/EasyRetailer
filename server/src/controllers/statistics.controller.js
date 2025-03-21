@@ -18,18 +18,17 @@ export const getStatistics = asyncHandler(async (req, res) => {
   const stats = await Statistics.find({
     date: { $gte: start, $lte: end },
   }).sort({ date: 1 });
-
+  if (!stats) {
+    throw new apiError(
+      404,
+      "No statistics found for the specified date range."
+    );
+  }
   // Optionally, calculate cumulative revenue and profit for the period
   const totalRevenue = stats.reduce((sum, stat) => sum + stat.totalRevenue, 0);
   const totalProfit = stats.reduce((sum, stat) => sum + stat.totalProfit, 0);
-
-  return res.status(200).json(
-    new apiResponse(200, "Statistics fetched successfully", {
-      stats,
-      cumulative: {
-        totalRevenue,
-        totalProfit,
-      },
-    })
-  );
+  console.log(totalRevenue, totalProfit);
+  return res
+    .status(200)
+    .json(new apiResponse(200, "Statistics fetched successfully", stats));
 });

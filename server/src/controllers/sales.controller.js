@@ -3,6 +3,7 @@ import { Sales } from "../models/sales.model.js";
 import { Product } from "../models/product.model.js"; // Import the Product model
 import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
+import { calculateDailyStatistics } from "../jobs/calculateDailyStatistics.js";
 
 export const createSale = asyncHandler(async (req, res) => {
   const {
@@ -62,7 +63,7 @@ export const createSale = asyncHandler(async (req, res) => {
       await productRecord.save();
     }
   }
-
+  calculateDailyStatistics();
   return res
     .status(201)
     .json(
@@ -178,5 +179,7 @@ export const getRevenue = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new apiResponse(200, "Revenue calculated successfully", totalRevenue));
+    .json(
+      new apiResponse(200, "Revenue calculated successfully", totalRevenue)
+    );
 });

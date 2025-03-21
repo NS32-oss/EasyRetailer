@@ -53,13 +53,14 @@ export default function EcommerceMetrics() {
           sale.createdAt.startsWith(today)
         );
         const ordersToday = salesToday.length;
-        const customersToday = new Set(
-          salesToday.map((sale) => sale.customer_mobile)
-        ).size;
+        const customersToday = salesToday.reduce((acc, sale) => {
+          return acc + sale.products.length;
+        }, 0);
 
         // Update state
         setTotalCustomers(totalCustomers);
         setTotalProductsSold(totalProductsSold);
+        console.log(ordersToday);
         setOrdersToday(ordersToday);
         setCustomersToday(customersToday);
       })
