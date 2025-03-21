@@ -27,7 +27,6 @@ export const getStatistics = asyncHandler(async (req, res) => {
   // Optionally, calculate cumulative revenue and profit for the period
   const totalRevenue = stats.reduce((sum, stat) => sum + stat.totalRevenue, 0);
   const totalProfit = stats.reduce((sum, stat) => sum + stat.totalProfit, 0);
-  console.log(totalRevenue, totalProfit);
   return res
     .status(200)
     .json(new apiResponse(200, "Statistics fetched successfully", stats));

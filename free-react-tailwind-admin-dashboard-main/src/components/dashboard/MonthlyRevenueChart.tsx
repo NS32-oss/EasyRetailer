@@ -126,13 +126,7 @@ export default function MonthlyRevenueChart() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
           Monthly Revenue
-        </h3>
-        <div className="relative inline-block">
-          {/* <button className="dropdown-toggle" onClick={toggleDropdown}>
-            <MoreDotIcon className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 size-6" />
-          </button> */}
-          
-        </div>
+        </h3>        
         <ChartTab />
       </div>
 
