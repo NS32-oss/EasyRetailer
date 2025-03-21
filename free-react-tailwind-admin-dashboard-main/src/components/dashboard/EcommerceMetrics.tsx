@@ -60,7 +60,6 @@ export default function EcommerceMetrics() {
         // Update state
         setTotalCustomers(totalCustomers);
         setTotalProductsSold(totalProductsSold);
-        console.log(ordersToday);
         setOrdersToday(ordersToday);
         setCustomersToday(customersToday);
       })

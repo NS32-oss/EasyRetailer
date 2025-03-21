@@ -1,30 +1,48 @@
 import { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-// import { Dropdown } from "../ui/dropdown/Dropdown";
-// import { DropdownItem } from "../ui/dropdown/DropdownItem";
-// import { MoreDotIcon } from "../../icons";
 import ChartTab from "../common/ChartTab";
-// import { useToast } from "@/components/ui/use-toast";
 
 export default function MonthlyRevenueChart() {
-  // const { toast } = useToast();
   const [seriesData, setSeriesData] = useState<number[]>([]);
+  const [timeRange, setTimeRange] = useState<"Daily" | "Monthly" | "Yearly">(
+    "Daily"
+  );
 
-  const fetchMonthlyRevenue = async () => {
+  const fetchRevenueData = async (range: "Daily" | "Monthly" | "Yearly") => {
     try {
-      // Calculate dynamic startDate and endDate for the current month
       const now = new Date();
-      // First day of the current month
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      // Last day of the current month
-      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      let startDate: string = "";
+      let endDate: string = "";
 
-      // Format dates as "YYYY-MM-DD"
-      const startDate = start.toISOString().split("T")[0];
-      const endDate = end.toISOString().split("T")[0];
+      if (range === "Daily") {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          .toISOString()
+          .split("T")[0];
+        console.log(startDate);
+        endDate = startDate;
+        console.log(endDate);
+      } else if (range === "Monthly") {
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+          .toISOString()
+          .split("T")[0];
+        console.log(startDate);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+          .toISOString()
+          .split("T")[0];
+        console.log(endDate);
+      } else if (range === "Yearly") {
+        startDate = new Date(now.getFullYear() - 10, 0, 1)
+          .toISOString()
+          .split("T")[0];
+        console.log(startDate);
+        endDate = new Date(now.getFullYear(), 11, 31)
+          .toISOString()
+          .split("T")[0];
+        console.log(endDate);
+      }
+      
 
-      // Build URL with query parameters
       const url = new URL("http://localhost:8000/api/v1/statistics");
       url.searchParams.append("startDate", startDate);
       url.searchParams.append("endDate", endDate);
@@ -32,24 +50,24 @@ export default function MonthlyRevenueChart() {
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error("Failed to fetch monthly revenue data");
+        throw new Error("Failed to fetch revenue data");
       }
 
       const jsonData = await response.json();
       if (jsonData.data && jsonData.data.length > 0) {
-        const monthlyRevenue = jsonData.data[0].totalRevenue;
-        setSeriesData([monthlyRevenue]);
+        const revenueData = jsonData.data.map((item: any) => item.totalRevenue);
+        setSeriesData(revenueData);
       } else {
-        setSeriesData([0]);
+        setSeriesData([]);
       }
     } catch (error) {
-      console.error("Error fetching monthly revenue data:", error);
+      console.error("Error fetching revenue data:", error);
     }
   };
 
   useEffect(() => {
-    fetchMonthlyRevenue();
-  }, []);
+    fetchRevenueData(timeRange);
+  }, [timeRange]);
 
   const options: ApexOptions = {
     colors: ["#465fff"],
@@ -78,20 +96,28 @@ export default function MonthlyRevenueChart() {
       colors: ["transparent"],
     },
     xaxis: {
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
+      categories:
+        timeRange === "Daily"
+          ? Array.from({ length: 31 }, (_, i) => i + 1)
+          : timeRange === "Monthly"
+          ? [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ]
+          : Array.from(
+              { length: 10 },
+              (_, i) => new Date().getFullYear() - 9 + i
+            ),
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
@@ -116,18 +142,17 @@ export default function MonthlyRevenueChart() {
       data:
         seriesData.length > 0
           ? seriesData
-          : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          : Array(options.xaxis?.categories?.length || 0).fill(0),
     },
   ];
 
-  
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          Monthly Revenue
-        </h3>        
-        <ChartTab />
+          {timeRange} Revenue
+        </h3>
+        <ChartTab onSelect={setTimeRange} />
       </div>
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">
