@@ -23,10 +23,7 @@ export default function SalesCart() {
 
   // Calculate totals whenever cart items change
   useEffect(() => {
-    const discount = cartItems.reduce(
-      (sum, item) => sum + item.discount * item.quantity,
-      0
-    );
+    const discount = cartItems.reduce((sum, item) => sum + item.discount, 0);
     const amount = cartItems.reduce((sum, item) => sum + item.amountPayable, 0);
 
     setTotalDiscount(discount);
@@ -45,7 +42,7 @@ export default function SalesCart() {
       const data = await response.json();
       console.log("Product data:", data);
 
-      if (data.status==200) {
+      if (data.status == 200) {
         const product = data.data;
         const unitPrice = product.unit_price;
 
@@ -159,18 +156,19 @@ export default function SalesCart() {
     try {
       // Send the sale data to your API
       const saleData = {
-        items: cartItems.map((item) => ({
-          brand: item.brand,
-          size: item.size,
-          type: item.type,
+        products: cartItems.map((item) => ({
+          product_id: item.id,
           quantity: item.quantity,
-          unitPrice: item.unitPrice,
+          unit_price: item.unitPrice,
           discount: item.discount,
-          amountPayable: item.amountPayable,
+          selling_price: item.amountPayable,
+          cost_price: item.unitPrice - item.discount,
         })),
-        totalDiscount,
-        totalAmount,
-        createdAt: new Date().toISOString(),
+        total_price: totalAmount,
+        final_discount: totalDiscount,
+        payment_method: "Card", // Example payment method
+        customer_mobile: "3334445555", // Example customer mobile
+        bill_generated: true,
       };
 
       const response = await fetch("http://localhost:8000/api/v1/sales", {
@@ -180,11 +178,12 @@ export default function SalesCart() {
         },
         body: JSON.stringify(saleData),
       });
-
-      if (response.ok) {
+      const data = await response.json();
+      console.log("API response:", data);
+      if (data.status === 201) {
         console.log("Sale created:", saleData);
         // Redirect to dashboard
-        window.location.href = "/dashboard";
+        window.location.href = "/";
       } else {
         throw new Error("Failed to create sale");
       }
