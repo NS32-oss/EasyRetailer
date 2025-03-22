@@ -2,29 +2,57 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { Product } from "../models/product.model.js";
 import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
+import Joi from "joi";
 
-// Create a new product
+// Define the validation schema using Joi
+const productSchema = Joi.object({
+  brand: Joi.string().trim().required(),
+  size: Joi.string().trim().required(),
+  colour: Joi.string().trim().allow("").optional(),
+  type: Joi.string().trim().required(),
+  subtype: Joi.string().trim().allow("").optional(),
+  quantity: Joi.number().integer().min(1).required(),
+  cost_price: Joi.number().positive().required(),
+  unit_price: Joi.number().positive().greater(Joi.ref("cost_price")).required(),
+});
+
+// Create or update a product
 export const createProduct = asyncHandler(async (req, res) => {
-  const {
-    brand,
-    size,
-    colour,
-    type,
-    subtype,
-    quantity,
-    cost_price,
-    unit_price,
-  } = req.body;
-
-  // Validate required fields
-  if (!brand || !size || !type || !quantity || !cost_price || !unit_price) {
-    throw new apiError(
-      400,
-      "Missing required fields: brand, size, type, quantity, cost_price, or unit_price"
-    );
+  // Validate the request body
+  const { error, value } = productSchema.validate(req.body);
+  if (error) {
+    throw new apiError(400, error.details[0].message);
   }
 
-  // Create the product. The pre-save hook will generate the barcode if it's not provided.
+  let { brand, size, colour, type, subtype, quantity, cost_price, unit_price } =
+    value;
+
+  // Convert to lowercase for case-insensitive matching
+  brand = brand.toLowerCase();
+  size = size.toLowerCase();
+  type = type.toLowerCase();
+  subtype = subtype.toLowerCase();
+  colour = colour.toLowerCase();
+
+  // Check for existing product and update atomically
+  const existingProduct = await Product.findOneAndUpdate(
+    { brand, size, type },
+    {
+      $set: { cost_price, unit_price, colour, subtype },
+      $inc: { quantity },
+    },
+    { new: true }
+  );
+
+  if (existingProduct) {
+    return res
+      .status(200)
+      .json(
+        new apiResponse(200, "Product updated successfully", existingProduct)
+      );
+  }
+
+  // Create a new product
   const product = await Product.create({
     brand,
     size,

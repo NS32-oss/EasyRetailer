@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
   {
     name: "Inventory",
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    path: "/inventory",
   },
   {
     name: "Return",
