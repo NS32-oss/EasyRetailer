@@ -5,6 +5,7 @@ import {
   getProductById,
   updateProduct,
   deleteProduct,
+  getProductByBarcode,
 } from "../controllers/product.controller.js";
 import { requireAuth } from "@clerk/clerk-sdk-node"; // Correct import
 
@@ -24,5 +25,7 @@ router
   .get(getProductById) // Retrieve a product by its ID
   .patch(updateProduct) // Update a product by its ID
   .delete(deleteProduct); // Delete a product by its ID
+
+router.get("/barcode/:barcode", getProductByBarcode); // Retrieve a product by its barcode
 
 export default router;

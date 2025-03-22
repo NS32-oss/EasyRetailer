@@ -12,7 +12,7 @@ import Buttons from "./pages/UiElements/Buttons";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
-import BasicTables from "./pages/Inventory/Inventory";
+// import BasicTables from "./pages/Inventory/Inventory";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
@@ -20,6 +20,7 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import SalesHistory from "./pages/Forms/SalesHistory";
 import Inventory from "./components/tables/Inventory";
+import SalesCart from "./components/dashboard/SalesCart";
 
 export default function App() {
   return (
@@ -33,7 +34,7 @@ export default function App() {
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
+            <Route path="//new-transaction" element={<SalesCart />} />
             <Route path="/blank" element={<Blank />} />
 
             {/* Forms */}

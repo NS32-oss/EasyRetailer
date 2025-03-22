@@ -167,3 +167,14 @@ export const deleteProduct = asyncHandler(async (req, res) => {
     .status(200)
     .json(new apiResponse(200, "Product deleted successfully", {}));
 });
+
+//get product by barcode
+export const getProductByBarcode = asyncHandler(async (req, res) => {
+  const product = await Product.findOne({ barcode: req.params.barcode });
+  if (!product) {
+    throw new apiError(404, "Product not found");
+  }
+  return res
+    .status(200)
+    .json(new apiResponse(200, "Product fetched successfully", product));
+});
