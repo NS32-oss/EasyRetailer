@@ -26,31 +26,38 @@ export const calculateDailyStatistics = asyncHandler(async () => {
         },
       },
       {
-        $unwind: "$products"
+        $unwind: "$products",
       },
       {
         $group: {
           _id: null,
           totalRevenue: {
-            $sum: { $multiply: ["$products.selling_price", "$products.quantity"] }
+            $sum: {
+              $multiply: ["$products.selling_price", "$products.quantity"],
+            },
           },
           totalProfit: {
             $sum: {
               $multiply: [
-                { $subtract: ["$products.selling_price", "$products.cost_price"] },
-                "$products.quantity"
-              ]
-            }
-          }
-        }
+                {
+                  $subtract: [
+                    "$products.selling_price",
+                    "$products.cost_price",
+                  ],
+                },
+                "$products.quantity",
+              ],
+            },
+          },
+        },
       },
       {
         $project: {
           _id: 0,
           totalRevenue: 1,
-          totalProfit: 1
-        }
-      }
+          totalProfit: 1,
+        },
+      },
     ]);
 
     const data = aggregatedData[0] || { totalRevenue: 0, totalProfit: 0 };
@@ -58,12 +65,12 @@ export const calculateDailyStatistics = asyncHandler(async () => {
     // Upsert the aggregated data into the Statistics collection using todayString as the key
     await Statistics.findOneAndUpdate(
       { date: todayString },
-      { totalRevenue: data.totalRevenue, totalProfit: data.totalProfit, date: todayString },
+      {
+        totalRevenue: data.totalRevenue,
+        totalProfit: data.totalProfit,
+        date: todayString,
+      },
       { upsert: true, new: true }
-    );
-
-    console.log(
-      `Daily Statistics saved for ${todayString}: Revenue = ${data.totalRevenue}, Profit = ${data.totalProfit}`
     );
   } catch (error) {
     console.error("Error calculating daily statistics:", error);

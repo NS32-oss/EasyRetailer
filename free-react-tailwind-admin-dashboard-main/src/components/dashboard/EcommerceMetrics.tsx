@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowUpIcon, BoxIconLine, GroupIcon } from "../../icons";
 import Badge from "../ui/badge/Badge";
 
-// Define interfaces for the product and sale data
+// Define the TypeScript interface for the product and sale data
 interface Product {
   product_id: string;
   quantity: number;
@@ -38,7 +38,7 @@ export default function EcommerceMetrics() {
       .then((responseData) => {
         const salesData: Sale[] = responseData.data.sales;
 
-        // Calculate total number of customers and products sold
+        // Calculate total number of customers (sales count) and total products sold
         const totalCustomers = salesData.length;
         const totalProductsSold = salesData.reduce((acc, sale) => {
           return (
@@ -47,11 +47,12 @@ export default function EcommerceMetrics() {
           );
         }, 0);
 
-        // Calculate orders and customers gained today
-        const today = new Date().toISOString().split("T")[0];
-        const salesToday = salesData.filter((sale) =>
-          sale.createdAt.startsWith(today)
-        );
+        // Calculate orders and customers gained today using local date strings
+        const today = new Date().toLocaleDateString("en-CA");
+        const salesToday = salesData.filter((sale) => {
+          const saleDate = new Date(sale.createdAt).toLocaleDateString("en-CA");
+          return saleDate === today;
+        });
         const ordersToday = salesToday.length;
         const customersToday = salesToday.reduce((acc, sale) => {
           return acc + sale.products.length;

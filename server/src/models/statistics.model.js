@@ -4,9 +4,8 @@ const statisticsSchema = new mongoose.Schema(
   {
     // The date for which the statistics apply (set as unique to have one document per day)
     date: {
-      type: Date,
+      type: String,
       required: true,
-      unique: true,
     },
     // Sum of all total_price values from sales for the day
     totalRevenue: {

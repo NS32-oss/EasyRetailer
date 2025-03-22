@@ -16,37 +16,40 @@ export default function MonthlyRevenueChart() {
       let endDate: string = "";
 
       if (range === "Daily") {
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-          .toISOString()
-          .split("T")[0];
-        // console.log(startDate);
-        endDate = startDate;
-        // console.log(endDate);
+        startDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1
+        ).toLocaleDateString("en-CA");
+        endDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        ).toLocaleDateString("en-CA");
       } else if (range === "Monthly") {
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
-        // console.log(startDate);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-          .toISOString()
-          .split("T")[0];
-        // console.log(endDate);
+        startDate = new Date(
+          now.getFullYear(),
+          now.getMonth() - 11,
+          1
+        ).toLocaleDateString("en-CA");
+        endDate = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0
+        ).toLocaleDateString("en-CA");
       } else if (range === "Yearly") {
-        startDate = new Date(now.getFullYear() - 10, 0, 1)
-          .toISOString()
-          .split("T")[0];
-        // console.log(startDate);
-        endDate = new Date(now.getFullYear(), 11, 31)
-          .toISOString()
-          .split("T")[0];
-        // console.log(endDate);
+        startDate = new Date(now.getFullYear() - 10, 0, 1).toLocaleDateString(
+          "en-CA"
+        );
+        endDate = new Date(now.getFullYear(), 11, 31).toLocaleDateString(
+          "en-CA"
+        );
       }
-      
 
       const url = new URL("http://localhost:8000/api/v1/statistics");
       url.searchParams.append("startDate", startDate);
       url.searchParams.append("endDate", endDate);
-      url.searchParams.append("groupBy", timeRange);
+      url.searchParams.append("groupBy", range);
 
       const response = await fetch(url);
 
@@ -99,22 +102,13 @@ export default function MonthlyRevenueChart() {
     xaxis: {
       categories:
         timeRange === "Daily"
-          ? Array.from({ length: 31 }, (_, i) => i + 1)
+          ? Array.from({ length: new Date().getDate() }, (_, i) => i + 1)
           : timeRange === "Monthly"
-          ? [
-              "Jan",
-              "Feb",
-              "Mar",
-              "Apr",
-              "May",
-              "Jun",
-              "Jul",
-              "Aug",
-              "Sep",
-              "Oct",
-              "Nov",
-              "Dec",
-            ]
+          ? Array.from({ length: 12 }, (_, i) => {
+              const date = new Date();
+              date.setMonth(date.getMonth() - 11 + i);
+              return date.toLocaleString("default", { month: "short" });
+            })
           : Array.from(
               { length: 10 },
               (_, i) => new Date().getFullYear() - 9 + i
