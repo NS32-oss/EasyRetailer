@@ -17,7 +17,11 @@ interface Sale {
   paymentMethod: string; // Payment method used for the sale
 }
 
-export default function RecentOrders() {
+interface RecentOrdersProps {
+  limit?: number; // Optional limit for the number of recent orders to display
+}
+
+export default function RecentOrders({ limit }: RecentOrdersProps) {
   const [tableData, setTableData] = useState<Sale[]>([]);
 
   useEffect(() => {
@@ -28,7 +32,7 @@ export default function RecentOrders() {
         const salesData = responseData.data.sales;
 
         // Process the sales data to extract the required fields
-        const processedData = salesData.slice(0, 5).map((sale: any) => {
+        const processedData = salesData.map((sale: any) => {
           const subtotal = sale.total_price;
           const discount = sale.final_discount;
           const netAmount = subtotal - discount;
@@ -37,20 +41,23 @@ export default function RecentOrders() {
           return {
             id: sale._id,
             date: new Date(sale.createdAt).toLocaleDateString(),
-            subtotal: `$${subtotal.toFixed(2)}`,
+            subtotal: `₹${subtotal.toFixed(2)}`,
             discount: `${discountPercentage}%`,
-            netAmount: `$${netAmount.toFixed(2)}`,
+            netAmount: `₹${netAmount.toFixed(2)}`,
             paymentMethod: sale.payment_method,
           };
         });
 
+        // Apply the limit if provided
+        const limitedData = limit ? processedData.slice(0, limit) : processedData;
+
         // Update state
-        setTableData(processedData);
+        setTableData(limitedData);
       })
       .catch((error) => {
         console.error("Error fetching sales data:", error);
       });
-  }, []);
+  }, [limit]);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
