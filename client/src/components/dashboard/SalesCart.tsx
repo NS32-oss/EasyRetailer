@@ -20,15 +20,19 @@ export default function SalesCart() {
   const [barcode, setBarcode] = useState("");
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [totalDiscountInput, setTotalDiscountInput] = useState(0);
 
-  // Calculate totals whenever cart items change
+  // Calculate totals whenever cart items or total discount input change
   useEffect(() => {
-    const discount = cartItems.reduce((sum, item) => sum + item.discount, 0);
-    const amount = cartItems.reduce((sum, item) => sum + item.amountPayable, 0);
+    const amount = cartItems.reduce(
+      (sum, item) => sum + item.unitPrice * item.quantity - item.discount,
+      0
+    );
+    const finalAmount = Math.max(0, amount - totalDiscountInput);
 
-    setTotalDiscount(discount);
-    setTotalAmount(amount);
-  }, [cartItems]);
+    setTotalDiscount(totalDiscountInput);
+    setTotalAmount(finalAmount);
+  }, [cartItems, totalDiscountInput]);
 
   // Function to add a product by barcode
   const addProductByBarcode = async () => {
@@ -162,7 +166,7 @@ export default function SalesCart() {
           unit_price: item.unitPrice,
           discount: item.discount,
           selling_price: item.amountPayable,
-          cost_price: item.unitPrice - item.discount,
+          cost_price: item.unitPrice,
         })),
         total_price: totalAmount,
         final_discount: totalDiscount,
@@ -183,7 +187,7 @@ export default function SalesCart() {
       if (data.status === 201) {
         console.log("Sale created:", saleData);
         // Redirect to dashboard
-        window.location.href = "/";
+        window.location.href = "/dashboard";
       } else {
         throw new Error("Failed to create sale");
       }
@@ -358,9 +362,13 @@ export default function SalesCart() {
               <span className="text-gray-600 dark:text-gray-400">
                 Total Discount:
               </span>
-              <span className="font-medium text-gray-800 dark:text-white">
-                ₹{totalDiscount.toFixed(2)}
-              </span>
+              <input
+                type="number"
+                value={totalDiscountInput}
+                onChange={(e) => setTotalDiscountInput(Number(e.target.value))}
+                className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                min="0"
+              />
             </div>
             <div className="flex justify-between sm:w-64">
               <span className="text-gray-600 dark:text-gray-400">

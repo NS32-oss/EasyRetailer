@@ -64,6 +64,7 @@ export const createSale = asyncHandler(async (req, res) => {
     }
   }
   calculateDailyStatistics();
+  console.log(sale);
   return res
     .status(201)
     .json(
