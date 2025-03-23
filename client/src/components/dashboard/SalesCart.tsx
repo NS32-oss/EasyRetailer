@@ -1,54 +1,56 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import type React from "react"
+
+import { useEffect, useState } from "react"
+import { ToastContainer } from "../toastNotification/Toast"
+import BarcodeScanner from "../barcodeScanner/BarcodeScanner"
 
 // Define the TypeScript interface for the cart items
 interface CartItem {
-  id: string;
-  brand: string;
-  size: string;
-  type: string;
-  quantity: number;
-  unitPrice: number;
-  discount: number;
-  amountPayable: number;
-  selected: boolean;
+  id: string
+  brand: string
+  size: string
+  type: string
+  quantity: number
+  unitPrice: number
+  discount: number
+  amountPayable: number
+  selected: boolean
 }
 
 export default function SalesCart() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [barcode, setBarcode] = useState("");
-  const [totalDiscount, setTotalDiscount] = useState(0);
-  const [totalAmount, setTotalAmount] = useState(0);
-  const [totalDiscountInput, setTotalDiscountInput] = useState(0);
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [barcode, setBarcode] = useState("")
+  const [totalDiscount, setTotalDiscount] = useState(0)
+  const [totalAmount, setTotalAmount] = useState(0)
+  const [totalDiscountInput, setTotalDiscountInput] = useState(0)
+  const [showScanner, setShowScanner] = useState(false)
+  const [showBillModal, setShowBillModal] = useState(false)
+  const [customerMobile, setCustomerMobile] = useState("")
 
   // Calculate totals whenever cart items or total discount input change
   useEffect(() => {
-    const amount = cartItems.reduce(
-      (sum, item) => sum + item.unitPrice * item.quantity - item.discount,
-      0
-    );
-    const finalAmount = Math.max(0, amount - totalDiscountInput);
+    const amount = cartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity - item.discount, 0)
+    const finalAmount = Math.max(0, amount - totalDiscountInput)
 
-    setTotalDiscount(totalDiscountInput);
-    setTotalAmount(finalAmount);
-  }, [cartItems, totalDiscountInput]);
+    setTotalDiscount(totalDiscountInput)
+    setTotalAmount(finalAmount)
+  }, [cartItems, totalDiscountInput])
 
   // Function to add a product by barcode
-  const addProductByBarcode = async () => {
-    if (!barcode.trim()) return;
+  const addProductByBarcode = async (barcodeValue: string) => {
+    if (!barcodeValue.trim()) return
 
     try {
       // Fetch product details from the API
-      const response = await fetch(
-        `http://localhost:8000/api/v1/product/barcode/${barcode}`
-      );
-      const data = await response.json();
-      console.log("Product data:", data);
+      const response = await fetch(`http://localhost:8000/api/v1/product/barcode/${barcodeValue}`)
+      const data = await response.json()
+      console.log("Product data:", data)
 
       if (data.status == 200) {
-        const product = data.data;
-        const unitPrice = product.unit_price;
+        const product = data.data
+        const unitPrice = product.unit_price
 
         const newItem: CartItem = {
           id: product._id, // Use the product ID from the API
@@ -60,101 +62,127 @@ export default function SalesCart() {
           discount: 0,
           amountPayable: unitPrice,
           selected: false,
-        };
+        }
 
-        setCartItems((prev) => [...prev, newItem]);
-        setBarcode("");
+        setCartItems((prev) => [...prev, newItem])
+        setBarcode("")
+
+        // Show success toast
+        if (window.showToast) {
+          window.showToast.success(`${product.brand} ${product.type} added to cart`)
+        }
       } else {
-        alert("Product not found");
+        if (window.showToast) {
+          window.showToast.error("Product not found")
+        } else {
+          alert("Product not found")
+        }
       }
     } catch (error) {
-      console.error("Error fetching product:", error);
-      alert("Failed to fetch product");
+      console.error("Error fetching product:", error)
+      if (window.showToast) {
+        window.showToast.error("Failed to fetch product")
+      } else {
+        alert("Failed to fetch product")
+      }
     }
-  };
+  }
 
   // Function to handle quantity change
   const handleQuantityChange = (id: string, increment: boolean) => {
     setCartItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const newQuantity = increment
-            ? item.quantity + 1
-            : Math.max(1, item.quantity - 1);
-          const newAmountPayable = item.unitPrice * newQuantity - item.discount;
+          const newQuantity = increment ? item.quantity + 1 : Math.max(1, item.quantity - 1)
+          const newAmountPayable = item.unitPrice * newQuantity - item.discount
 
           return {
             ...item,
             quantity: newQuantity,
             amountPayable: newAmountPayable,
-          };
+          }
         }
-        return item;
-      })
-    );
-  };
+        return item
+      }),
+    )
+  }
 
   // Function to handle discount change
   const handleDiscountChange = (id: string, value: string) => {
-    const discountValue = Number.parseFloat(value) || 0;
+    const discountValue = Number.parseFloat(value) || 0
 
     setCartItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const totalPrice = item.unitPrice * item.quantity;
-          const newAmountPayable = Math.max(0, totalPrice - discountValue);
+          const totalPrice = item.unitPrice * item.quantity
+          const newAmountPayable = Math.max(0, totalPrice - discountValue)
 
           return {
             ...item,
             discount: discountValue,
             amountPayable: newAmountPayable,
-          };
+          }
         }
-        return item;
-      })
-    );
-  };
+        return item
+      }),
+    )
+  }
 
   // Function to handle amount payable change
   const handleAmountPayableChange = (id: string, value: string) => {
-    const amountValue = Number.parseFloat(value) || 0;
+    const amountValue = Number.parseFloat(value) || 0
 
     setCartItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const totalPrice = item.unitPrice * item.quantity;
-          const newDiscount = Math.max(0, totalPrice - amountValue);
+          const totalPrice = item.unitPrice * item.quantity
+          const newDiscount = Math.max(0, totalPrice - amountValue)
 
           return {
             ...item,
             discount: newDiscount,
             amountPayable: amountValue,
-          };
+          }
         }
-        return item;
-      })
-    );
-  };
+        return item
+      }),
+    )
+  }
 
   // Function to toggle item selection
   const toggleItemSelection = (id: string) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, selected: !item.selected } : item
-      )
-    );
-  };
+    setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, selected: !item.selected } : item)))
+  }
 
   // Function to delete selected items
   const deleteSelectedItems = () => {
-    setCartItems((prev) => prev.filter((item) => !item.selected));
-  };
+    const selectedItems = cartItems.filter((item) => item.selected)
+    setCartItems((prev) => prev.filter((item) => !item.selected))
 
-  // Function to create sale and redirect to dashboard
-  const createSale = async () => {
+    // Show toast for deleted items
+    if (window.showToast && selectedItems.length > 0) {
+      window.showToast.info(`${selectedItems.length} item(s) removed from cart`)
+    }
+  }
+
+  // Function to create sale
+  const createSale = async (generateBill: boolean) => {
     if (cartItems.length === 0) {
-      alert("Cart is empty");
-      return;
+      if (window.showToast) {
+        window.showToast.error("Cart is empty")
+      } else {
+        alert("Cart is empty")
+      }
+      return
+    }
+
+    if (generateBill && !customerMobile) {
+      if (window.showToast) {
+        window.showToast.error("Please enter customer mobile number")
+      } else {
+        alert("Please enter customer mobile number")
+      }
+      return
     }
 
     try {
@@ -171,9 +199,9 @@ export default function SalesCart() {
         total_price: totalAmount,
         final_discount: totalDiscount,
         payment_method: "Card", // Example payment method
-        customer_mobile: "3334445555", // Example customer mobile
-        bill_generated: true,
-      };
+        customer_mobile: customerMobile || "0000000000",
+        bill_generated: generateBill,
+      }
 
       const response = await fetch("http://localhost:8000/api/v1/sales", {
         method: "POST",
@@ -181,215 +209,277 @@ export default function SalesCart() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(saleData),
-      });
-      const data = await response.json();
-      console.log("API response:", data);
+      })
+      const data = await response.json()
+      console.log("API response:", data)
+
       if (data.status === 201) {
-        console.log("Sale created:", saleData);
-        // Redirect to dashboard
-        window.location.href = "/dashboard";
+        console.log("Sale created:", saleData)
+
+        if (window.showToast) {
+          window.showToast.success(`Sale created successfully${generateBill ? " and bill generated" : ""}`)
+        }
+
+        // Redirect to dashboard or sales history
+        if (data.data && data.data.sale && data.data.sale._id) {
+          window.location.href = generateBill ? `/sales-history/${data.data.sale._id}` : "/dashboard"
+        } else {
+          window.location.href = "/dashboard"
+        }
       } else {
-        throw new Error("Failed to create sale");
+        throw new Error("Failed to create sale")
       }
     } catch (error) {
-      console.error("Error creating sale:", error);
-      alert("Failed to create sale");
+      console.error("Error creating sale:", error)
+      if (window.showToast) {
+        window.showToast.error("Failed to create sale")
+      } else {
+        alert("Failed to create sale")
+      }
     }
-  };
+  }
+
+  // Function to handle barcode input submission
+  const handleBarcodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    addProductByBarcode(barcode)
+  }
+
+  // Function to handle barcode detection from scanner
+  const handleBarcodeDetection = (detectedBarcode: string) => {
+    addProductByBarcode(detectedBarcode)
+    setShowScanner(false)
+  }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-      <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Sales Cart
-          </h3>
-        </div>
+    <>
+      <ToastContainer />
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Enter barcode"
-              value={barcode}
-              onChange={(e) => setBarcode(e.target.value)}
-              className="w-40 sm:w-60 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  addProductByBarcode();
-                }
-              }}
-            />
-            <button
-              onClick={addProductByBarcode}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
-            >
-              Add Product
-            </button>
-          </div>
-          <button
-            onClick={deleteSelectedItems}
-            disabled={!cartItems.some((item) => item.selected)}
-            className={`inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 ${
-              !cartItems.some((item) => item.selected)
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
-          >
-            Delete Selected
-          </button>
-        </div>
-      </div>
-      <div className="max-w-full overflow-x-auto">
-        <div className="min-w-[800px]">
-          <table className="table-auto w-full">
-            {/* Table Header */}
-            <thead className="border-gray-100 dark:border-gray-800 border-y">
-              <tr>
-                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                  Select
-                </th>
-                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                  Brand
-                </th>
-                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                  Size
-                </th>
-                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                  Type
-                </th>
-                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                  Quantity
-                </th>
-                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                  Unit Price
-                </th>
-                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                  Discount
-                </th>
-                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                  Amount Payable
-                </th>
-              </tr>
-            </thead>
+      {showBillModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Generate Bill</h3>
+            <p className="mb-4 text-gray-600 dark:text-gray-300">Would you like to generate a bill for this sale?</p>
 
-            {/* Table Body */}
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {cartItems.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="py-6 text-center text-gray-500 dark:text-gray-400"
-                  >
-                    No items in cart. Add products using the barcode.
-                  </td>
-                </tr>
-              ) : (
-                cartItems.map((item) => (
-                  <tr key={item.id}>
-                    <td className="py-3 px-4">
-                      <input
-                        type="checkbox"
-                        checked={item.selected}
-                        onChange={() => toggleItemSelection(item.id)}
-                        className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-700"
-                      />
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      {item.brand}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      {item.size}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      {item.type}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
-                          onClick={() => handleQuantityChange(item.id, false)}
-                        >
-                          -
-                        </button>
-                        <span>{item.quantity}</span>
-                        <button
-                          className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
-                          onClick={() => handleQuantityChange(item.id, true)}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      ₹{item.unitPrice.toFixed(2)}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      <input
-                        type="number"
-                        value={item.discount}
-                        onChange={(e) =>
-                          handleDiscountChange(item.id, e.target.value)
-                        }
-                        className="w-20 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                        min="0"
-                      />
-                    </td>
-                    <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      <input
-                        type="number"
-                        value={item.amountPayable}
-                        onChange={(e) =>
-                          handleAmountPayableChange(item.id, e.target.value)
-                        }
-                        className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                        min="0"
-                      />
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Summary Section */}
-      {cartItems.length > 0 && (
-        <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
-          <div className="flex flex-col gap-2 sm:items-end">
-            <div className="flex justify-between sm:w-64">
-              <span className="text-gray-600 dark:text-gray-400">
-                Total Discount:
-              </span>
+            <div className="mb-4">
+              <label className="block text-gray-700 dark:text-gray-300 mb-2">Customer Mobile Number:</label>
               <input
-                type="number"
-                value={totalDiscountInput}
-                onChange={(e) => setTotalDiscountInput(Number(e.target.value))}
-                className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                min="0"
+                type="tel"
+                value={customerMobile}
+                onChange={(e) => setCustomerMobile(e.target.value)}
+                placeholder="Enter mobile number"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               />
             </div>
-            <div className="flex justify-between sm:w-64">
-              <span className="text-gray-600 dark:text-gray-400">
-                Final Amount Payable:
-              </span>
-              <span className="font-semibold text-lg text-gray-900 dark:text-white">
-                ₹{totalAmount.toFixed(2)}
-              </span>
-            </div>
-          </div>
 
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={createSale}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 font-medium"
-            >
-              Create Sale
-            </button>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  createSale(false)
+                  setShowBillModal(false)
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              >
+                No, Skip
+              </button>
+              <button
+                onClick={() => {
+                  createSale(true)
+                  setShowBillModal(false)
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                Yes, Generate Bill
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
-  );
+
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
+        <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Sales Cart</h3>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {!showScanner ? (
+              <>
+                <form onSubmit={handleBarcodeSubmit} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter barcode"
+                    value={barcode}
+                    onChange={(e) => setBarcode(e.target.value)}
+                    className="w-40 sm:w-60 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+                  >
+                    Add Product
+                  </button>
+                </form>
+                <button
+                  onClick={() => setShowScanner(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Scan Barcode
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setShowScanner(false)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              >
+                Cancel Scan
+              </button>
+            )}
+            <button
+              onClick={deleteSelectedItems}
+              disabled={!cartItems.some((item) => item.selected)}
+              className={`inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 ${
+                !cartItems.some((item) => item.selected) ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              Delete Selected
+            </button>
+          </div>
+        </div>
+
+        {showScanner ? (
+          <div className="mb-6">
+            <BarcodeScanner onBarcodeDetected={handleBarcodeDetection} />
+          </div>
+        ) : (
+          <div className="max-w-full overflow-x-auto">
+            <div className="min-w-[800px]">
+              <table className="table-auto w-full">
+                {/* Table Header */}
+                <thead className="border-gray-100 dark:border-gray-800 border-y">
+                  <tr>
+                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                      Select
+                    </th>
+                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">Brand</th>
+                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">Size</th>
+                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">Type</th>
+                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                      Quantity
+                    </th>
+                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                      Unit Price
+                    </th>
+                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                      Discount
+                    </th>
+                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                      Amount Payable
+                    </th>
+                  </tr>
+                </thead>
+
+                {/* Table Body */}
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {cartItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-6 text-center text-gray-500 dark:text-gray-400">
+                        No items in cart. Add products using the barcode.
+                      </td>
+                    </tr>
+                  ) : (
+                    cartItems.map((item) => (
+                      <tr key={item.id}>
+                        <td className="py-3 px-4">
+                          <input
+                            type="checkbox"
+                            checked={item.selected}
+                            onChange={() => toggleItemSelection(item.id)}
+                            className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-700"
+                          />
+                        </td>
+                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">{item.brand}</td>
+                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">{item.size}</td>
+                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">{item.type}</td>
+                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
+                              onClick={() => handleQuantityChange(item.id, false)}
+                            >
+                              -
+                            </button>
+                            <span>{item.quantity}</span>
+                            <button
+                              className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
+                              onClick={() => handleQuantityChange(item.id, true)}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                          ₹{item.unitPrice.toFixed(2)}
+                        </td>
+                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                          <input
+                            type="number"
+                            value={item.discount}
+                            onChange={(e) => handleDiscountChange(item.id, e.target.value)}
+                            className="w-20 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                            min="0"
+                          />
+                        </td>
+                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                          <input
+                            type="number"
+                            value={item.amountPayable}
+                            onChange={(e) => handleAmountPayableChange(item.id, e.target.value)}
+                            className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                            min="0"
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Summary Section */}
+        {cartItems.length > 0 && (
+          <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
+            <div className="flex flex-col gap-2 sm:items-end">
+              <div className="flex justify-between sm:w-64">
+                <span className="text-gray-600 dark:text-gray-400">Total Discount:</span>
+                <input
+                  type="number"
+                  value={totalDiscountInput}
+                  onChange={(e) => setTotalDiscountInput(Number(e.target.value))}
+                  className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  min="0"
+                />
+              </div>
+              <div className="flex justify-between sm:w-64">
+                <span className="text-gray-600 dark:text-gray-400">Final Amount Payable:</span>
+                <span className="font-semibold text-lg text-gray-900 dark:text-white">₹{totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowBillModal(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 font-medium"
+              >
+                Create Sale
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  )
 }
+
