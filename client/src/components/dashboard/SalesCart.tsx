@@ -173,43 +173,47 @@ export default function SalesCart() {
     }
   };
 
-  const generateBill = async () => {
-    if (!sale) return;
+  // Function to generate bill
+const generateBill = async () => {
+  if (!sale) return;
 
-    try {
-      const response = await fetch(
-        `http://localhost:8000/api/v1/sales/${saleId}/generate-bill`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ customer_mobile: customerMobile }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.status === 200) {
-        setNotification({
-          message: "Bill generated and sent successfully",
-          type: "success",
-        });
-
-        // Update the sale object to reflect bill generation
-        setSale((prev) => (prev ? { ...prev, bill_generated: true } : null));
-        setShowBillModal(false);
-      } else {
-        throw new Error(data.message || "Failed to generate bill");
+  try {
+    const response = await fetch(
+      `http://localhost:8000/api/v1/sales/${saleId}/generate-bill`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ customer_mobile: customerMobile }),
       }
-    } catch (error) {
-      console.error("Error generating bill:", error);
+    );
+
+    const data = await response.json();
+
+    if (data.status === 200) {
       setNotification({
-        message: "Failed to generate bill",
-        type: "error",
+        message: "Bill generated and sent successfully",
+        type: "success",
       });
+
+      // Update the sale object to reflect bill generation and assign customer mobile
+      setSale((prev) =>
+        prev ? { ...prev, bill_generated: true, customer_mobile: customerMobile } : null
+      );
+      setShowBillModal(false);
+    } else {
+      throw new Error(data.message || "Failed to generate bill");
     }
-  };
+  } catch (error) {
+    console.error("Error generating bill:", error);
+    setNotification({
+      message: "Failed to generate bill",
+      type: "error",
+    });
+  }
+};
+
 
   // Function to create sale
   const createSale = async (generateBill: boolean) => {

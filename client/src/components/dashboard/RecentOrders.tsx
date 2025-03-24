@@ -1,11 +1,6 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
 
 // Define the TypeScript interface for the table rows
 interface Sale {
@@ -49,7 +44,9 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
         });
 
         // Apply the limit if provided
-        const limitedData = limit ? processedData.slice(0, limit) : processedData;
+        const limitedData = limit
+          ? processedData.slice(0, limit)
+          : processedData;
 
         // Update state
         setTableData(limitedData);
@@ -58,6 +55,11 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
         console.error("Error fetching sales data:", error);
       });
   }, [limit]);
+
+  // Function to handle row click and redirect to sales history
+  const handleRowClick = (saleId: string) => {
+    window.location.href = `/sales-cart-history/${saleId}`;
+  };
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
@@ -114,75 +116,61 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
       </div>
       <div className="max-w-full overflow-x-auto">
         <div className="min-w-[800px]">
-          <Table className="table-auto w-full">
+          <table className="table-auto w-full">
             {/* Table Header */}
-            <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
-              <TableRow>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
+            <thead className="border-gray-100 dark:border-gray-800 border-y">
+              <tr>
+                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
                   Transaction ID
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
+                </th>
+                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
                   Date
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
+                </th>
+                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
                   Subtotal
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
+                </th>
+                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
                   Discount
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
+                </th>
+                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
                   Net Amount
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
+                </th>
+                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
                   Payment Method
-                </TableCell>
-              </TableRow>
-            </TableHeader>
+                </th>
+              </tr>
+            </thead>
 
             {/* Table Body */}
-            <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {tableData.map((sale) => (
-                <TableRow key={sale.id} className="">
-                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 truncate max-w-[120px]">
+                <tr
+                  key={sale.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                  onClick={() => handleRowClick(sale.id)}
+                >
+                  <td className="py-3 px-4 text-gray-500 text-sm dark:text-gray-400 truncate max-w-[120px]">
                     {sale.id}
-                  </TableCell>
-                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  </td>
+                  <td className="py-3 px-4 text-gray-500 text-sm dark:text-gray-400">
                     {sale.date}
-                  </TableCell>
-                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  </td>
+                  <td className="py-3 px-4 text-gray-500 text-sm dark:text-gray-400">
                     {sale.subtotal}
-                  </TableCell>
-                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  </td>
+                  <td className="py-3 px-4 text-gray-500 text-sm dark:text-gray-400">
                     {sale.discount}
-                  </TableCell>
-                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  </td>
+                  <td className="py-3 px-4 text-gray-500 text-sm dark:text-gray-400">
                     {sale.netAmount}
-                  </TableCell>
-                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                  </td>
+                  <td className="py-3 px-4 text-gray-500 text-sm dark:text-gray-400">
                     {sale.paymentMethod}
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               ))}
-            </TableBody>
-          </Table>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

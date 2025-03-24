@@ -93,6 +93,7 @@ export default function SalesCartHistory() {
   }, [saleId]);
 
   // Function to generate bill
+  // Function to generate bill
   const generateBill = async () => {
     if (!sale) return;
 
@@ -116,8 +117,12 @@ export default function SalesCartHistory() {
           type: "success",
         });
 
-        // Update the sale object to reflect bill generation
-        setSale((prev) => (prev ? { ...prev, bill_generated: true } : null));
+        // Update the sale object to reflect bill generation and assign customer mobile
+        setSale((prev) =>
+          prev
+            ? { ...prev, bill_generated: true, customer_mobile: customerMobile }
+            : null
+        );
         setShowBillModal(false);
       } else {
         throw new Error(data.message || "Failed to generate bill");
