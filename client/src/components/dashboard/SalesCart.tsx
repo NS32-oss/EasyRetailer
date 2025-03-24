@@ -27,6 +27,7 @@ export default function SalesCart() {
   const [showScanner, setShowScanner] = useState(false);
   const [showBillModal, setShowBillModal] = useState(false);
   const [customerMobile, setCustomerMobile] = useState("");
+  const [mobileError, setMobileError] = useState("");
   const [notification, setNotification] = useState<{
     message: string;
     type: "success" | "error" | "info";
@@ -34,10 +35,13 @@ export default function SalesCart() {
 
   // Calculate totals whenever cart items or total discount input change
   useEffect(() => {
+    // Calculate the sum of (unitPrice * quantity - discount) for each item
     const amount = cartItems.reduce(
-      (sum, item) => sum + item.unitPrice * item.quantity - item.discount,
+      (sum, item) => sum + (item.unitPrice * item.quantity - item.discount),
       0
     );
+
+    // Apply the additional discount from the total discount input
     const finalAmount = Math.max(0, amount - totalDiscountInput);
 
     setTotalDiscount(totalDiscountInput);
@@ -173,60 +177,120 @@ export default function SalesCart() {
     }
   };
 
-  // Function to generate bill
-const generateBill = async () => {
-  if (!sale) return;
+  // Function to validate mobile number
+  const validateMobileNumber = (mobile: string): boolean => {
+    // Check if mobile number is exactly 10 digits
+    alert("mobile number is exactly 10 digits");
+    const mobileRegex = /^\d{10}$/;
+    return mobileRegex.test(mobile);
+  };
 
-  try {
-    const response = await fetch(
-      `http://localhost:8000/api/v1/sales/${saleId}/generate-bill`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ customer_mobile: customerMobile }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (data.status === 200) {
-      setNotification({
-        message: "Bill generated and sent successfully",
-        type: "success",
-      });
-
-      // Update the sale object to reflect bill generation and assign customer mobile
-      setSale((prev) =>
-        prev ? { ...prev, bill_generated: true, customer_mobile: customerMobile } : null
-      );
-      setShowBillModal(false);
-    } else {
-      throw new Error(data.message || "Failed to generate bill");
-    }
-  } catch (error) {
-    console.error("Error generating bill:", error);
-    setNotification({
-      message: "Failed to generate bill",
-      type: "error",
-    });
-  }
-};
-
-
-  // Function to create sale
-  const createSale = async (generateBill: boolean) => {
+  // Function to generate bill and create sale
+  const handleGenerateBill = async () => {
     if (cartItems.length === 0) {
       setNotification({ message: "Cart is empty", type: "error" });
       return;
     }
+    alert("cartItems.length === 0");
+    console.log("cartItems.length === 0");
+    // Validate mobile number
+    if (!validateMobileNumber(customerMobile)) {
+      setMobileError("Please enter a valid 10-digit mobile number");
+      alert("Please enter a valid 10-digit mobile number");
+      return;
+    }
 
-    if (generateBill && !customerMobile) {
-      setNotification({
-        message: "Please enter customer mobile number",
-        type: "error",
+    setMobileError("");
+
+    try {
+      // Send the sale data to your API
+      const saleData = {
+        products: cartItems.map((item) => ({
+          product_id: item.id,
+          quantity: item.quantity,
+          unit_price: item.unitPrice,
+          discount: item.discount,
+          selling_price: item.amountPayable,
+          cost_price: item.unitPrice,
+        })),
+        total_price: totalAmount,
+        final_discount: totalDiscount,
+        payment_method: "Card", // Example payment method
+        customer_mobile: customerMobile,
+        bill_generated: true,
+      };
+
+      const response = await fetch("http://localhost:8000/api/v1/sales", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(saleData),
       });
+
+      const data = await response.json();
+      console.log("API response:", data);
+
+      if (data.status === 201) {
+        console.log("Sale created:", saleData);
+
+        // Now generate the bill
+        if (data.data && data.data._id) {
+          try {
+            const billResponse = await fetch(
+              `http://localhost:8000/api/v1/sales/${data.data._id}/generate-bill`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ contact_number: customerMobile }),
+              }
+            );
+
+            const billData = await billResponse.json();
+
+            if (billData.status === 200) {
+              setNotification({
+                message: "Sale created and bill generated successfully",
+                type: "success",
+              });
+
+              // Redirect to sales history
+              window.location.href = `/sales-cart-history/${data.data._id}`;
+            } else {
+              throw new Error(billData.message || "Failed to generate bill");
+            }
+          } catch (error) {
+            console.error("Error generating bill:", error);
+            setNotification({
+              message: "Sale created but failed to generate bill",
+              type: "error",
+            });
+
+            // Still redirect to sales history
+            // window.location.href = `/sales-cart-history/${data.data._id}`;
+          }
+        } else {
+          console.error("Sale ID not found in response");
+          setNotification({
+            message: "Sale created but sale ID not found",
+            type: "error",
+          });
+        }
+      } else {
+        throw new Error(data.message || "Failed to create sale");
+      }
+    } catch (error) {
+      console.error("Error creating sale:", error);
+      setNotification({ message: "Failed to create sale", type: "error" });
+    }
+  };
+
+  // Function to create sale without bill
+  const handleCreateSaleWithoutBill = async () => {
+    if (cartItems.length === 0) {
+      setNotification({ message: "Cart is empty", type: "error" });
       return;
     }
 
@@ -244,8 +308,8 @@ const generateBill = async () => {
         total_price: totalAmount,
         final_discount: totalDiscount,
         payment_method: "Card", // Example payment method
-        customer_mobile: customerMobile,
-        bill_generated: generateBill,
+        customer_mobile: "",
+        bill_generated: false,
       };
 
       const response = await fetch("http://localhost:8000/api/v1/sales", {
@@ -255,27 +319,26 @@ const generateBill = async () => {
         },
         body: JSON.stringify(saleData),
       });
+
       const data = await response.json();
       console.log("API response:", data);
 
       if (data.status === 201) {
         console.log("Sale created:", saleData);
         setNotification({
-          message: `Sale created successfully${
-            generateBill ? " and bill generated" : ""
-          }`,
+          message: "Sale created successfully",
           type: "success",
         });
-        console.log("Sale ID:", data);
-        // Redirect to dashboard or sales history
+
+        // Redirect to sales history
         if (data.data && data.data._id) {
           window.location.href = `/sales-cart-history/${data.data._id}`;
         } else {
           console.error("Sale ID not found in response");
-          // window.location.href = "/";
+          window.location.href = "/";
         }
       } else {
-        throw new Error("Failed to create sale");
+        throw new Error(data.message || "Failed to create sale");
       }
     } catch (error) {
       console.error("Error creating sale:", error);
@@ -322,16 +385,24 @@ const generateBill = async () => {
               <input
                 type="tel"
                 value={customerMobile}
-                onChange={(e) => setCustomerMobile(e.target.value)}
+                onChange={(e) => {
+                  setCustomerMobile(e.target.value);
+                  setMobileError("");
+                }}
                 placeholder="Enter mobile number"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className={`w-full px-3 py-2 border ${
+                  mobileError ? "border-red-500" : "border-gray-300"
+                } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white`}
               />
+              {mobileError && (
+                <p className="text-red-500 text-sm mt-1">{mobileError}</p>
+              )}
             </div>
 
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
-                  createSale(false);
+                  handleCreateSaleWithoutBill();
                   setShowBillModal(false);
                 }}
                 className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
@@ -340,9 +411,7 @@ const generateBill = async () => {
               </button>
               <button
                 onClick={() => {
-                  generateBill();
-                  createSale(true);
-                  setShowBillModal(false);
+                  handleGenerateBill();
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
               >

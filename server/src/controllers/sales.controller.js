@@ -5,6 +5,7 @@ import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
 import { calculateDailyStatistics } from "../jobs/calculateDailyStatistics.js";
 import mongoose from "mongoose";
+// import twilio from "twilio";
 
 export const createSale = asyncHandler(async (req, res) => {
   const {
@@ -57,12 +58,12 @@ export const createSale = asyncHandler(async (req, res) => {
     }
     productRecord.quantity -= item.quantity;
 
-    // If the updated quantity is 0, remove the product from the database
-    if (productRecord.quantity === 0) {
-      await productRecord.deleteOne();
-    } else {
-      await productRecord.save();
-    }
+    // // If the updated quantity is 0, remove the product from the database
+    // if (productRecord.quantity === 0) {
+    //   await productRecord.deleteOne();
+    // } else {
+    //   await productRecord.save();
+    // }
   }
   calculateDailyStatistics();
   console.log(sale);
@@ -197,9 +198,9 @@ export const getRevenue = asyncHandler(async (req, res) => {
 
 // Generate a bill for a sale transaction
 export const generateBill = asyncHandler(async (req, res) => {
-  const { id,contact_number } = req.params;
+  const { id, contact_number } = req.params;
 
-  // Validate the saleId
+  // Validate the sale ID
   if (!mongoose.Types.ObjectId.isValid(id)) {
     throw new apiError(400, "Invalid sale ID");
   }
@@ -210,10 +211,33 @@ export const generateBill = asyncHandler(async (req, res) => {
   }
 
   // Update the bill_generated flag to true
-  sale.bill_generated = true;
-  await sale.save();
+
+  // Setup Twilio client using environment variables
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const client = twilio(accountSid, authToken);
+
+  // Prepare a simple test message for the bill
+  const smsBody = "Hello World, your bill is generated!";
+
+  try {
+    const message = await client.messages.create({
+      body: smsBody,
+      from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
+      to: contact_number,
+    });
+    console.log("SMS sent:", message.sid);
+    sale.bill_generated = true;
+    sale.customer_mobile = contact_number;
+    await sale.save();
+  } catch (smsError) {
+    console.error("Error sending SMS:", smsError);
+    // Optionally, you can choose to throw an error or continue
+  }
 
   return res
     .status(200)
-    .json(new apiResponse(200, "Bill generated successfully", sale));
+    .json(
+      new apiResponse(200, "Bill generated and SMS sent successfully", sale)
+    );
 });

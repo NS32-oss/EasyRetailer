@@ -135,6 +135,9 @@ export const getProductById = asyncHandler(async (req, res) => {
   if (!product) {
     throw new apiError(404, "Product not found");
   }
+  if (product.quantity === 0) {
+    await product.deleteOne();
+  }
   return res
     .status(200)
     .json(new apiResponse(200, "Product fetched successfully", product));
