@@ -3,7 +3,7 @@ import MonthlySalesChart from "../../components/dashboard/MonthlySalesChart";
 import MonthlyRevenueChart from "../../components/dashboard/MonthlyRevenueChart";
 // import StatisticsChart from "../../components/dashboard/StatisticsChart";
 // import MonthlyTarget from "../../components/dashboard/MonthlyTarget";
-import SalesHistory from "../../components/dashboard/SalesHistory";
+import RecentOrders from "../../components/dashboard/RecentOrders";
 // import DemographicCard from "../../components/dashboard/DemographicCard";
 import PageMeta from "../../components/common/PageMeta";
 
@@ -26,7 +26,7 @@ export default function Home() {
         </div>
 
         <div className="col-span-12">
-          <SalesHistory limit={5} />
+          <RecentOrders limit={5} />
         </div>
 
         {/* <div className="col-span-12 xl:col-span-5">
@@ -34,7 +34,7 @@ export default function Home() {
         </div> */}
 
         {/* <div className="col-span-12 xl:col-span-7">
-          <SalesHistory />
+          <RecentOrders />
         </div> */}
       </div>
     </>

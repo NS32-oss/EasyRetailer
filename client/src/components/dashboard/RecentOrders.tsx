@@ -17,11 +17,11 @@ interface Sale {
   paymentMethod: string; // Payment method used for the sale
 }
 
-interface SalesHistoryProps {
+interface RecentOrdersProps {
   limit?: number; // Optional limit for the number of recent orders to display
 }
 
-export default function SalesHistory({ limit }: SalesHistoryProps) {
+export default function RecentOrders({ limit }: RecentOrdersProps) {
   const [tableData, setTableData] = useState<Sale[]>([]);
 
   useEffect(() => {
