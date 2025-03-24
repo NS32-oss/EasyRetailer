@@ -224,13 +224,10 @@ export default function SalesCart() {
           }`,
           type: "success",
         });
-
+        console.log("Sale ID:", data);
         // Redirect to dashboard or sales history
-        if (data.data && data.data.sale && data.data.sale._id) {
-          console.log("Sale ID:", data.data.sale._id);
-          window.location.href = generateBill
-            ? `/sales-history/${data.data.sale._id}`
-            : "/dashboard";
+        if (data.data  && data.data._id) {
+          window.location.href = `/sales-cart-history/${data.data._id}`
         } else {
           console.error("Sale ID not found in response");
           // window.location.href = "/";

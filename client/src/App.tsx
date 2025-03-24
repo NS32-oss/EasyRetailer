@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useParams } from "react-router";
+import { BrowserRouter as Router, Routes, Route } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -41,10 +41,7 @@ export default function App() {
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
             <Route path="/sales-history" element={<SalesHistory />} />
-            <Route
-              path="/sales-cart-history/:saleId"
-              element={<SalesCartHistory saleId={useParams().saleId || ''} />}
-            />
+            <Route path="/sales-cart-history/:saleId" element={<SalesCartHistory />} />
 
             {/* Tables */}
             <Route path="/inventory" element={<Inventory />} />

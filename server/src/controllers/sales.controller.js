@@ -4,6 +4,7 @@ import { Product } from "../models/product.model.js"; // Import the Product mode
 import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
 import { calculateDailyStatistics } from "../jobs/calculateDailyStatistics.js";
+import mongoose from "mongoose";
 
 export const createSale = asyncHandler(async (req, res) => {
   const {

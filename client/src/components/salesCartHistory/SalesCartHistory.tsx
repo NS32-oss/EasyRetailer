@@ -48,8 +48,28 @@ export default function SalesCartHistory() {
         const data = await response.json();
 
         if (data.status === 200) {
-          setSale(data.data);
-          setCustomerMobile(data.data.customer_mobile);
+          const saleData = data.data;
+
+          // Fetch product details for each product in the sale
+          const productDetailsPromises = saleData.products.map(
+            (product: SaleProduct) =>
+              fetch(
+                `http://localhost:8000/api/v1/products/${product.product_id}`
+              )
+                .then((res) => res.json())
+                .then((productData) => ({
+                  ...product,
+                  ...productData.data,
+                }))
+          );
+
+          const productsWithDetails = await Promise.all(productDetailsPromises);
+
+          setSale({
+            ...saleData,
+            products: productsWithDetails,
+          });
+          setCustomerMobile(saleData.customer_mobile);
         } else {
           setError("Failed to fetch sale details");
         }
