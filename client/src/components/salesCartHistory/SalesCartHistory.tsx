@@ -51,15 +51,21 @@ export default function SalesCartHistory() {
           const saleData = data.data;
 
           // Fetch product details for each product in the sale
+          // Fetch product details for each product in the sale
           const productDetailsPromises = saleData.products.map(
             (product: SaleProduct) =>
               fetch(
-                `http://localhost:8000/api/v1/products/${product.product_id}`
+                `http://localhost:8000/api/v1/product/${product.product_id}`
               )
                 .then((res) => res.json())
                 .then((productData) => ({
-                  ...product,
-                  ...productData.data,
+                  ...productData.data, // Inventory product data
+                  quantity: product.quantity, // Preserve the sale's quantity
+                  unit_price: product.unit_price,
+                  discount: product.discount,
+                  selling_price: product.selling_price,
+                  cost_price: product.cost_price,
+                  _id: product._id,
                 }))
           );
 

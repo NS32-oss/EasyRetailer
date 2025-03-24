@@ -192,3 +192,28 @@ export const getRevenue = asyncHandler(async (req, res) => {
       new apiResponse(200, "Revenue calculated successfully", totalRevenue)
     );
 });
+
+//http://localhost:8000/api/v1/sales/${saleId}/generate-bill
+
+// Generate a bill for a sale transaction
+export const generateBill = asyncHandler(async (req, res) => {
+  const { id,contact_number } = req.params;
+
+  // Validate the saleId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new apiError(400, "Invalid sale ID");
+  }
+
+  const sale = await Sales.findById(id);
+  if (!sale) {
+    throw new apiError(404, "Sale not found");
+  }
+
+  // Update the bill_generated flag to true
+  sale.bill_generated = true;
+  await sale.save();
+
+  return res
+    .status(200)
+    .json(new apiResponse(200, "Bill generated successfully", sale));
+});
