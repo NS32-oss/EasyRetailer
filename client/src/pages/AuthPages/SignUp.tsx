@@ -1,8 +1,8 @@
+import { SignUp } from "@clerk/clerk-react";
 import PageMeta from "../../components/common/PageMeta";
 import AuthLayout from "./AuthPageLayout";
-import SignUpForm from "../../components/auth/SignUpForm";
 
-export default function SignUp() {
+export default function SignUpPage() {
   return (
     <>
       <PageMeta
@@ -10,7 +10,7 @@ export default function SignUp() {
         description="Register to EasyRetailer, the retail management system for seamless inventory, sales, and employee management."
       />
       <AuthLayout>
-        <SignUpForm />
+        <SignUp path="/signup" routing="path" />
       </AuthLayout>
     </>
   );
