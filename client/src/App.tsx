@@ -11,7 +11,7 @@ import Avatars from "./pages/UiElements/Avatars";
 import Buttons from "./pages/UiElements/Buttons";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
-import Calendar from "./pages/Calendar";
+// import Calendar from "./pages/Calendar";
 // import BasicTables from "./pages/Inventory/Inventory";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
@@ -21,6 +21,7 @@ import Home from "./pages/Dashboard/Home";
 import SalesHistory from "./pages/Forms/SalesHistory";
 import Inventory from "./components/tables/Inventory";
 import SalesCart from "./components/dashboard/SalesCart";
+import SalesCartHistory from "./components/salesCartHistory/SalesCartHistory";
 
 export default function App() {
   return (
@@ -40,6 +41,8 @@ export default function App() {
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
             <Route path="/sales-history" element={<SalesHistory />} />
+            <Route path="/sales-cart-history" element={<SalesCartHistory />} />
+            
             {/* Tables */}
             <Route path="/inventory" element={<Inventory />} />
 
