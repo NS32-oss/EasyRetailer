@@ -147,7 +147,14 @@ export const getAllSales = asyncHandler(async (req, res) => {
 
 // Get a single sale transaction by ID
 export const getSaleById = asyncHandler(async (req, res) => {
-  const sale = await Sales.findById(req.params.id);
+  const { id } = req.params;
+
+  // Validate the saleId
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new apiError(400, "Invalid sale ID");
+  }
+
+  const sale = await Sales.findById(id);
   if (!sale) {
     throw new apiError(404, "Sale not found");
   }

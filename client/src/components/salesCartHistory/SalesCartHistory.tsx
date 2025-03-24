@@ -1,6 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Notification } from "../toastNotification/Notification";
 
 interface SaleProduct {
@@ -9,6 +8,7 @@ interface SaleProduct {
   unit_price: number;
   discount: number;
   selling_price: number;
+  cost_price: number;
   _id: string;
   brand?: string;
   size?: string;
@@ -27,7 +27,8 @@ interface Sale {
   updatedAt: string;
 }
 
-export default function SalesCartHistory({ saleId }: { saleId: string }) {
+export default function SalesCartHistory() {
+  const { saleId } = useParams<{ saleId: string }>();
   const [sale, setSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,8 +48,8 @@ export default function SalesCartHistory({ saleId }: { saleId: string }) {
         const data = await response.json();
 
         if (data.status === 200) {
-          setSale(data.data.sale);
-          setCustomerMobile(data.data.sale.customer_mobile);
+          setSale(data.data);
+          setCustomerMobile(data.data.customer_mobile);
         } else {
           setError("Failed to fetch sale details");
         }
