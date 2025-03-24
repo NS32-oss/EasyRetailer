@@ -35,11 +35,8 @@ export default function SalesCart() {
 
   // Calculate totals whenever cart items or total discount input change
   useEffect(() => {
-    // Calculate the sum of (unitPrice * quantity - discount) for each item
-    const amount = cartItems.reduce(
-      (sum, item) => sum + (item.unitPrice * item.quantity - item.discount),
-      0
-    );
+    // Calculate the sum of amountPayable for each item
+    const amount = cartItems.reduce((sum, item) => sum + item.amountPayable, 0);
 
     // Apply the additional discount from the total discount input
     const finalAmount = Math.max(0, amount - totalDiscountInput);
@@ -180,7 +177,6 @@ export default function SalesCart() {
   // Function to validate mobile number
   const validateMobileNumber = (mobile: string): boolean => {
     // Check if mobile number is exactly 10 digits
-    alert("mobile number is exactly 10 digits");
     const mobileRegex = /^\d{10}$/;
     return mobileRegex.test(mobile);
   };
@@ -191,34 +187,36 @@ export default function SalesCart() {
       setNotification({ message: "Cart is empty", type: "error" });
       return;
     }
-    alert("cartItems.length === 0");
-    console.log("cartItems.length === 0");
+
     // Validate mobile number
     if (!validateMobileNumber(customerMobile)) {
       setMobileError("Please enter a valid 10-digit mobile number");
-      alert("Please enter a valid 10-digit mobile number");
       return;
     }
 
     setMobileError("");
 
     try {
-      // Send the sale data to your API
+      // Prepare the sale data with correct calculations
       const saleData = {
         products: cartItems.map((item) => ({
           product_id: item.id,
           quantity: item.quantity,
           unit_price: item.unitPrice,
           discount: item.discount,
+          // Make sure selling_price is the final amount for this item only
           selling_price: item.amountPayable,
           cost_price: item.unitPrice,
         })),
+        // Use the calculated totalAmount directly
         total_price: totalAmount,
         final_discount: totalDiscount,
-        payment_method: "Card", // Example payment method
+        payment_method: "Card",
         customer_mobile: customerMobile,
         bill_generated: true,
       };
+
+      console.log("Sending sale data:", saleData);
 
       const response = await fetch("http://localhost:8000/api/v1/sales", {
         method: "POST",
@@ -269,7 +267,7 @@ export default function SalesCart() {
             });
 
             // Still redirect to sales history
-            // window.location.href = `/sales-cart-history/${data.data._id}`;
+            window.location.href = `/sales-cart-history/${data.data._id}`;
           }
         } else {
           console.error("Sale ID not found in response");
@@ -295,22 +293,26 @@ export default function SalesCart() {
     }
 
     try {
-      // Send the sale data to your API
+      // Prepare the sale data with correct calculations
       const saleData = {
         products: cartItems.map((item) => ({
           product_id: item.id,
           quantity: item.quantity,
           unit_price: item.unitPrice,
           discount: item.discount,
+          // Make sure selling_price is the final amount for this item only
           selling_price: item.amountPayable,
           cost_price: item.unitPrice,
         })),
+        // Use the calculated totalAmount directly
         total_price: totalAmount,
         final_discount: totalDiscount,
-        payment_method: "Card", // Example payment method
+        payment_method: "Card",
         customer_mobile: "",
         bill_generated: false,
       };
+
+      console.log("Sending sale data:", saleData);
 
       const response = await fetch("http://localhost:8000/api/v1/sales", {
         method: "POST",
