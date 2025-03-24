@@ -11,6 +11,7 @@ export const createSale = asyncHandler(async (req, res) => {
   const {
     products, // Array of products { product_id, quantity, unit_price, discount, selling_price }
     final_discount, // Final discount on total bill (optional)
+    total_price,
     payment_method, // "Cash", "Card", or "UPI"
     customer_mobile, // Optional for e-bill
     bill_generated, // Optional flag; default is false
@@ -24,19 +25,10 @@ export const createSale = asyncHandler(async (req, res) => {
     throw new apiError(400, "Payment method is required.");
   }
 
-  // Calculate the total price dynamically based on each product's selling price and quantity.
-  let computedTotalPrice = 0;
-  products.forEach((product) => {
-    computedTotalPrice += product.selling_price * product.quantity;
-  });
-
-  // Apply the final discount if provided
-  computedTotalPrice -= final_discount || 0;
-
   // Create the sale transaction document
   const sale = await Sales.create({
     products,
-    total_price: computedTotalPrice,
+    total_price,
     final_discount,
     payment_method,
     customer_mobile,
@@ -57,13 +49,7 @@ export const createSale = asyncHandler(async (req, res) => {
       );
     }
     productRecord.quantity -= item.quantity;
-
-    // // If the updated quantity is 0, remove the product from the database
-    // if (productRecord.quantity === 0) {
-    //   await productRecord.deleteOne();
-    // } else {
-    //   await productRecord.save();
-    // }
+    await productRecord.save();
   }
   calculateDailyStatistics();
   console.log(sale);
