@@ -24,12 +24,14 @@ interface InventoryProps {
   limit?: number; // Optional limit for the number of products to display
 }
 
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
+
 export default function Inventory({ limit }: InventoryProps) {
   const [tableData, setTableData] = useState<Product[]>([]);
 
   useEffect(() => {
     // Fetch data from the API
-    fetch("http://localhost:8000/api/v1/product")
+    fetch(`${API_BASE_URL}/api/v1/product`)
       .then((response) => response.json())
       .then((responseData) => {
         const productsData = responseData.data.products;

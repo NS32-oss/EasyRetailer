@@ -25,6 +25,8 @@ interface Sale {
   __v: number;
 }
 
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
+
 export default function EcommerceMetrics() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   const [totalProductsSold, setTotalProductsSold] = useState(0);
@@ -33,7 +35,7 @@ export default function EcommerceMetrics() {
 
   useEffect(() => {
     // Fetch data from the API
-    fetch("http://localhost:8000/api/v1/sales/")
+    fetch(`${API_BASE_URL}/api/v1/sales`)
       .then((response) => response.json())
       .then((responseData) => {
         const salesData: Sale[] = responseData.data.sales;

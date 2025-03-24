@@ -154,7 +154,7 @@ export const getSaleById = asyncHandler(async (req, res) => {
 //calculate revenue for any time period
 export const getRevenue = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
-
+  console.log(startDate, endDate);
   // Build filter object
   const filter = {};
 
@@ -180,7 +180,6 @@ export const getRevenue = asyncHandler(async (req, res) => {
     );
 });
 
-//http://localhost:8000/api/v1/sales/${saleId}/generate-bill
 
 // Generate a bill for a sale transaction
 export const generateBill = asyncHandler(async (req, res) => {

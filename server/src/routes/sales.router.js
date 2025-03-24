@@ -3,6 +3,8 @@ import {
   createSale,
   getAllSales,
   getSaleById,
+  
+
 } from "../controllers/sales.controller.js";
 import { requireAuth } from "@clerk/clerk-sdk-node"; // Correct import
 

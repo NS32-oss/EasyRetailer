@@ -16,12 +16,14 @@ interface RecentOrdersProps {
   limit?: number; // Optional limit for the number of recent orders to display
 }
 
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
+
 export default function RecentOrders({ limit }: RecentOrdersProps) {
   const [tableData, setTableData] = useState<Sale[]>([]);
 
   useEffect(() => {
     // Fetch data from the API
-    fetch("http://localhost:8000/api/v1/sales")
+    fetch(`${API_BASE_URL}/api/v1/sales`)
       .then((response) => response.json())
       .then((responseData) => {
         const salesData = responseData.data.sales;

@@ -18,6 +18,8 @@ interface CartItem {
   selected: boolean;
 }
 
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
+
 export default function SalesCart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [barcode, setBarcode] = useState("");
@@ -52,7 +54,7 @@ export default function SalesCart() {
     try {
       // Fetch product details from the API
       const response = await fetch(
-        `http://localhost:8000/api/v1/product/barcode/${barcodeValue}`
+        `${API_BASE_URL}/api/v1/product/barcode/${barcodeValue}`
       );
       const data = await response.json();
       console.log("Product data:", data);
@@ -218,7 +220,7 @@ export default function SalesCart() {
 
       console.log("Sending sale data:", saleData);
 
-      const response = await fetch("http://localhost:8000/api/v1/sales", {
+      const response = await fetch(`${API_BASE_URL}/api/v1/sales`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -236,7 +238,7 @@ export default function SalesCart() {
         if (data.data && data.data._id) {
           try {
             const billResponse = await fetch(
-              `http://localhost:8000/api/v1/sales/${data.data._id}/generate-bill`,
+              `${API_BASE_URL}/api/v1/sales/bill/${data.data._id}`,
               {
                 method: "POST",
                 headers: {
@@ -314,7 +316,7 @@ export default function SalesCart() {
 
       console.log("Sending sale data:", saleData);
 
-      const response = await fetch("http://localhost:8000/api/v1/sales", {
+      const response = await fetch(`${API_BASE_URL}/api/v1/sales`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

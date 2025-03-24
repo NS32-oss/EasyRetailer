@@ -27,6 +27,8 @@ interface Sale {
   updatedAt: string;
 }
 
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
+
 export default function SalesCartHistory() {
   const { saleId } = useParams<{ saleId: string }>();
   const [sale, setSale] = useState<Sale | null>(null);
@@ -43,7 +45,7 @@ export default function SalesCartHistory() {
     const fetchSale = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8000/api/v1/sales/${saleId}`
+          `${API_BASE_URL}/api/v1/sales/${saleId}`
         );
         const data = await response.json();
 
@@ -55,7 +57,7 @@ export default function SalesCartHistory() {
           const productDetailsPromises = saleData.products.map(
             (product: SaleProduct) =>
               fetch(
-                `http://localhost:8000/api/v1/product/${product.product_id}`
+                `${API_BASE_URL}/api/v1/product/${product.product_id}`
               )
                 .then((res) => res.json())
                 .then((productData) => ({
@@ -99,7 +101,7 @@ export default function SalesCartHistory() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/sales/${saleId}/generate-bill`,
+        `${API_BASE_URL}/api/v1/sales/bill/${sale._id}`,
         {
           method: "POST",
           headers: {

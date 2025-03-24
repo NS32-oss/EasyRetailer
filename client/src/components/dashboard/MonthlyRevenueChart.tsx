@@ -3,6 +3,8 @@ import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import ChartTab from "../common/ChartTab";
 
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
+
 export default function MonthlyRevenueChart() {
   const [seriesData, setSeriesData] = useState<number[]>([]);
   const [timeRange, setTimeRange] = useState<"Daily" | "Monthly" | "Yearly">(
@@ -46,7 +48,7 @@ export default function MonthlyRevenueChart() {
         );
       }
 
-      const url = new URL("http://localhost:8000/api/v1/statistics");
+      const url = new URL(`${API_BASE_URL}/api/v1/statistics`);
       url.searchParams.append("startDate", startDate);
       url.searchParams.append("endDate", endDate);
       url.searchParams.append("groupBy", range);
