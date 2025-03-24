@@ -21,7 +21,7 @@ import Home from "./pages/Dashboard/Home";
 import SalesHistory from "./pages/Forms/SalesHistory";
 import Inventory from "./components/tables/Inventory";
 import SalesCart from "./components/dashboard/SalesCart";
-import SalesCartHistory from "./components/salesCartHistory/salesCartHistory";
+import SalesCartHistory from "./components/salesCartHistory/SalesCartHistory";
 
 export default function App() {
   return (

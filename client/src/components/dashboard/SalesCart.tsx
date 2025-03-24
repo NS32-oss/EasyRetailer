@@ -173,6 +173,44 @@ export default function SalesCart() {
     }
   };
 
+  const generateBill = async () => {
+    if (!sale) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/sales/${saleId}/generate-bill`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ customer_mobile: customerMobile }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.status === 200) {
+        setNotification({
+          message: "Bill generated and sent successfully",
+          type: "success",
+        });
+
+        // Update the sale object to reflect bill generation
+        setSale((prev) => (prev ? { ...prev, bill_generated: true } : null));
+        setShowBillModal(false);
+      } else {
+        throw new Error(data.message || "Failed to generate bill");
+      }
+    } catch (error) {
+      console.error("Error generating bill:", error);
+      setNotification({
+        message: "Failed to generate bill",
+        type: "error",
+      });
+    }
+  };
+
   // Function to create sale
   const createSale = async (generateBill: boolean) => {
     if (cartItems.length === 0) {
@@ -202,7 +240,7 @@ export default function SalesCart() {
         total_price: totalAmount,
         final_discount: totalDiscount,
         payment_method: "Card", // Example payment method
-        customer_mobile: customerMobile || "0000000000",
+        customer_mobile: customerMobile,
         bill_generated: generateBill,
       };
 
@@ -226,8 +264,8 @@ export default function SalesCart() {
         });
         console.log("Sale ID:", data);
         // Redirect to dashboard or sales history
-        if (data.data  && data.data._id) {
-          window.location.href = `/sales-cart-history/${data.data._id}`
+        if (data.data && data.data._id) {
+          window.location.href = `/sales-cart-history/${data.data._id}`;
         } else {
           console.error("Sale ID not found in response");
           // window.location.href = "/";
@@ -298,6 +336,7 @@ export default function SalesCart() {
               </button>
               <button
                 onClick={() => {
+                  generateBill();
                   createSale(true);
                   setShowBillModal(false);
                 }}
