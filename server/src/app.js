@@ -27,11 +27,7 @@ app.use(limiter);
 // Hardcoded allowed origins (for local development or specific environments)
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://127.0.0.1:5500",
-  "http://localhost:3000",
-  "https://example.com",
-  "https://mytubestream.vercel.app",
-  "https://mytubestream.vercel.app/login.html",
+  "https://easy-retailer.vercel.app",
 ];
 //Allow from all origins
 // const allowedOrigins = ["*"];
