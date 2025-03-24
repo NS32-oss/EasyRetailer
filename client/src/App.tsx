@@ -21,7 +21,7 @@ import Home from "./pages/Dashboard/Home";
 import SalesHistory from "./pages/Forms/SalesHistory";
 import Inventory from "./components/tables/Inventory";
 import SalesCart from "./components/dashboard/SalesCart";
-import SalesCartHistory from "./components/salesCartHistory/SalesCartHistory";
+import SalesCartHistory from "./components/salesCartHistory/salesCartHistory";
 
 export default function App() {
   return (
@@ -41,7 +41,7 @@ export default function App() {
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
             <Route path="/sales-history" element={<SalesHistory />} />
-            <Route path="/sales-cart-history" element={<SalesCartHistory />} />
+            <Route path="/sales-cart-history/:saleId" element={<SalesCartHistory saleId="someSaleId" />} />
             
             {/* Tables */}
             <Route path="/inventory" element={<Inventory />} />
