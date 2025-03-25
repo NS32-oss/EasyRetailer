@@ -83,6 +83,7 @@ export default function SalesCart() {
           type: "success",
         });
       } else {
+        alert("Product not found");
         setNotification({ message: "Product not found", type: "error" });
       }
     } catch (error) {
@@ -362,7 +363,7 @@ export default function SalesCart() {
 
   // Function to handle barcode detection from scanner
   const handleBarcodeDetection = (detectedBarcode: string) => {
-    // alert(`Detected barcode: ${detectedBarcode}`);
+    alert(`Detected barcode: ${detectedBarcode}`);
     addProductByBarcode(detectedBarcode);
     setShowScanner(false);
   };

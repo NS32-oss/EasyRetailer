@@ -49,7 +49,6 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
 
   const handleDetected = (result: any) => {
     const code = result.codeResult.code;
-    alert(`Result: ${result.codeResult}`);
     alert(`Barcode detected: ${code}`);
     setScannedBarcodes((prev) => [...prev, code]);
     onBarcodeDetected(code);
