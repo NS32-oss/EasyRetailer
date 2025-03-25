@@ -1,273 +1,340 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import { BrowserMultiFormatReader } from "@zxing/browser";
+import { useState, useRef, useEffect } from "react"
+import { BrowserMultiFormatReader } from "@zxing/browser"
 
 interface BarcodeScannerProps {
-  onBarcodeDetected?: (barcode: string) => void;
+  onBarcodeDetected?: (barcode: string) => void
 }
 
 interface ScannedBarcode {
-  id: string;
-  value: string;
-  timestamp: Date;
+  id: string
+  value: string
+  timestamp: Date
 }
 
-export default function BarcodeScanner({
-  onBarcodeDetected,
-}: BarcodeScannerProps) {
-  const [scanMode, setScanMode] = useState<"machine" | "mobile">("mobile");
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [scannedBarcodes, setScannedBarcodes] = useState<ScannedBarcode[]>([]);
+export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProps) {
+  // State
+  const [scanMode, setScanMode] = useState<"machine" | "mobile">("mobile")
+  const [isCameraActive, setIsCameraActive] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [scannedBarcodes, setScannedBarcodes] = useState<ScannedBarcode[]>([])
+  const [buffer, setBuffer] = useState<string>("")
+  const [lastKeypressTime, setLastKeypressTime] = useState<number>(0)
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
-  const controlsRef = useRef<{ stop: () => void } | null>(null);
-  const beepRef = useRef<HTMLAudioElement | null>(null);
+  // Refs
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
+  const controlsRef = useRef<{ stop: () => void } | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const recentlyScannedRef = useRef<Set<string>>(new Set())
 
-  // Track already scanned barcodes to avoid duplicates in quick succession
-  const recentlyScannedRef = useRef<Set<string>>(new Set());
+  // Constants
+  const TIMEOUT_MS = 100 // Time window to consider keypresses part of the same barcode
+  const MIN_BARCODE_LENGTH = 5 // Minimum length to consider a valid barcode
 
-  const startScanner = async () => {
-    if (isCameraActive) return; // avoid re-initializing
+  // Handle barcode detection
+  const handleBarcodeDetected = (barcode: string) => {
+    // Check if this barcode was recently scanned (within last 3 seconds)
+    if (!recentlyScannedRef.current.has(barcode)) {
+      console.log("Detected:", barcode)
 
-    setErrorMessage("");
+      // Add to recently scanned set with a timeout to remove after 3 seconds
+      recentlyScannedRef.current.add(barcode)
+      setTimeout(() => {
+        recentlyScannedRef.current.delete(barcode)
+      }, 3000)
+
+      // Add to our list of scanned barcodes
+      setScannedBarcodes((prev) => [
+        {
+          id: Date.now().toString(),
+          value: barcode,
+          timestamp: new Date(),
+        },
+        ...prev,
+      ])
+
+      // Also call the callback if provided
+      if (onBarcodeDetected) {
+        onBarcodeDetected(barcode)
+      }
+
+      // Play beep sound
+      playBeep()
+    }
+  }
+
+  // Process keyboard input buffer
+  const processBuffer = () => {
+    if (buffer.length >= MIN_BARCODE_LENGTH) {
+      handleBarcodeDetected(buffer)
+    }
+    setBuffer("")
+  }
+
+  // Play beep sound
+  const playBeep = () => {
+    try {
+      const audio = new Audio("/beep.mp3")
+      audio.volume = 0.5
+      audio.play().catch((err) => console.error("Beep error:", err))
+    } catch (err) {
+      console.error("Could not play beep sound:", err)
+    }
+  }
+
+  // Start camera for mobile scanning
+  const startCamera = async () => {
+    if (isCameraActive) return // avoid re-initializing
+
+    setErrorMessage("")
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setErrorMessage("Camera access is not supported by this browser");
-      return;
+      setErrorMessage("Camera access is not supported by this browser")
+      return
     }
 
     try {
       const constraints = {
         video: {
-          facingMode: scanMode === "mobile" ? "environment" : "user",
+          facingMode: "environment",
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
-      };
+      }
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
 
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+        videoRef.current.srcObject = stream
 
-        videoRef.current
-          .play()
-          .then(() => {
-            setIsCameraActive(true);
+        try {
+          await videoRef.current.play()
+          setIsCameraActive(true)
 
-            codeReaderRef.current = new BrowserMultiFormatReader();
+          // Initialize barcode reader
+          codeReaderRef.current = new BrowserMultiFormatReader()
 
-            codeReaderRef.current
-              .decodeFromVideoDevice(
-                undefined,
-                videoRef.current!,
-                (result, err) => {
-                  if (result) {
-                    const barcode = result.getText();
-                    console.log("Detected:", err);
-                    // Check if this barcode was recently scanned (within last 3 seconds)
-                    if (!recentlyScannedRef.current.has(barcode)) {
-                      console.log("Detected:", barcode);
-                      playBeep();
+          const controls = await codeReaderRef.current.decodeFromVideoDevice(
+            undefined,
+            videoRef.current,
+            (result, err) => {
+              if (result) {
+                const barcode = result.getText()
+                handleBarcodeDetected(barcode)
+              }
+            },
+          )
 
-                      // Add to recently scanned set with a timeout to remove after 3 seconds
-                      recentlyScannedRef.current.add(barcode);
-                      setTimeout(() => {
-                        recentlyScannedRef.current.delete(barcode);
-                      }, 3000);
-
-                      // Add to our list of scanned barcodes
-                      setScannedBarcodes((prev) => [
-                        {
-                          id: Date.now().toString(),
-                          value: barcode,
-                          timestamp: new Date(),
-                        },
-                        ...prev,
-                      ]);
-
-                      // Also call the callback if provided
-                      if (onBarcodeDetected) {
-                        onBarcodeDetected(barcode);
-                      }
-                    }
-                  }
-                }
-              )
-              .then((controls) => {
-                controlsRef.current = controls;
-              })
-              .catch((err) => {
-                console.error("Error starting scanner:", err);
-                setErrorMessage("Failed to start barcode scanner");
-              });
-          })
-          .catch((err) => {
-            if (err.name === "AbortError") {
-              console.log("Play was interrupted — ignoring.");
-            } else {
-              console.error("Video play error:", err);
-              setErrorMessage("Could not play camera feed");
-            }
-          });
+          controlsRef.current = controls
+        } catch (err) {
+          console.error("Video play error:", err)
+          setErrorMessage("Could not start video stream. Please check camera permissions.")
+        }
       }
     } catch (err) {
-      console.error("Camera init error:", err);
-      setErrorMessage("Could not access camera. Please check permissions.");
+      console.error("Camera init error:", err)
+      setErrorMessage("Could not access camera. Please check permissions.")
     }
-  };
+  }
 
+  // Stop camera
   const stopCamera = () => {
-    controlsRef.current?.stop();
-    controlsRef.current = null;
+    if (controlsRef.current) {
+      controlsRef.current.stop()
+      controlsRef.current = null
+    }
 
     if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
+      const stream = videoRef.current.srcObject as MediaStream
+      stream.getTracks().forEach((track) => track.stop())
+      videoRef.current.srcObject = null
     }
 
-    setIsCameraActive(false);
-  };
+    setIsCameraActive(false)
+  }
 
-  const playBeep = () => {
-    if (beepRef.current) {
-      beepRef.current.volume = 0.5;
-      beepRef.current.currentTime = 0;
-      beepRef.current.play().catch((err) => console.error("Beep error:", err));
-    }
-  };
-
+  // Clear scanned barcodes
   const clearScannedBarcodes = () => {
-    setScannedBarcodes([]);
-  };
+    setScannedBarcodes([])
+  }
 
+  // Format time for display
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+  }
+
+  // Handle scan mode change
   const handleScanModeChange = (mode: "machine" | "mobile") => {
     if (isCameraActive) {
-      stopCamera();
+      stopCamera()
     }
-    setScanMode(mode);
-  };
+    setScanMode(mode)
+  }
 
+  // Effect for keyboard barcode scanner
   useEffect(() => {
-    return () => stopCamera(); // cleanup on unmount
-  }, []);
+    if (scanMode !== "machine") return
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only process if we're in machine mode and the target isn't an input element
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return
+      }
+
+      const currentTime = Date.now()
+
+      // If it's been too long since the last keypress, reset the buffer
+      if (currentTime - lastKeypressTime > TIMEOUT_MS && buffer.length > 0) {
+        processBuffer()
+      }
+
+      // Update the last keypress time
+      setLastKeypressTime(currentTime)
+
+      // Add the key to the buffer if it's a printable character
+      if (e.key.length === 1 || e.key === "Enter") {
+        if (e.key === "Enter") {
+          processBuffer()
+        } else {
+          setBuffer((prev) => prev + e.key)
+
+          // Clear any existing timeout
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+          }
+
+          // Set a new timeout to process the buffer after a delay
+          timeoutRef.current = setTimeout(() => {
+            processBuffer()
+          }, TIMEOUT_MS)
+        }
+      }
+    }
+
+    // Add the event listener
+    window.addEventListener("keydown", handleKeyDown)
+
+    // Clean up
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [scanMode, buffer, lastKeypressTime])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera()
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div className="p-4 max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow">
-      <audio ref={beepRef} src="/beep.mp3" preload="auto" />
+      <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Barcode Scanner</h2>
 
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">
-          Barcode Scanner
-        </h2>
-
-        <div className="flex gap-4 mb-4">
-          <button
-            onClick={() => handleScanModeChange("machine")}
-            className={`flex-1 py-2 px-4 rounded-md ${
-              scanMode === "machine"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white"
-            }`}
-          >
-            Scan with Machine
-          </button>
-          <button
-            onClick={() => handleScanModeChange("mobile")}
-            className={`flex-1 py-2 px-4 rounded-md ${
-              scanMode === "mobile"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white"
-            }`}
-          >
-            Scan with Mobile
-          </button>
-        </div>
-
-        {errorMessage && (
-          <div className="text-red-500 mb-2 p-2 bg-red-100 dark:bg-red-900/30 rounded">
-            {errorMessage}
-          </div>
-        )}
-
-        {scanMode === "mobile" && (
-          <>
-            <div className="flex gap-4 mb-4">
-              {!isCameraActive ? (
-                <button
-                  onClick={startScanner}
-                  className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
-                >
-                  Start Camera
-                </button>
-              ) : (
-                <button
-                  onClick={stopCamera}
-                  className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700"
-                >
-                  Stop Camera
-                </button>
-              )}
-
-              <button
-                onClick={clearScannedBarcodes}
-                className="py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-              >
-                Clear Results
-              </button>
-            </div>
-
-            {isCameraActive && (
-              <div className="relative mb-4">
-                <video
-                  ref={videoRef}
-                  muted
-                  playsInline
-                  className="w-full rounded-lg border border-gray-300 dark:border-gray-600"
-                  style={{ aspectRatio: "16/9", backgroundColor: "black" }}
-                />
-                <div className="absolute inset-0 pointer-events-none border-2 border-red-500 opacity-50 rounded-lg">
-                  <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500"></div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {scanMode === "machine" && (
-          <div className="p-6 border border-gray-300 dark:border-gray-600 rounded-lg text-center">
-            <p className="text-gray-600 dark:text-gray-300 mb-2">
-              Connect your barcode scanner to your computer.
-            </p>
-            <p className="text-gray-600 dark:text-gray-300">
-              When ready, scan barcodes with your device and they will appear
-              below.
-            </p>
-          </div>
-        )}
+      <div className="flex gap-4 mb-4">
+        <button
+          onClick={() => handleScanModeChange("machine")}
+          className={`flex-1 py-2 px-4 rounded-md ${
+            scanMode === "machine"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white"
+          }`}
+        >
+          Scan with Machine
+        </button>
+        <button
+          onClick={() => handleScanModeChange("mobile")}
+          className={`flex-1 py-2 px-4 rounded-md ${
+            scanMode === "mobile"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-white"
+          }`}
+        >
+          Scan with Mobile
+        </button>
       </div>
+
+      {errorMessage && (
+        <div className="text-red-500 mb-4 p-2 bg-red-100 dark:bg-red-900/30 rounded">{errorMessage}</div>
+      )}
+
+      {scanMode === "mobile" && (
+        <div className="mb-4">
+          <div className="flex gap-4 mb-4">
+            {!isCameraActive ? (
+              <button
+                onClick={startCamera}
+                className="flex-1 py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                Start Camera
+              </button>
+            ) : (
+              <button
+                onClick={stopCamera}
+                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Stop Camera
+              </button>
+            )}
+
+            <button
+              onClick={clearScannedBarcodes}
+              className="py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            >
+              Clear Results
+            </button>
+          </div>
+
+          {isCameraActive && (
+            <div className="relative mb-4">
+              <video
+                ref={videoRef}
+                muted
+                playsInline
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600"
+                style={{ aspectRatio: "16/9", backgroundColor: "black" }}
+              />
+              <div className="absolute inset-0 pointer-events-none border-2 border-red-500 opacity-50 rounded-lg">
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-red-500"></div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {scanMode === "machine" && (
+        <div className="p-6 border border-gray-300 dark:border-gray-600 rounded-lg text-center mb-4">
+          <p className="text-gray-600 dark:text-gray-300 mb-2">Connect your barcode scanner to your computer.</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            When ready, scan barcodes with your device and they will appear below.
+          </p>
+        </div>
+      )}
 
       <div className="mt-6">
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-medium text-gray-800 dark:text-white">
-            Scanned Barcodes
-          </h3>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {scannedBarcodes.length}{" "}
-            {scannedBarcodes.length === 1 ? "item" : "items"}
-          </span>
+          <h3 className="text-lg font-medium text-gray-800 dark:text-white">Scanned Barcodes</h3>
+          <div className="flex gap-2 items-center">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {scannedBarcodes.length} {scannedBarcodes.length === 1 ? "item" : "items"}
+            </span>
+            {scannedBarcodes.length > 0 && (
+              <button
+                onClick={clearScannedBarcodes}
+                className="py-1 px-3 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
         {scannedBarcodes.length > 0 ? (
@@ -299,11 +366,7 @@ export default function BarcodeScanner({
                 {scannedBarcodes.map((barcode, index) => (
                   <tr
                     key={barcode.id}
-                    className={
-                      index % 2 === 0
-                        ? "bg-white dark:bg-gray-900"
-                        : "bg-gray-50 dark:bg-gray-800"
-                    }
+                    className={index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"}
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {scannedBarcodes.length - index}
@@ -326,5 +389,6 @@ export default function BarcodeScanner({
         )}
       </div>
     </div>
-  );
+  )
 }
+
