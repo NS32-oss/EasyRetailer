@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
-import { BrowserMultiFormatReader } from "@zxing/browser";
+import React, { useEffect, useRef, useState } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface Props {
   onBarcodeDetected: (barcode: string) => void;
 }
 
 const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
-  const streamControlsRef = useRef<{ stop: () => void } | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scannedBarcodes, setScannedBarcodes] = useState<string[]>([]);
   const [isScanning, setIsScanning] = useState(true);
+
+  const scannerId = "barcode-scanner";
 
   useEffect(() => {
     if (isScanning) {
@@ -24,40 +24,38 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
 
   const startScanner = async () => {
     try {
-      const codeReader = new BrowserMultiFormatReader();
-      codeReaderRef.current = codeReader;
+      const config = { fps: 10, qrbox: 250 };
+      scannerRef.current = new Html5Qrcode(scannerId);
 
-      const devices = await BrowserMultiFormatReader.listVideoInputDevices();
-      const selectedDeviceId = devices[0]?.deviceId;
-
-      if (selectedDeviceId && videoRef.current) {
-        const controls = await codeReader.decodeFromVideoDevice(
-          selectedDeviceId,
-          videoRef.current,
-          (result) => {
-            if (result) {
-              const barcode = result.getText();
-              setScannedBarcodes((prev) => [...prev, barcode]);
-              onBarcodeDetected(barcode);
-            }
-          }
-        );
-        // Save the controls to stop the scanner later
-        streamControlsRef.current = controls;
-      }
-    } catch (error) {
-      console.error("Error starting barcode scanner:", error);
+      await scannerRef.current.start(
+        { facingMode: "environment" }, // back camera on phones
+        config,
+        (decodedText) => {
+          // alert(decodedText);
+          console.log("Barcode detected:", decodedText);
+          setScannedBarcodes((prev) => [...prev, decodedText]);
+          // onBarcodeDetected(decodedText);
+        },
+        (err) => {
+          
+        }
+      );
+    } catch (err) {
+      console.error("Error starting scanner:", err);
     }
   };
 
-  const stopScanner = () => {
-    streamControlsRef.current?.stop();
+  const stopScanner = async () => {
+    if (scannerRef.current?.isScanning) {
+      await scannerRef.current.stop();
+      scannerRef.current.clear();
+    }
     setIsScanning(false);
   };
 
   return (
     <div className="p-4 border rounded-xl shadow-md">
-      <video ref={videoRef} className="w-full max-w-md rounded-lg" />
+      <div id={scannerId} className="w-full max-w-md rounded-lg" />
 
       <button
         onClick={stopScanner}
