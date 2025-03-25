@@ -33,7 +33,7 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
         },
       },
       decoder: {
-        readers: ['code_128_reader', 'ean_reader', 'ean_8_reader'], // Adjust formats here
+        readers: ['code_128_reader'], // Adjust formats here
       },
       locate: true,
     }, (err: any) => {
