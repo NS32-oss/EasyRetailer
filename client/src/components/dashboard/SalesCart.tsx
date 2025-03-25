@@ -2,8 +2,9 @@
 
 import type React from "react";
 import { useEffect, useState } from "react";
-import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
+// import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
 import { Notification } from "../toastNotification/Notification";
+import EnhancedBarcodeScanner from "../barcodeScanner/enhancedBarcodeScanner";
 
 // Define the TypeScript interface for the cart items
 interface CartItem {
@@ -490,7 +491,7 @@ export default function SalesCart() {
 
         {showScanner ? (
           <div className="mb-6">
-            <BarcodeScanner onBarcodeDetected={handleBarcodeDetection} />
+            <EnhancedBarcodeScanner onBarcodeDetected={handleBarcodeDetection} />
           </div>
         ) : (
           <div className="max-w-full overflow-x-auto">
