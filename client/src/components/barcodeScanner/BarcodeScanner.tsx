@@ -1,16 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import Quagga from 'quagga';
 
 interface Props {
   onBarcodeDetected: (barcode: string) => void;
 }
 
 const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
-  const scannerRef = useRef<Html5Qrcode | null>(null);
   const [scannedBarcodes, setScannedBarcodes] = useState<string[]>([]);
   const [isScanning, setIsScanning] = useState(true);
-
-  const scannerId = "barcode-scanner";
+  const scannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isScanning) {
@@ -22,40 +20,53 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
     };
   }, [isScanning]);
 
-  const startScanner = async () => {
-    try {
-      const config = { fps: 10, qrbox: 250 };
-      scannerRef.current = new Html5Qrcode(scannerId);
+  const startScanner = () => {
+    if (!scannerRef.current) return;
 
-      await scannerRef.current.start(
-        { facingMode: "environment" }, // back camera on phones
-        config,
-        (decodedText) => {
-          // alert(decodedText);
-          console.log("Barcode detected:", decodedText);
-          setScannedBarcodes((prev) => [...prev, decodedText]);
-          // onBarcodeDetected(decodedText);
+    Quagga.init({
+      inputStream: {
+        name: 'Live',
+        type: 'LiveStream',
+        target: scannerRef.current,
+        constraints: {
+          facingMode: 'environment', // ✅ back camera on mobile
         },
-        (err) => {
-          
-        }
-      );
-    } catch (err) {
-      console.error("Error starting scanner:", err);
-    }
+      },
+      decoder: {
+        readers: ['code_128_reader', 'ean_reader', 'ean_8_reader'], // Adjust formats here
+      },
+      locate: true,
+    }, (err: any) => {
+      if (err) {
+        console.error('Quagga init error:', err);
+        return;
+      }
+      Quagga.start();
+    });
+    
+    Quagga.onDetected(handleDetected);
   };
 
-  const stopScanner = async () => {
-    if (scannerRef.current?.isScanning) {
-      await scannerRef.current.stop();
-      scannerRef.current.clear();
-    }
+  const handleDetected = (result: any) => {
+    const code = result.codeResult.code;
+    alert(`Barcode detected: ${code}`);
+    setScannedBarcodes((prev) => [...prev, code]);
+    onBarcodeDetected(code);
+  };
+
+  const stopScanner = () => {
+    Quagga.offDetected(handleDetected);
+    Quagga.stop();
     setIsScanning(false);
   };
 
   return (
     <div className="p-4 border rounded-xl shadow-md">
-      <div id={scannerId} className="w-full max-w-md rounded-lg" />
+      <div
+        ref={scannerRef}
+        className="w-full max-w-md h-64 rounded-lg overflow-hidden"
+        id="quagga-scanner"
+      />
 
       <button
         onClick={stopScanner}
