@@ -4,7 +4,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 // import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
 import { Notification } from "../toastNotification/Notification";
-import EnhancedBarcodeScanner from "../barcodeScanner/enhancedBarcodeScanner";
+import EnhancedBarcodeScanner from "../barcodeScanner/EnhancedBarcodeScanner";
 
 // Define the TypeScript interface for the cart items
 interface CartItem {
