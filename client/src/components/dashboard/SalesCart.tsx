@@ -361,8 +361,9 @@ export default function SalesCart() {
 
   // Function to handle barcode detection from scanner
   const handleBarcodeDetection = (detectedBarcode: string) => {
-    addProductByBarcode(detectedBarcode);
-    setShowScanner(false);
+    alert(`Detected barcode: ${detectedBarcode}`);
+    // addProductByBarcode(detectedBarcode);
+    // setShowScanner(false);
   };
 
   return (
