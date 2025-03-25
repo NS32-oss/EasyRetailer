@@ -25,6 +25,7 @@ export default function BarcodeScanner({
 
   const startMobileScanner = async () => {
     setErrorMessage("");
+
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setErrorMessage("Camera access is not supported by this browser");
       return;
@@ -42,6 +43,7 @@ export default function BarcodeScanner({
 
       codeReaderRef.current = new BrowserMultiFormatReader();
 
+      // Continuously decode from the video stream
       const controls = await codeReaderRef.current.decodeFromVideoDevice(
         undefined,
         videoRef.current!,
@@ -50,10 +52,10 @@ export default function BarcodeScanner({
             const barcode = result.getText();
             console.log("Detected barcode:", barcode);
             playBeep();
+            // Call the parent callback each time a barcode is detected
             onBarcodeDetected(barcode);
-            stopCamera();
-            setScanMethod(null);
           }
+          // If 'err' is non-fatal, it just means "no barcode found" at the moment
         }
       );
 
@@ -66,6 +68,7 @@ export default function BarcodeScanner({
     }
   };
 
+  // Manually stop scanning
   const stopCamera = () => {
     scanControlsRef.current?.stop();
     scanControlsRef.current = null;
@@ -86,18 +89,21 @@ export default function BarcodeScanner({
     }
   };
 
+  // Auto-start scanner when "mobile" method is chosen
   useEffect(() => {
     if (scanMethod === "mobile") {
       startMobileScanner();
     }
   }, [scanMethod]);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopCamera();
     };
   }, []);
 
+  // Manual barcode submission (machine method)
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (manualBarcode.trim()) {
@@ -106,17 +112,18 @@ export default function BarcodeScanner({
     }
   };
 
+  // Debug button for simulating a scan
   const simulateBarcodeDetection = () => {
     const mockBarcode = Math.floor(Math.random() * 1000000000000)
       .toString()
       .padStart(12, "0");
     onBarcodeDetected(mockBarcode);
-    stopCamera();
-    setScanMethod(null);
+    // No stop here, just simulating an extra detection
   };
 
   return (
     <div className="p-4 border rounded-lg bg-white shadow-md dark:bg-gray-800 dark:border-gray-700">
+      {/* Beep sound file in public/beep.mp3 */}
       <audio ref={beepRef} src="/beep.mp3" preload="auto" />
       <div className="p-4 border rounded-lg bg-white shadow-md dark:bg-gray-800 dark:border-gray-700">
         <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
@@ -198,6 +205,10 @@ export default function BarcodeScanner({
                 <li>Click "Start Camera" to activate your device's camera</li>
                 <li>Point the camera at the barcode</li>
                 <li>Hold steady until the barcode is detected</li>
+                <li>
+                  Each time a barcode is recognized, you'll hear a beep and see
+                  it logged in the console
+                </li>
               </ol>
             </div>
           </div>
