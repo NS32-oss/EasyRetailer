@@ -25,8 +25,21 @@ const salesSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
-        cost_price: { // Added field: cost price at time of sale
+        cost_price: {
+          // Added field: cost price at time of sale
           type: Number,
+          required: true,
+        },
+        brand: {
+          type: String,
+          required: true,
+        },
+        size: {
+          type: String,
+          required: true,
+        },
+        type: {
+          type: String,
           required: true,
         },
       },

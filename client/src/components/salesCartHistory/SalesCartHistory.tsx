@@ -9,10 +9,10 @@ interface SaleProduct {
   discount: number;
   selling_price: number;
   cost_price: number;
+  brand: string;
+  size: string;
+  type: string;
   _id: string;
-  brand?: string;
-  size?: string;
-  type?: string;
 }
 
 interface Sale {
@@ -44,39 +44,12 @@ export default function SalesCartHistory() {
   useEffect(() => {
     const fetchSale = async () => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/v1/sales/${saleId}`
-        );
+        const response = await fetch(`${API_BASE_URL}/api/v1/sales/${saleId}`);
         const data = await response.json();
 
         if (data.status === 200) {
           const saleData = data.data;
-
-          // Fetch product details for each product in the sale
-          // Fetch product details for each product in the sale
-          const productDetailsPromises = saleData.products.map(
-            (product: SaleProduct) =>
-              fetch(
-                `${API_BASE_URL}/api/v1/product/${product.product_id}`
-              )
-                .then((res) => res.json())
-                .then((productData) => ({
-                  ...productData.data, // Inventory product data
-                  quantity: product.quantity, // Preserve the sale's quantity
-                  unit_price: product.unit_price,
-                  discount: product.discount,
-                  selling_price: product.selling_price,
-                  cost_price: product.cost_price,
-                  _id: product._id,
-                }))
-          );
-
-          const productsWithDetails = await Promise.all(productDetailsPromises);
-
-          setSale({
-            ...saleData,
-            products: productsWithDetails,
-          });
+          setSale(saleData);
           setCustomerMobile(saleData.customer_mobile);
         } else {
           setError("Failed to fetch sale details");
@@ -94,8 +67,6 @@ export default function SalesCartHistory() {
     }
   }, [saleId]);
 
-  // Function to generate bill
-  // Function to generate bill
   const generateBill = async () => {
     if (!sale) return;
 
@@ -119,7 +90,6 @@ export default function SalesCartHistory() {
           type: "success",
         });
 
-        // Update the sale object to reflect bill generation and assign customer mobile
         setSale((prev) =>
           prev
             ? { ...prev, bill_generated: true, customer_mobile: customerMobile }
@@ -274,13 +244,13 @@ export default function SalesCartHistory() {
                 {sale.products.map((product) => (
                   <tr key={product._id}>
                     <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      {product.brand || "N/A"}
+                      {product.brand}
                     </td>
                     <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      {product.size || "N/A"}
+                      {product.size}
                     </td>
                     <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                      {product.type || "N/A"}
+                      {product.type}
                     </td>
                     <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
                       {product.quantity}

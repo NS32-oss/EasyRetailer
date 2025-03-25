@@ -209,6 +209,9 @@ export default function SalesCart() {
           // Make sure selling_price is the final amount for this item only
           selling_price: item.amountPayable,
           cost_price: item.unitPrice,
+          brand: item.brand,
+          size: item.size,
+          type: item.type,
         })),
         // Use the calculated totalAmount directly
         total_price: totalAmount,
