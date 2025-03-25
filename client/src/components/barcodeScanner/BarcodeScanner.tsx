@@ -1,40 +1,42 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { BrowserMultiFormatReader } from "@zxing/browser"
+import { useState, useRef, useEffect } from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 interface BarcodeScannerProps {
-  onBarcodeDetected?: (barcode: string) => void
+  onBarcodeDetected?: (barcode: string) => void;
 }
 
 interface ScannedBarcode {
-  id: string
-  value: string
-  timestamp: Date
+  id: string;
+  value: string;
+  timestamp: Date;
 }
 
-export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProps) {
-  const [scanMode, setScanMode] = useState<"machine" | "mobile">("mobile")
-  const [isCameraActive, setIsCameraActive] = useState(false)
-  const [errorMessage, setErrorMessage] = useState("")
-  const [scannedBarcodes, setScannedBarcodes] = useState<ScannedBarcode[]>([])
+export default function BarcodeScanner({
+  onBarcodeDetected,
+}: BarcodeScannerProps) {
+  const [scanMode, setScanMode] = useState<"machine" | "mobile">("mobile");
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [scannedBarcodes, setScannedBarcodes] = useState<ScannedBarcode[]>([]);
 
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null)
-  const controlsRef = useRef<{ stop: () => void } | null>(null)
-  const beepRef = useRef<HTMLAudioElement | null>(null)
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const codeReaderRef = useRef<BrowserMultiFormatReader | null>(null);
+  const controlsRef = useRef<{ stop: () => void } | null>(null);
+  const beepRef = useRef<HTMLAudioElement | null>(null);
 
   // Track already scanned barcodes to avoid duplicates in quick succession
-  const recentlyScannedRef = useRef<Set<string>>(new Set())
+  const recentlyScannedRef = useRef<Set<string>>(new Set());
 
   const startScanner = async () => {
-    if (isCameraActive) return // avoid re-initializing
+    if (isCameraActive) return; // avoid re-initializing
 
-    setErrorMessage("")
+    setErrorMessage("");
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setErrorMessage("Camera access is not supported by this browser")
-      return
+      setErrorMessage("Camera access is not supported by this browser");
+      return;
     }
 
     try {
@@ -44,122 +46,132 @@ export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProp
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
-      }
+      };
 
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
+        videoRef.current.srcObject = stream;
 
         videoRef.current
           .play()
           .then(() => {
-            setIsCameraActive(true)
+            setIsCameraActive(true);
 
-            codeReaderRef.current = new BrowserMultiFormatReader()
+            codeReaderRef.current = new BrowserMultiFormatReader();
 
             codeReaderRef.current
-              .decodeFromVideoDevice(undefined, videoRef.current!, (result, err) => {
-                if (result) {
-                  const barcode = result.getText()
+              .decodeFromVideoDevice(
+                undefined,
+                videoRef.current!,
+                (result, err) => {
+                  if (result) {
+                    const barcode = result.getText();
+                    console.log("Detected:", err);
+                    // Check if this barcode was recently scanned (within last 3 seconds)
+                    if (!recentlyScannedRef.current.has(barcode)) {
+                      console.log("Detected:", barcode);
+                      playBeep();
 
-                  // Check if this barcode was recently scanned (within last 3 seconds)
-                  if (!recentlyScannedRef.current.has(barcode)) {
-                    console.log("Detected:", barcode)
-                    playBeep()
+                      // Add to recently scanned set with a timeout to remove after 3 seconds
+                      recentlyScannedRef.current.add(barcode);
+                      setTimeout(() => {
+                        recentlyScannedRef.current.delete(barcode);
+                      }, 3000);
 
-                    // Add to recently scanned set with a timeout to remove after 3 seconds
-                    recentlyScannedRef.current.add(barcode)
-                    setTimeout(() => {
-                      recentlyScannedRef.current.delete(barcode)
-                    }, 3000)
+                      // Add to our list of scanned barcodes
+                      setScannedBarcodes((prev) => [
+                        {
+                          id: Date.now().toString(),
+                          value: barcode,
+                          timestamp: new Date(),
+                        },
+                        ...prev,
+                      ]);
 
-                    // Add to our list of scanned barcodes
-                    setScannedBarcodes((prev) => [
-                      {
-                        id: Date.now().toString(),
-                        value: barcode,
-                        timestamp: new Date(),
-                      },
-                      ...prev,
-                    ])
-
-                    // Also call the callback if provided
-                    if (onBarcodeDetected) {
-                      onBarcodeDetected(barcode)
+                      // Also call the callback if provided
+                      if (onBarcodeDetected) {
+                        onBarcodeDetected(barcode);
+                      }
                     }
                   }
                 }
-              })
+              )
               .then((controls) => {
-                controlsRef.current = controls
+                controlsRef.current = controls;
               })
               .catch((err) => {
-                console.error("Error starting scanner:", err)
-                setErrorMessage("Failed to start barcode scanner")
-              })
+                console.error("Error starting scanner:", err);
+                setErrorMessage("Failed to start barcode scanner");
+              });
           })
           .catch((err) => {
             if (err.name === "AbortError") {
-              console.log("Play was interrupted — ignoring.")
+              console.log("Play was interrupted — ignoring.");
             } else {
-              console.error("Video play error:", err)
-              setErrorMessage("Could not play camera feed")
+              console.error("Video play error:", err);
+              setErrorMessage("Could not play camera feed");
             }
-          })
+          });
       }
     } catch (err) {
-      console.error("Camera init error:", err)
-      setErrorMessage("Could not access camera. Please check permissions.")
+      console.error("Camera init error:", err);
+      setErrorMessage("Could not access camera. Please check permissions.");
     }
-  }
+  };
 
   const stopCamera = () => {
-    controlsRef.current?.stop()
-    controlsRef.current = null
+    controlsRef.current?.stop();
+    controlsRef.current = null;
 
     if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream
-      stream.getTracks().forEach((track) => track.stop())
-      videoRef.current.srcObject = null
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
     }
 
-    setIsCameraActive(false)
-  }
+    setIsCameraActive(false);
+  };
 
   const playBeep = () => {
     if (beepRef.current) {
-      beepRef.current.volume = 0.5
-      beepRef.current.currentTime = 0
-      beepRef.current.play().catch((err) => console.error("Beep error:", err))
+      beepRef.current.volume = 0.5;
+      beepRef.current.currentTime = 0;
+      beepRef.current.play().catch((err) => console.error("Beep error:", err));
     }
-  }
+  };
 
   const clearScannedBarcodes = () => {
-    setScannedBarcodes([])
-  }
+    setScannedBarcodes([]);
+  };
 
   const handleScanModeChange = (mode: "machine" | "mobile") => {
     if (isCameraActive) {
-      stopCamera()
+      stopCamera();
     }
-    setScanMode(mode)
-  }
+    setScanMode(mode);
+  };
 
   useEffect(() => {
-    return () => stopCamera() // cleanup on unmount
-  }, [])
+    return () => stopCamera(); // cleanup on unmount
+  }, []);
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-  }
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
 
   return (
     <div className="p-4 max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow">
       <audio ref={beepRef} src="/beep.mp3" preload="auto" />
 
       <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Barcode Scanner</h2>
+        <h2 className="text-xl font-semibold mb-2 text-gray-800 dark:text-white">
+          Barcode Scanner
+        </h2>
 
         <div className="flex gap-4 mb-4">
           <button
@@ -185,7 +197,9 @@ export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProp
         </div>
 
         {errorMessage && (
-          <div className="text-red-500 mb-2 p-2 bg-red-100 dark:bg-red-900/30 rounded">{errorMessage}</div>
+          <div className="text-red-500 mb-2 p-2 bg-red-100 dark:bg-red-900/30 rounded">
+            {errorMessage}
+          </div>
         )}
 
         {scanMode === "mobile" && (
@@ -234,9 +248,12 @@ export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProp
 
         {scanMode === "machine" && (
           <div className="p-6 border border-gray-300 dark:border-gray-600 rounded-lg text-center">
-            <p className="text-gray-600 dark:text-gray-300 mb-2">Connect your barcode scanner to your computer.</p>
+            <p className="text-gray-600 dark:text-gray-300 mb-2">
+              Connect your barcode scanner to your computer.
+            </p>
             <p className="text-gray-600 dark:text-gray-300">
-              When ready, scan barcodes with your device and they will appear below.
+              When ready, scan barcodes with your device and they will appear
+              below.
             </p>
           </div>
         )}
@@ -244,9 +261,12 @@ export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProp
 
       <div className="mt-6">
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-medium text-gray-800 dark:text-white">Scanned Barcodes</h3>
+          <h3 className="text-lg font-medium text-gray-800 dark:text-white">
+            Scanned Barcodes
+          </h3>
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            {scannedBarcodes.length} {scannedBarcodes.length === 1 ? "item" : "items"}
+            {scannedBarcodes.length}{" "}
+            {scannedBarcodes.length === 1 ? "item" : "items"}
           </span>
         </div>
 
@@ -279,7 +299,11 @@ export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProp
                 {scannedBarcodes.map((barcode, index) => (
                   <tr
                     key={barcode.id}
-                    className={index % 2 === 0 ? "bg-white dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"}
+                    className={
+                      index % 2 === 0
+                        ? "bg-white dark:bg-gray-900"
+                        : "bg-gray-50 dark:bg-gray-800"
+                    }
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {scannedBarcodes.length - index}
@@ -302,6 +326,5 @@ export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProp
         )}
       </div>
     </div>
-  )
+  );
 }
-

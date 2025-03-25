@@ -40,7 +40,6 @@ export default function KeyboardBarcodeInput({ onBarcodeDetected, isActive }: Ke
         setBuffer((prev) => {
           // If Enter key is pressed, consider it the end of the barcode
           if (e.key === "Enter") {
-            const newBuffer = prev
             processBuffer()
             return ""
           }
