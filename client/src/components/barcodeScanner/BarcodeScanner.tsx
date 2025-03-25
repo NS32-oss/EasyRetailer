@@ -119,7 +119,7 @@ export default function BarcodeScanner({ onBarcodeDetected }: BarcodeScannerProp
           const controls = await codeReaderRef.current.decodeFromVideoDevice(
             undefined,
             videoRef.current,
-            (result, err) => {
+            (result) => {
               if (result) {
                 const barcode = result.getText()
                 handleBarcodeDetected(barcode)
