@@ -4,7 +4,6 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-import { useDropzone } from "react-dropzone";
 
 interface Brand {
   _id: string;
@@ -31,7 +30,8 @@ export default function InventoryForm() {
   });
 
   // Dropdown data
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]); // Initialize as an empty array
+
   const [filteredBrands, setFilteredBrands] = useState<Brand[]>([]);
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
   const [newBrand, setNewBrand] = useState(false);
@@ -74,14 +74,13 @@ export default function InventoryForm() {
   // Filter brands based on input
   useEffect(() => {
     if (formData.brand) {
-      console.log("brands", brands);
-      const filtered = brands.filter((brand) =>
+      const filtered = (brands || []).filter((brand) =>
         brand.name.toLowerCase().includes(formData.brand.toLowerCase())
       );
       setFilteredBrands(filtered);
       setNewBrand(filtered.length === 0 && formData.brand.trim() !== "");
     } else {
-      setFilteredBrands(brands);
+      setFilteredBrands(brands || []);
       setNewBrand(false);
     }
   }, [formData.brand, brands]);
@@ -128,8 +127,9 @@ export default function InventoryForm() {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/brand`);
       const data = await response.json();
+      // console.log("Brands data:", data);
       if (data.status === 200) {
-        setBrands(data.data.brands);
+        setBrands(data.data);
       }
     } catch (error) {
       console.error("Error fetching brands:", error);
@@ -196,10 +196,12 @@ export default function InventoryForm() {
       });
 
       const data = await response.json();
-
+      console.log("Brand creation response:", data);
       if (data.status === 201) {
         // Add the new brand to the list
-        setBrands((prev) => [...prev, data.data.brand]);
+        setBrands((prev) =>
+          Array.isArray(prev) ? [...prev, data.data] : [data.data]
+        );
         setNewBrand(false);
       } else {
         setError("Failed to create new brand");
@@ -287,20 +289,6 @@ export default function InventoryForm() {
     }
   };
 
-  // Dropzone for image upload (optional feature)
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      console.log("Files dropped:", acceptedFiles);
-      // Handle file uploads here
-    },
-    accept: {
-      "image/png": [],
-      "image/jpeg": [],
-      "image/webp": [],
-      "image/svg+xml": [],
-    },
-  });
-
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -342,7 +330,7 @@ export default function InventoryForm() {
                 filteredBrands.map((brand) => (
                   <div
                     key={brand._id}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700"
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 dark:text-white"
                     onClick={() => handleBrandSelect(brand.name)}
                   >
                     {brand.name}
@@ -401,7 +389,7 @@ export default function InventoryForm() {
                 filteredTypes.map((type) => (
                   <div
                     key={type._id}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700"
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 dark:text-white"
                     onClick={() => handleTypeSelect(type.name)}
                   >
                     {type.name}
@@ -414,9 +402,7 @@ export default function InventoryForm() {
               )}
 
               {newType && (
-                <div
-                  className="px-4 py-2 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30"
-                >
+                <div className="px-4 py-2 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30">
                   + Save "{formData.type}" as new product type
                 </div>
               )}
@@ -475,60 +461,6 @@ export default function InventoryForm() {
             step={0.01}
             className="w-full"
           />
-        </div>
-
-        {/* Optional: Image Upload */}
-        <div>
-          <Label>Product Image (Optional)</Label>
-          <div className="transition border border-gray-300 border-dashed cursor-pointer dark:hover:border-brand-500 dark:border-gray-700 rounded-xl hover:border-brand-500">
-            <div
-              {...getRootProps()}
-              className={`dropzone rounded-xl border-dashed border-gray-300 p-7
-                ${
-                  isDragActive
-                    ? "border-brand-500 bg-gray-100 dark:bg-gray-800"
-                    : "border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
-                }
-              `}
-            >
-              {/* Hidden Input */}
-              <input {...getInputProps()} />
-
-              <div className="flex flex-col items-center m-0">
-                {/* Icon Container */}
-                <div className="mb-4 flex justify-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                    <svg
-                      className="fill-current"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 29 28"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        clipRule="evenodd"
-                        d="M14.5019 3.91699C14.2852 3.91699 14.0899 4.00891 13.953 4.15589L8.57363 9.53186C8.28065 9.82466 8.2805 10.2995 8.5733 10.5925C8.8661 10.8855 9.34097 10.8857 9.63396 10.5929L13.7519 6.47752V18.667C13.7519 19.0812 14.0877 19.417 14.5019 19.417C14.9161 19.417 15.2519 19.0812 15.2519 18.667V6.48234L19.3653 10.5929C19.6583 10.8857 20.1332 10.8855 20.426 10.5925C20.7188 10.2995 20.7186 9.82463 20.4256 9.53184L15.0838 4.19378C14.9463 4.02488 14.7367 3.91699 14.5019 3.91699ZM5.91626 18.667C5.91626 18.2528 5.58047 17.917 5.16626 17.917C4.75205 17.917 4.41626 18.2528 4.41626 18.667V21.8337C4.41626 23.0763 5.42362 24.0837 6.66626 24.0837H22.3339C23.5766 24.0837 24.5839 23.0763 24.5839 21.8337V18.667C24.5839 18.2528 24.2482 17.917 23.8339 17.917C23.4197 17.917 23.0839 18.2528 23.0839 18.667V21.8337C23.0839 22.2479 22.7482 22.5837 22.3339 22.5837H6.66626C6.25205 22.5837 5.91626 22.2479 5.91626 21.8337V18.667Z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Text Content */}
-                <h4 className="mb-2 font-semibold text-gray-800 dark:text-white/90">
-                  {isDragActive ? "Drop Files Here" : "Drag & Drop Files Here"}
-                </h4>
-
-                <span className="text-center mb-3 block w-full max-w-[290px] text-sm text-gray-700 dark:text-gray-400">
-                  Drag and drop your product image or browse
-                </span>
-
-                <span className="font-medium underline text-sm text-blue-500">
-                  Browse File
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Submit Button */}

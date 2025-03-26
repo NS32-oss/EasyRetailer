@@ -1,6 +1,8 @@
 // fetch all brands
 import Brand from "../models/brand.model.js";
 import asyncHandler from "../utils/asyncHandler.js";
+import apiResponse from "../utils/apiResponse.js";
+
 
 export const fetchBrands = asyncHandler(async (req, res) => {
   const brands = await Brand.find();
