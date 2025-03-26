@@ -462,14 +462,10 @@ export default function SalesCart() {
                   </button>
                 </form>
                 <button
-                  onClick={() => setShowScanner((prev) => !prev)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 ${
-                    showScanner
-                      ? "bg-gray-600 hover:bg-gray-700"
-                      : "bg-blue-600 hover:bg-blue-700"
-                  } text-white rounded-md`}
+                  onClick={() => setShowScanner(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  {showScanner ? "Close Scanner" : "Scan Barcode"}
+                  Scan Barcode
                 </button>
               </>
             ) : (
@@ -494,7 +490,11 @@ export default function SalesCart() {
           </div>
         </div>
 
-        
+        {showScanner ? (
+          <div className="mb-6">
+            <BarcodeScanner onBarcodeDetected={handleBarcodeDetection} />
+          </div>
+        ) : (
           <div className="max-w-full overflow-x-auto">
             <div className="min-w-[800px]">
               <table className="table-auto w-full">
@@ -612,7 +612,7 @@ export default function SalesCart() {
               </table>
             </div>
           </div>
-        
+        )}
 
         {/* Summary Section */}
         {cartItems.length > 0 && (
@@ -650,11 +650,6 @@ export default function SalesCart() {
                 Create Sale
               </button>
             </div>
-          </div>
-        )}
-        {showScanner && (
-          <div className="mb-6">
-            <BarcodeScanner onBarcodeDetected={handleBarcodeDetection} />
           </div>
         )}
       </div>
