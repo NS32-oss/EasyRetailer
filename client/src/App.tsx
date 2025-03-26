@@ -22,6 +22,7 @@ import SalesHistory from "./pages/Forms/SalesHistory";
 import Inventory from "./components/tables/Inventory";
 import SalesCart from "./components/dashboard/SalesCart";
 import SalesCartHistory from "./components/salesCartHistory/SalesCartHistory";
+import Barcode from "./components/charts/bar/BarChartOne";
 
 export default function App() {
   return (
@@ -45,7 +46,7 @@ export default function App() {
 
             {/* Tables */}
             <Route path="/inventory" element={<Inventory />} />
-
+            <Route path="/scanner" element={<Barcode />} />
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/avatars" element={<Avatars />} />
