@@ -57,11 +57,13 @@ import businessRouter from "./routes/business.router.js";
 import productRouter from "./routes/product.router.js";
 import salesRouter from "./routes/sales.router.js";
 import statisticsRouter from "./routes/statistics.router.js";
+import brandRouter from "./routes/brand.router.js";
 
 app.use("/api/v1/business", businessRouter);
 app.use("/api/v1/product", productRouter);
 app.use("/api/v1/sales", salesRouter);
 app.use("/api/v1/statistics", statisticsRouter);
+app.use("/api/v1/brand", brandRouter);
 
 // Centralized error handling middleware
 app.use((err, req, res, next) => {

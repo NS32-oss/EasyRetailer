@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect, useRef } from "react"
-import Label from "../form/Label"
-import Input from "../form/input/InputField"
-import { useDropzone } from "react-dropzone"
+import type React from "react";
+import { useState, useEffect, useRef } from "react";
+import Label from "../form/Label";
+import Input from "../form/input/InputField";
+import { useDropzone } from "react-dropzone";
 
 interface Brand {
-  _id: string
-  name: string
+  _id: string;
+  name: string;
 }
 
 interface ProductType {
-  _id: string
-  name: string
+  _id: string;
+  name: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_APP_API_URL
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
 
 export default function InventoryForm() {
   // Form state
@@ -28,88 +28,110 @@ export default function InventoryForm() {
     quantity: 1,
     cost_price: 0,
     unit_price: 0,
-  })
+  });
 
   // Dropdown data
-  const [brands, setBrands] = useState<Brand[]>([])
-  const [filteredBrands, setFilteredBrands] = useState<Brand[]>([])
-  const [showBrandDropdown, setShowBrandDropdown] = useState(false)
-  const [newBrand, setNewBrand] = useState(false)
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [filteredBrands, setFilteredBrands] = useState<Brand[]>([]);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [newBrand, setNewBrand] = useState(false);
 
-  const [productTypes, setProductTypes] = useState<ProductType[]>([])
-  const [filteredTypes, setFilteredTypes] = useState<ProductType[]>([])
-  const [showTypeDropdown, setShowTypeDropdown] = useState(false)
-  const [newType, setNewType] = useState(false)
+  const [productTypes, setProductTypes] = useState<ProductType[]>([]);
+  const [filteredTypes, setFilteredTypes] = useState<ProductType[]>([]);
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const [newType, setNewType] = useState(false);
 
   // Size options
-  const sizeOptions = ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL", "5XL", "6XL", "7XL"]
+  const sizeOptions = [
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL",
+    "3XL",
+    "4XL",
+    "5XL",
+    "6XL",
+    "7XL",
+  ];
 
   // Loading and error states
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Refs for dropdowns
-  const brandDropdownRef = useRef<HTMLDivElement>(null)
-  const typeDropdownRef = useRef<HTMLDivElement>(null)
+  const brandDropdownRef = useRef<HTMLDivElement>(null);
+  const typeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch brands and product types on component mount
   useEffect(() => {
-    fetchBrands()
-    fetchProductTypes()
-  }, [])
+    fetchBrands();
+    fetchProductTypes();
+  }, []);
 
   // Filter brands based on input
   useEffect(() => {
     if (formData.brand) {
-      const filtered = brands.filter((brand) => brand.name.toLowerCase().includes(formData.brand.toLowerCase()))
-      setFilteredBrands(filtered)
-      setNewBrand(filtered.length === 0 && formData.brand.trim() !== "")
+      const filtered = brands.filter((brand) =>
+        brand.name.toLowerCase().includes(formData.brand.toLowerCase())
+      );
+      setFilteredBrands(filtered);
+      setNewBrand(filtered.length === 0 && formData.brand.trim() !== "");
     } else {
-      setFilteredBrands(brands)
-      setNewBrand(false)
+      setFilteredBrands(brands);
+      setNewBrand(false);
     }
-  }, [formData.brand, brands])
+  }, [formData.brand, brands]);
 
   // Filter product types based on input
   useEffect(() => {
     if (formData.type) {
-      const filtered = productTypes.filter((type) => type.name.toLowerCase().includes(formData.type.toLowerCase()))
-      setFilteredTypes(filtered)
-      setNewType(filtered.length === 0 && formData.type.trim() !== "")
+      const filtered = productTypes.filter((type) =>
+        type.name.toLowerCase().includes(formData.type.toLowerCase())
+      );
+      setFilteredTypes(filtered);
+      setNewType(filtered.length === 0 && formData.type.trim() !== "");
     } else {
-      setFilteredTypes(productTypes)
-      setNewType(false)
+      setFilteredTypes(productTypes);
+      setNewType(false);
     }
-  }, [formData.type, productTypes])
+  }, [formData.type, productTypes]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (brandDropdownRef.current && !brandDropdownRef.current.contains(event.target as Node)) {
-        setShowBrandDropdown(false)
+      if (
+        brandDropdownRef.current &&
+        !brandDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowBrandDropdown(false);
       }
-      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target as Node)) {
-        setShowTypeDropdown(false)
+      if (
+        typeDropdownRef.current &&
+        !typeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowTypeDropdown(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch brands from API
   const fetchBrands = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/brands`)
-      const data = await response.json()
+      const response = await fetch(`${API_BASE_URL}/api/v1/brand`);
+      const data = await response.json();
       if (data.status === 200) {
-        setBrands(data.data.brands)
+        setBrands(data.data.brands);
       }
     } catch (error) {
-      console.error("Error fetching brands:", error)
+      console.error("Error fetching brands:", error);
       // If API fails, use some default brands
       setBrands([
         { _id: "1", name: "Gucci" },
@@ -117,121 +139,118 @@ export default function InventoryForm() {
         { _id: "3", name: "Zara" },
         { _id: "4", name: "Nike" },
         { _id: "5", name: "Adidas" },
-      ])
+      ]);
     }
-  }
+  };
 
   // Fetch product types from API
   const fetchProductTypes = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/product-types`)
-      const data = await response.json()
-      if (data.status === 200) {
-        setProductTypes(data.data.types)
-      }
-    } catch (error) {
-      console.error("Error fetching product types:", error)
-      // If API fails, use some default types
-      setProductTypes([
-        { _id: "1", name: "Shirt" },
-        { _id: "2", name: "Pant" },
-        { _id: "3", name: "Trouser" },
-        { _id: "4", name: "Handkerchief" },
-        { _id: "5", name: "Blazer" },
-        { _id: "6", name: "Sweater" },
-      ])
-    }
-  }
+    setProductTypes([
+      { _id: "1", name: "Shirt" },
+      { _id: "2", name: "Pant" },
+      { _id: "3", name: "Trouser" },
+      { _id: "4", name: "Handkerchief" },
+      { _id: "5", name: "Blazer" },
+      { _id: "6", name: "Sweater" },
+    ]);
+  };
 
   // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "quantity" || name === "cost_price" || name === "unit_price" ? Number(value) : value,
-    }))
-  }
+      [name]:
+        name === "quantity" || name === "cost_price" || name === "unit_price"
+          ? Number(value)
+          : value,
+    }));
+  };
 
   // Handle brand selection
   const handleBrandSelect = (brandName: string) => {
-    setFormData((prev) => ({ ...prev, brand: brandName }))
-    setShowBrandDropdown(false)
-  }
+    setFormData((prev) => ({ ...prev, brand: brandName }));
+    setShowBrandDropdown(false);
+  };
 
   // Handle type selection
   const handleTypeSelect = (typeName: string) => {
-    setFormData((prev) => ({ ...prev, type: typeName }))
-    setShowTypeDropdown(false)
-  }
+    setFormData((prev) => ({ ...prev, type: typeName }));
+    setShowTypeDropdown(false);
+  };
 
   // Create new brand
   const handleCreateBrand = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/brands`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/brand`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ name: formData.brand }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.status === 201) {
         // Add the new brand to the list
-        setBrands((prev) => [...prev, data.data.brand])
-        setNewBrand(false)
+        setBrands((prev) => [...prev, data.data.brand]);
+        setNewBrand(false);
       } else {
-        setError("Failed to create new brand")
+        setError("Failed to create new brand");
       }
     } catch (error) {
-      console.error("Error creating brand:", error)
-      setError("Failed to create new brand")
+      console.error("Error creating brand:", error);
+      setError("Failed to create new brand");
 
       // For demo purposes, add the brand locally if API fails
-      const newBrandObj = { _id: Date.now().toString(), name: formData.brand }
-      setBrands((prev) => [...prev, newBrandObj])
-      setNewBrand(false)
+      const newBrandObj = { _id: Date.now().toString(), name: formData.brand };
+      setBrands((prev) => [...prev, newBrandObj]);
+      setNewBrand(false);
     }
-  }
+  };
 
   // Create new product type
-  const handleCreateType = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/product-types`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name: formData.type }),
-      })
+  // const handleCreateType = async () => {
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/api/v1/product-types`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({ name: formData.type }),
+  //     });
 
-      const data = await response.json()
+  //     const data = await response.json();
 
-      if (data.status === 201) {
-        // Add the new type to the list
-        setProductTypes((prev) => [...prev, data.data.type])
-        setNewType(false)
-      } else {
-        setError("Failed to create new product type")
-      }
-    } catch (error) {
-      console.error("Error creating product type:", error)
-      setError("Failed to create new product type")
+  //     if (data.status === 201) {
+  //       // Add the new type to the list
+  //       setProductTypes((prev) => [...prev, data.data.type]);
+  //       setNewType(false);
+  //     } else {
+  //       setError("Failed to create new product type");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error creating product type:", error);
+  //     setError("Failed to create new product type");
 
-      // For demo purposes, add the type locally if API fails
-      const newTypeObj = { _id: Date.now().toString(), name: formData.type }
-      setProductTypes((prev) => [...prev, newTypeObj])
-      setNewType(false)
-    }
-  }
+  //     // For demo purposes, add the type locally if API fails
+  //     const newTypeObj = { _id: Date.now().toString(), name: formData.type };
+  //     setProductTypes((prev) => [...prev, newTypeObj]);
+  //     setNewType(false);
+  //   }
+  // };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError("")
-    setSuccess("")
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/product`, {
@@ -240,12 +259,12 @@ export default function InventoryForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.status === 201) {
-        setSuccess("Product added successfully!")
+        setSuccess("Product added successfully!");
         // Reset form
         setFormData({
           brand: "",
@@ -255,22 +274,22 @@ export default function InventoryForm() {
           quantity: 1,
           cost_price: 0,
           unit_price: 0,
-        })
+        });
       } else {
-        setError(data.message || "Failed to add product")
+        setError(data.message || "Failed to add product");
       }
     } catch (error) {
-      console.error("Error adding product:", error)
-      setError("Failed to add product. Please try again.")
+      console.error("Error adding product:", error);
+      setError("Failed to add product. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Dropzone for image upload (optional feature)
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
-      console.log("Files dropped:", acceptedFiles)
+      console.log("Files dropped:", acceptedFiles);
       // Handle file uploads here
     },
     accept: {
@@ -279,18 +298,22 @@ export default function InventoryForm() {
       "image/webp": [],
       "image/svg+xml": [],
     },
-  })
+  });
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">Add New Product</h3>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            Add New Product
+          </h3>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md dark:bg-red-900/30 dark:text-red-400">{error}</div>
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md dark:bg-red-900/30 dark:text-red-400">
+          {error}
+        </div>
       )}
 
       {success && (
@@ -325,7 +348,9 @@ export default function InventoryForm() {
                   </div>
                 ))
               ) : (
-                <div className="px-4 py-2 text-gray-500 dark:text-gray-400">No brands found</div>
+                <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                  No brands found
+                </div>
               )}
 
               {newBrand && (
@@ -382,13 +407,14 @@ export default function InventoryForm() {
                   </div>
                 ))
               ) : (
-                <div className="px-4 py-2 text-gray-500 dark:text-gray-400">No product types found</div>
+                <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                  No product types found
+                </div>
               )}
 
               {newType && (
                 <div
                   className="px-4 py-2 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30"
-                  onClick={handleCreateType}
                 >
                   + Save "{formData.type}" as new product type
                 </div>
@@ -431,7 +457,7 @@ export default function InventoryForm() {
             value={formData.cost_price}
             onChange={handleInputChange}
             min="0"
-            step="0.01"
+            step={0.01}
             className="w-full"
           />
         </div>
@@ -445,7 +471,7 @@ export default function InventoryForm() {
             value={formData.unit_price}
             onChange={handleInputChange}
             min="0"
-            step="0.01"
+            step={0.01}
             className="w-full"
           />
         </div>
@@ -496,7 +522,9 @@ export default function InventoryForm() {
                   Drag and drop your product image or browse
                 </span>
 
-                <span className="font-medium underline text-sm text-blue-500">Browse File</span>
+                <span className="font-medium underline text-sm text-blue-500">
+                  Browse File
+                </span>
               </div>
             </div>
           </div>
@@ -516,6 +544,5 @@ export default function InventoryForm() {
         </div>
       </form>
     </div>
-  )
+  );
 }
-
