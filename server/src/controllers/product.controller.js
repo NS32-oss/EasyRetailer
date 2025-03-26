@@ -24,21 +24,19 @@ export const createProduct = asyncHandler(async (req, res) => {
     throw new apiError(400, error.details[0].message);
   }
 
-  let { brand, size, colour, type, subtype, quantity, cost_price, unit_price } =
-    value;
-
+  let { brand, size, type, subtype, quantity, cost_price, unit_price } = value;
+  console.log(value);
   // Convert to lowercase for case-insensitive matching
   brand = brand.toLowerCase();
   size = size.toLowerCase();
   type = type.toLowerCase();
   subtype = subtype.toLowerCase();
-  colour = colour.toLowerCase();
-
+  
   // Check for existing product and update atomically
   const existingProduct = await Product.findOneAndUpdate(
     { brand, size, type },
     {
-      $set: { cost_price, unit_price, colour, subtype },
+      $set: { cost_price, unit_price, subtype },
       $inc: { quantity },
     },
     { new: true }

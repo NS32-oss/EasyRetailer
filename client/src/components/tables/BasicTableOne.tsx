@@ -74,6 +74,7 @@ export default function InventoryForm() {
   // Filter brands based on input
   useEffect(() => {
     if (formData.brand) {
+      console.log("brands", brands);
       const filtered = brands.filter((brand) =>
         brand.name.toLowerCase().includes(formData.brand.toLowerCase())
       );
