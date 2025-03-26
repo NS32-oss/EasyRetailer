@@ -12,3 +12,5 @@ const router = Router();
 
 
 router.route("/").get(fetchBrands).post(createBrand);
+
+export default router;
