@@ -4,6 +4,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
+import { PlusIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 
 interface Brand {
   _id: string;
@@ -468,11 +469,11 @@ export default function InventoryForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium ${
+            className={`px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium flex items-center gap-2 ${
               loading ? "opacity-70 cursor-not-allowed" : ""
             }`}
           >
-            {loading ? "Adding Product..." : "Add Product"}
+            <PlusIcon className="h-5 w-5" /> Add Product
           </button>
         </div>
       </form>
