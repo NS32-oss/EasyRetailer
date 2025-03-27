@@ -460,9 +460,9 @@ export default function SalesCart() {
                   />
                   <button
                     type="submit"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 whitespace-nowrap"
                   >
-                    <PlusIcon className="h-5 w-5" /> Add Product
+                    <PlusIcon className="h-4 w-4" /> Add Product
                   </button>
                 </form>
                 <div className="flex gap-2">
@@ -477,13 +477,13 @@ export default function SalesCart() {
                   <button
                     onClick={deleteSelectedItems}
                     disabled={!cartItems.some((item) => item.selected)}
-                    className={`w-1/2 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 ${
+                    className={`w-1/2 inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 whitespace-nowrap ${
                       !cartItems.some((item) => item.selected)
                         ? "opacity-50 cursor-not-allowed"
                         : ""
                     }`}
                   >
-                    <TrashIcon className="h-5 w-5" /> Delete Selected
+                    <TrashIcon className="h-4 w-4" /> Delete Selected
                   </button>
                 </div>
               </>
@@ -491,9 +491,9 @@ export default function SalesCart() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowScanner(false)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 whitespace-nowrap"
                 >
-                  <XMarkIcon className="h-5 w-5" /> Cancel Scan
+                  <XMarkIcon className="h-4 w-4" /> Cancel Scan
                 </button>
               </div>
             )}
