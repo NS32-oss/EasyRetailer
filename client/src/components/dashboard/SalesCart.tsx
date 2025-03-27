@@ -5,12 +5,10 @@ import { useEffect, useState } from "react";
 // import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
 import { Notification } from "../toastNotification/Notification";
 import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
-import {
-  QrCodeIcon, // Commented out as it is not exported
-  TrashIcon,
-  PlusIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBarcode } from "@fortawesome/free-solid-svg-icons";
+
+import { TrashIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 // Define the TypeScript interface for the cart items
 interface CartItem {
@@ -472,9 +470,9 @@ export default function SalesCart() {
                     onClick={() => setShowScanner(true)}
                     className="w-1/2 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    <QrCodeIcon className="h-5 w-5" /> Scan Barcode
-                    {/* Replace BarcodeScannerIcon with a valid icon or remove it */}
+                    <FontAwesomeIcon icon={faBarcode} className="h-5 w-5" />{" "}
                     Scan Barcode
+                  </button>
                   <button
                     onClick={deleteSelectedItems}
                     disabled={!cartItems.some((item) => item.selected)}
