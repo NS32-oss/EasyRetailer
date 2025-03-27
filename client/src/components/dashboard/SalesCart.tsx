@@ -487,12 +487,14 @@ export default function SalesCart() {
                 </div>
               </>
             ) : (
-              <button
-                onClick={() => setShowScanner(false)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
-              >
-                <XMarkIcon className="h-5 w-5" /> Cancel Scan
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowScanner(false)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
+                >
+                  <XMarkIcon className="h-5 w-5" /> Cancel Scan
+                </button>
+              </div>
             )}
           </div>
         </div>
