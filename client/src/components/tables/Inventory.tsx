@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "../ui/table";
 import InventoryForm from "./BasicTableOne";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 // Define the TypeScript interface for the table rows
 interface Product {
@@ -79,7 +80,7 @@ export default function Inventory({ limit }: InventoryProps) {
             onClick={() => setShowInventoryForm(true)}
             className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
           >
-            Add Inventory
+            <PlusIcon className="h-5 w-5" /> Add Inventory
           </button>
         </div>
       </div>
@@ -88,9 +89,9 @@ export default function Inventory({ limit }: InventoryProps) {
           <InventoryForm />
           <button
             onClick={() => setShowInventoryForm(false)}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center gap-2"
           >
-            Close Form
+            <XMarkIcon className="h-5 w-5" /> Close Form
           </button>
         </div>
       )}
