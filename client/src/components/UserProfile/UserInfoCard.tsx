@@ -26,19 +26,10 @@ export default function UserInfoCard() {
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                First Name
+                Full Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user?.firstName || "N/A"}
-              </p>
-            </div>
-
-            <div>
-              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Last Name
-              </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {user?.lastName || "N/A"}
               </p>
             </div>
 
@@ -65,7 +56,9 @@ export default function UserInfoCard() {
                 Bio
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {typeof user?.publicMetadata?.bio === 'string' ? user.publicMetadata.bio : "N/A"}
+                {typeof user?.publicMetadata?.bio === "string"
+                  ? user.publicMetadata.bio
+                  : "N/A"}
               </p>
             </div>
           </div>
@@ -116,26 +109,48 @@ export default function UserInfoCard() {
                     <Label>Facebook</Label>
                     <Input
                       type="text"
-                      value={typeof user?.publicMetadata?.facebook === 'string' ? user.publicMetadata.facebook : ""}
+                      value={
+                        typeof user?.publicMetadata?.facebook === "string"
+                          ? user.publicMetadata.facebook
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <Label>X.com</Label>
-                    <Input type="text" value={typeof user?.publicMetadata?.twitter === 'string' ? user.publicMetadata.twitter : ""} />
+                    <Input
+                      type="text"
+                      value={
+                        typeof user?.publicMetadata?.twitter === "string"
+                          ? user.publicMetadata.twitter
+                          : ""
+                      }
+                    />
                   </div>
 
                   <div>
                     <Label>Linkedin</Label>
                     <Input
                       type="text"
-                      value={typeof user?.publicMetadata?.linkedin === 'string' ? user.publicMetadata.linkedin : ""}
+                      value={
+                        typeof user?.publicMetadata?.linkedin === "string"
+                          ? user.publicMetadata.linkedin
+                          : ""
+                      }
                     />
                   </div>
 
                   <div>
                     <Label>Instagram</Label>
-                    <Input type="text" value={typeof user?.publicMetadata?.instagram === 'string' ? user.publicMetadata.instagram : ""} />
+                    <Input
+                      type="text"
+                      value={
+                        typeof user?.publicMetadata?.instagram === "string"
+                          ? user.publicMetadata.instagram
+                          : ""
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -157,17 +172,30 @@ export default function UserInfoCard() {
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Email Address</Label>
-                    <Input type="text" value={user?.primaryEmailAddress?.emailAddress || ""} />
+                    <Input
+                      type="text"
+                      value={user?.primaryEmailAddress?.emailAddress || ""}
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Phone</Label>
-                    <Input type="text" value={user?.phoneNumbers[0]?.phoneNumber || ""} />
+                    <Input
+                      type="text"
+                      value={user?.phoneNumbers[0]?.phoneNumber || ""}
+                    />
                   </div>
 
                   <div className="col-span-2">
                     <Label>Bio</Label>
-                    <Input type="text" value={typeof user?.publicMetadata?.bio === 'string' ? user.publicMetadata.bio : ""} />
+                    <Input
+                      type="text"
+                      value={
+                        typeof user?.publicMetadata?.bio === "string"
+                          ? user.publicMetadata.bio
+                          : ""
+                      }
+                    />
                   </div>
                 </div>
               </div>
