@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import Quagga from 'quagga';
+import React, { useEffect, useRef, useState } from "react";
+import Quagga from "quagga";
 
 interface Props {
   onBarcodeDetected: (barcode: string) => void;
 }
 
 const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
-  const [scannedBarcodes, setScannedBarcodes] = useState<string[]>([]);
   const [isScanLineActive, setIsScanLineActive] = useState(true);
   const scannerRef = useRef<HTMLDivElement>(null);
   const quaggaRunningRef = useRef(false);
@@ -30,34 +29,37 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
     const width = scannerRef.current.offsetWidth;
     const height = scannerRef.current.offsetHeight;
     if (width === 0 || height === 0) {
-      console.warn('Scanner area not ready');
+      console.warn("Scanner area not ready");
       return;
     }
 
-    Quagga.init({
-      inputStream: {
-        name: 'Live',
-        type: 'LiveStream',
-        target: scannerRef.current!,
-        constraints: {
-          facingMode: 'environment',
+    Quagga.init(
+      {
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: scannerRef.current!,
+          constraints: {
+            facingMode: "environment",
+          },
         },
+        decoder: {
+          readers: ["code_128_reader"],
+        },
+        locate: true,
+        numOfWorkers: 0,
+        frequency: 2,
       },
-      decoder: {
-        readers: ['code_128_reader'],
-      },
-      locate: true,
-      numOfWorkers: 0,
-      frequency: 2,
-    }, (err : any) => {
-      if (err) {
-        console.error('Quagga init error:', err);
-        return;
+      (err: any) => {
+        if (err) {
+          console.error("Quagga init error:", err);
+          return;
+        }
+        Quagga.start();
+        quaggaRunningRef.current = true;
+        setIsScanLineActive(true);
       }
-      Quagga.start();
-      quaggaRunningRef.current = true;
-      setIsScanLineActive(true);
-    });
+    );
 
     Quagga.onDetected(handleDetected);
   };
@@ -70,7 +72,6 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
       beepRef.current.play();
     }
 
-    setScannedBarcodes((prev) => [...prev, code]);
     onBarcodeDetected(code);
   };
 
@@ -81,7 +82,7 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
       quaggaRunningRef.current = false;
     }
 
-    const video = document.querySelector('video');
+    const video = document.querySelector("video");
     if (video?.srcObject) {
       const stream = video.srcObject as MediaStream;
       stream.getTracks().forEach((track) => track.stop());
@@ -89,7 +90,7 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
     }
 
     if (scannerRef.current) {
-      scannerRef.current.innerHTML = '';
+      scannerRef.current.innerHTML = "";
     }
 
     setIsScanLineActive(false);
@@ -107,26 +108,6 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
           <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-scan-line z-20 opacity-70" />
         )}
       </div>
-
-      
-
-      <h3 className="mt-6 text-lg font-semibold">Scanned Barcodes:</h3>
-      <table className="mt-2 w-full border text-sm">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border px-2 py-1">#</th>
-            <th className="border px-2 py-1">Barcode</th>
-          </tr>
-        </thead>
-        <tbody>
-          {scannedBarcodes.map((code, index) => (
-            <tr key={index}>
-              <td className="border px-2 py-1 text-center">{index + 1}</td>
-              <td className="border px-2 py-1">{code}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 };
