@@ -435,7 +435,7 @@ export default function SalesCart() {
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
         <div className="flex flex-col gap-9 mb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 whitespace-nowrap">
               Sales Cart
             </h3>
           </div>
@@ -484,7 +484,7 @@ export default function SalesCart() {
             ) : (
               <button
                 onClick={() => setShowScanner(false)}
-                className="w -1/2 inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
               >
                 Cancel Scan
               </button>
