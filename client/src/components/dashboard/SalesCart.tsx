@@ -468,11 +468,12 @@ export default function SalesCart() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowScanner(true)}
-                    className="w-1/2 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="w-1/2 inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 whitespace-nowrap"
                   >
-                    <FontAwesomeIcon icon={faBarcode} className="h-5 w-5" />{" "}
+                    <FontAwesomeIcon icon={faBarcode} className="h-4 w-4" />
                     Scan Barcode
                   </button>
+
                   <button
                     onClick={deleteSelectedItems}
                     disabled={!cartItems.some((item) => item.selected)}

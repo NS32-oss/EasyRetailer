@@ -108,12 +108,7 @@ const BarcodeScanner: React.FC<Props> = ({ onBarcodeDetected }) => {
         )}
       </div>
 
-      <button
-        onClick={stopScanner}
-        className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-      >
-        Stop Scanning
-      </button>
+      
 
       <h3 className="mt-6 text-lg font-semibold">Scanned Barcodes:</h3>
       <table className="mt-2 w-full border text-sm">
