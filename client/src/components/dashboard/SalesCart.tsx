@@ -5,6 +5,12 @@ import { useEffect, useState } from "react";
 // import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
 import { Notification } from "../toastNotification/Notification";
 import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
+import {
+  QrCodeIcon, // Commented out as it is not exported
+  TrashIcon,
+  PlusIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 // Define the TypeScript interface for the cart items
 interface CartItem {
@@ -458,7 +464,7 @@ export default function SalesCart() {
                     type="submit"
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
                   >
-                    Add Product
+                    <PlusIcon className="h-5 w-5" /> Add Product
                   </button>
                 </form>
                 <div className="flex gap-2">
@@ -466,8 +472,9 @@ export default function SalesCart() {
                     onClick={() => setShowScanner(true)}
                     className="w-1/2 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
+                    <QrCodeIcon className="h-5 w-5" /> Scan Barcode
+                    {/* Replace BarcodeScannerIcon with a valid icon or remove it */}
                     Scan Barcode
-                  </button>
                   <button
                     onClick={deleteSelectedItems}
                     disabled={!cartItems.some((item) => item.selected)}
@@ -477,7 +484,7 @@ export default function SalesCart() {
                         : ""
                     }`}
                   >
-                    Delete Selected
+                    <TrashIcon className="h-5 w-5" /> Delete Selected
                   </button>
                 </div>
               </>
@@ -486,7 +493,7 @@ export default function SalesCart() {
                 onClick={() => setShowScanner(false)}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
               >
-                Cancel Scan
+                <XMarkIcon className="h-5 w-5" /> Cancel Scan
               </button>
             )}
           </div>
