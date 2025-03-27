@@ -4,7 +4,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-import { PlusIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { PlusIcon} from "@heroicons/react/24/outline";
 
 interface Brand {
   _id: string;
