@@ -303,6 +303,15 @@ export default function SalesCart() {
       return;
     }
 
+    // Validate cart items
+    const invalidItems = cartItems.filter(
+      (item) => !item.type || !item.size || !item.brand
+    );
+    if (invalidItems.length > 0) {
+      console.log("Invalid items:", invalidItems);
+      return;
+    }
+
     try {
       // Prepare the sale data with correct calculations
       const saleData = {
@@ -311,9 +320,11 @@ export default function SalesCart() {
           quantity: item.quantity,
           unit_price: item.unitPrice,
           discount: item.discount,
-          // Make sure selling_price is the final amount for this item only
           selling_price: item.amountPayable,
           cost_price: item.unitPrice,
+          type: item.type,
+          size: item.size,
+          brand: item.brand,
         })),
         // Use the calculated totalAmount directly
         total_price: totalAmount,

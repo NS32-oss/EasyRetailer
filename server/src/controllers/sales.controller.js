@@ -25,6 +25,15 @@ export const createSale = asyncHandler(async (req, res) => {
     throw new apiError(400, "Payment method is required.");
   }
 
+  for (const product of products) {
+    if (!product.type || !product.size || !product.brand) {
+      throw new apiError(
+        400,
+        "Each product must have 'type', 'size', and 'brand' fields."
+      );
+    }
+  }
+
   // Create the sale transaction document
   const sale = await Sales.create({
     products,
