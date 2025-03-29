@@ -214,7 +214,7 @@ export const generateBill = asyncHandler(async (req, res) => {
   const billMessage = `🧾 Bill Receipt
 
 🛒 Items Purchased:
-1. Product ID: ${product.product_id}
+1. Product ID: ${product.product_id}  
    - Quantity: ${product.quantity}
    - Unit Price: $${product.unit_price}
    - Discount: $${product.discount}
