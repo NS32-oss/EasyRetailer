@@ -6,7 +6,6 @@ import { worldMill } from "@react-jvectormap/world";
 interface CountryMapProps {
   mapColor?: string;
 }
-console.log("CountryMap component loaded");
 const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
   return (
     <VectorMap
