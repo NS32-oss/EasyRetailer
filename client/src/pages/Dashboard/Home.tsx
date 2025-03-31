@@ -21,7 +21,7 @@ export default function Home() {
           
         </div>
 
-        <div className="col-span-12 xl:col-span-5">
+        <div className="col-span-12 xl:col-span-7">
         <MonthlySalesChart />
         </div>
 
