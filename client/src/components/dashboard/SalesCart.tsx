@@ -55,7 +55,7 @@ export default function SalesCart() {
   // Function to add a product by barcode
   const addProductByBarcode = async (barcodeValue: string) => {
     if (!barcodeValue.trim()) return;
-    alert(`Adding product with barcode  1: ${barcodeValue}`);
+    // alert(`Adding product with barcode  1: ${barcodeValue}`);
     try {
       // Fetch product details from the API
       const response = await fetch(
@@ -63,7 +63,7 @@ export default function SalesCart() {
       );
       const data = await response.json();
       console.log("Product data:", data);
-      alert(`Adding product with barcode  2: ${barcodeValue}`);
+      // alert(`Adding product with barcode  2: ${barcodeValue}`);
       if (data.status == 200) {
         const product = data.data;
         const unitPrice = product.unit_price;
