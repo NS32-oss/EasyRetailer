@@ -8,7 +8,7 @@ export const fetchBrands = asyncHandler(async (req, res) => {
   const brands = await Brand.find();
   return res
     .status(200)
-    .json(new apiResponse(200, "Brands fetched successfully", brands));
+    .json(new apiResponse(200, "brands fetched successfully", brands));
 });
 
 // create brand
