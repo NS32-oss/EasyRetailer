@@ -28,6 +28,7 @@ app.use(limiter);
 const allowedOrigins = [
   "http://localhost:5173",
   "https://easy-retailer.vercel.app",
+  "http://localhost:5173/"
 ];
 //Allow from all origins
 // const allowedOrigins = ["*"];
