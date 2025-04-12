@@ -24,19 +24,15 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Hardcoded allowed origins (for local development or specific environments)
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://easy-retailer.vercel.app",
-  "http://localhost:5173/"
+  "http://localhost:5173", // Local development
+  "https://easy-retailer.vercel.app", // Deployed frontend
 ];
-//Allow from all origins
-// const allowedOrigins = ["*"];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin) || origin === "null") {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
