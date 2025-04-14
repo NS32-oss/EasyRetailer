@@ -59,7 +59,7 @@ export default function EcommerceMetrics() {
         const customersToday = salesToday.reduce((acc, sale) => {
           return acc + sale.products.length;
         }, 0);
-
+        
         // Update state
         setTotalCustomers(totalCustomers);
         setTotalProductsSold(totalProductsSold);
