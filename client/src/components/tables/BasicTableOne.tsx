@@ -1,4 +1,7 @@
 "use client";
+interface InventoryFormProps {
+  onSuccess?: () => void;
+}
 
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
@@ -18,7 +21,8 @@ interface ProductType {
 
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
 
-export default function InventoryForm() {
+export default function InventoryForm({ onSuccess }: InventoryFormProps) {
+
   // Form state
   const [formData, setFormData] = useState({
     brand: "",
@@ -269,6 +273,8 @@ export default function InventoryForm() {
 
       if (data.status === 201) {
         setSuccess("Product added successfully!");
+        if (onSuccess) onSuccess();
+
         // Reset form
         setFormData({
           brand: "",

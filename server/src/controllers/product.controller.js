@@ -3,6 +3,7 @@ import { Product } from "../models/product.model.js";
 import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
 import Joi from "joi";
+import { generateBarcode } from "../utils/barcodeGenerator.js";
 
 // Define the validation schema using Joi
 const productSchema = Joi.object({
@@ -16,6 +17,165 @@ const productSchema = Joi.object({
   unit_price: Joi.number().positive().greater(Joi.ref("cost_price")).required(),
 });
 
+// ------------------------------
+// BULK PRODUCT CREATE / UPDATE
+// ------------------------------
+const bulkSchema = Joi.object({
+  brand: Joi.string().trim().required(),
+  type: Joi.string().trim().required(),
+  subtype: Joi.string().trim().allow("").optional(),
+
+  // Allow numbers OR numeric strings (Joi will convert)
+  cost_price: Joi.number().positive().required(),
+  unit_price: Joi.number().positive().greater(Joi.ref("cost_price")).required(),
+
+  sizes: Joi.array()
+    .items(
+      Joi.object({
+        size: Joi.string().trim().required(),
+        quantity: Joi.number().integer().min(1).required(), // also converted
+      })
+    )
+    .min(1)
+    .required(),
+});
+
+export const createProductsBulk = asyncHandler(async (req, res) => {
+  console.log("🔥 BULK ROUTE HIT");
+
+  console.log("🔥 RAW BODY:", JSON.stringify(req.body, null, 2));
+
+  // --- FORCE COERCION ---
+  try {
+    req.body.cost_price = Number(req.body.cost_price);
+    req.body.unit_price = Number(req.body.unit_price);
+
+    if (Array.isArray(req.body.sizes)) {
+      req.body.sizes = req.body.sizes.map((s) => ({
+        size: s.size,
+        quantity: Number(s.quantity),
+      }));
+    }
+  } catch (err) {
+    console.log("❌ COERCION ERROR:", err);
+  }
+
+  console.log("🔥 AFTER COERCION:", JSON.stringify(req.body, null, 2));
+
+  // --- JOI VALIDATION ---
+  const { error, value } = bulkSchema.validate(req.body, { convert: true });
+
+  if (error) {
+    console.log("❌ JOI VALIDATION FAILED:", error.details);
+    return res
+      .status(400)
+      .json(
+        new apiResponse(400, "Validation failed", {
+          message: error.details[0].message,
+          details: error.details,
+        })
+      );
+  }
+
+  console.log("✅ JOI VALIDATION PASSED:", value);
+
+  // --- NORMALIZED VALUES ---
+  let { brand, type, subtype, cost_price, unit_price, sizes } = value;
+
+  brand = brand.toLowerCase();
+  type = type.toLowerCase();
+  subtype = subtype?.toLowerCase() || "";
+
+  // --- BUILD OPS ---
+  let ops = [];
+
+  try {
+    ops = await Promise.all(
+      sizes.map(async ({ size, quantity }) => {
+        const lowerSize = size.toLowerCase();
+
+        return {
+          updateOne: {
+            filter: { brand, type, subtype, size: lowerSize },
+            update: {
+              $set: { cost_price, unit_price, subtype },
+              $setOnInsert: {
+                barcode: await generateBarcode(),
+              },
+              $inc: { quantity },
+            },
+            upsert: true,
+          },
+        };
+      })
+    );
+  } catch (err) {
+    console.log("❌ ERROR WHILE GENERATING OPS:", err);
+  }
+
+  console.log("🔥 OPS TO BULKWRITE:", JSON.stringify(ops, null, 2));
+
+  const created = [];
+  const updated = [];
+  const errors = [];
+
+  try {
+    const result = await Product.bulkWrite(ops, { ordered: false });
+
+    console.log("🔥 BULKWRITE RESULT:", result);
+
+    // fetch each product
+    for (const { size } of sizes) {
+      const lowerSize = size.toLowerCase();
+
+      const product = await Product.findOne({
+        brand,
+        type,
+        subtype,
+        size: lowerSize,
+      });
+
+      if (!product) {
+        errors.push({ size, message: "Not found after upsert" });
+        continue;
+      }
+
+      const isNew =
+        product.createdAt.getTime() === product.updatedAt.getTime();
+
+      if (isNew) created.push({ size, productId: product._id });
+      else updated.push({ size, productId: product._id });
+    }
+
+    return res.status(200).json(
+      new apiResponse(200, "Bulk operation complete", {
+        created,
+        updated,
+        errors,
+      })
+    );
+  } catch (error) {
+    console.log("❌ BULKWRITE ERROR:", error);
+    console.log("❌ ERROR MESSAGE:", error.message);
+    console.log("❌ ERROR CODE:", error.code);
+
+    if (error.code === 11000) {
+      return res.status(400).json(
+        new apiResponse(400, "Duplicate key (barcode)", {
+          message: error.message,
+        })
+      );
+    }
+
+    return res.status(500).json(
+      new apiResponse(500, "Bulk operation failed", {
+        message: error.message,
+      })
+    );
+  }
+});
+
+
 // Create or update a product
 export const createProduct = asyncHandler(async (req, res) => {
   // Validate the request body
@@ -25,16 +185,16 @@ export const createProduct = asyncHandler(async (req, res) => {
   }
 
   let { brand, size, type, subtype, quantity, cost_price, unit_price } = value;
-  console.log(value);
-  // Convert to lowercase for case-insensitive matching
+
+  // Normalize
   brand = brand.toLowerCase();
   size = size.toLowerCase();
   type = type.toLowerCase();
-  subtype = subtype.toLowerCase();
-  
-  // Check for existing product and update atomically
+  subtype = subtype?.toLowerCase() || "";
+
+  // Check for existing product
   const existingProduct = await Product.findOneAndUpdate(
-    { brand, size, type },
+    { brand, size, type, subtype },
     {
       $set: { cost_price, unit_price, subtype },
       $inc: { quantity },
@@ -50,7 +210,10 @@ export const createProduct = asyncHandler(async (req, res) => {
       );
   }
 
-  // Create a new product
+  // Generate barcode for NEW product
+  const barcode = await generateBarcode();
+
+  // Create product with barcode
   const product = await Product.create({
     brand,
     size,
@@ -59,6 +222,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     quantity,
     cost_price,
     unit_price,
+    barcode,
   });
 
   return res

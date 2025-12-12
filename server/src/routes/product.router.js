@@ -8,6 +8,8 @@ import {
   getProductByBarcode,
 } from "../controllers/product.controller.js";
 import { requireAuth } from "@clerk/clerk-sdk-node"; // Correct import
+import { createProductsBulk } from "../controllers/product.controller.js";
+
 
 const router = Router();
 
@@ -15,10 +17,11 @@ const router = Router();
 
 // Route to get all products or create a new product
 router
-  .route("/")
-  .get(getAllProducts) // Retrieve all products (with filtering, pagination, etc.)
-  .post(createProduct); // Create a new product
+.route("/")
+.get(getAllProducts) // Retrieve all products (with filtering, pagination, etc.)
+.post(createProduct); // Create a new product
 
+router.post("/bulk", createProductsBulk);
 // Route to get, update, or delete a single product by ID
 router
   .route("/:id")
