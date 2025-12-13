@@ -274,6 +274,21 @@ export default function SalesCartHistory() {
                 Generate Bill
               </button>
             )}
+            {sale.bill_generated && sale.customer_mobile && (
+              <button
+                onClick={() => {
+                  const whatsappUrl = generateWhatsAppUrl();
+                  window.open(whatsappUrl, '_blank');
+                  setNotification({
+                    message: "Bill sent on WhatsApp again",
+                    type: "success",
+                  });
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                📱 Send Bill Again
+              </button>
+            )}
             <button
               onClick={() => window.history.back()}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
