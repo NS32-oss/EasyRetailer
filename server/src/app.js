@@ -26,6 +26,7 @@ app.use(limiter);
 
 const allowedOrigins = [
   "http://localhost:5173", // Local development
+  "http://localhost:5174", // Local development (current port)
   "https://easy-retailer.vercel.app", // Deployed frontend
 ];
 

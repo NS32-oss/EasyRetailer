@@ -350,12 +350,12 @@ export default function SalesCart() {
           } catch (error) {
             console.error("Error generating bill:", error);
             setNotification({
-              message: "Sale created but failed to generate bill",
+              message: "Sale created but failed to generate bill: " + error.message,
               type: "error",
             });
 
-            // Still redirect to sales history
-            window.location.href = `/sales-cart-history/${data.data._id}`;
+            // Don't redirect on bill generation failure - show the error instead
+            // window.location.href = `/sales-cart-history/${data.data._id}`;
           }
         } else {
           console.error("Sale ID not found in response");
