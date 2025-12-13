@@ -36,6 +36,7 @@ export default function SalesCartHistory() {
   const [error, setError] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
   const [showBillModal, setShowBillModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [notification, setNotification] = useState<{
     message: string;
     type: "success" | "error" | "info";
@@ -67,6 +68,47 @@ export default function SalesCartHistory() {
     }
   }, [saleId]);
 
+  // Function to generate WhatsApp message and URL
+  const generateWhatsAppUrl = () => {
+    if (!sale) return "#";
+
+    // Build the bill message
+    let message = `🧾 *Your Bill*\n`;
+    message += `----------------------\n`;
+
+    sale.products.forEach((product, index) => {
+      message += `Brand: ${product.brand}\n`;
+      message += `Type: ${product.type}\n`;
+      message += `Size: ${product.size}\n`;
+      message += `Qty: ${product.quantity}\n`;
+      message += `Unit Price: ₹${product.unit_price.toFixed(2)}\n`;
+      if (product.discount > 0) {
+        message += `Discount: ₹${product.discount.toFixed(2)}\n`;
+      }
+      message += `Amount: ₹${product.selling_price.toFixed(2)}\n`;
+      if (index < sale.products.length - 1) {
+        message += `---\n`;
+      }
+    });
+
+    message += `----------------------\n`;
+    message += `Total Discount: ₹${sale.final_discount.toFixed(2)}\n`;
+    message += `Final Amount: ₹${sale.total_price.toFixed(2)}\n`;
+    message += `Payment Method: ${sale.payment_method}\n`;
+    message += `----------------------\n`;
+    message += `Thank you for shopping with us!\n`;
+    message += `Sale ID: ${sale._id}`;
+
+    // Encode the message
+    const encoded = encodeURIComponent(message);
+
+    // Build WhatsApp URL (add country code 91 for India)
+    const phone = `91${customerMobile}`;
+    const url = `https://wa.me/${phone}?text=${encoded}`;
+
+    return url;
+  };
+
   const generateBill = async () => {
     if (!sale) return;
 
@@ -86,15 +128,19 @@ export default function SalesCartHistory() {
 
       if (data.status === 200) {
         setNotification({
-          message: "Bill generated and sent successfully",
+          message: "Bill generated successfully",
           type: "success",
         });
 
+        // Update the sale state
         setSale((prev) =>
           prev
             ? { ...prev, bill_generated: true, customer_mobile: customerMobile }
             : null
         );
+
+        // Show success modal with WhatsApp option
+        setShowSuccessModal(true);
         setShowBillModal(false);
       } else {
         throw new Error(data.message || "Failed to generate bill");
@@ -170,7 +216,39 @@ export default function SalesCartHistory() {
                 onClick={generateBill}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
               >
-                Generate & Send Bill
+                Generate Bill
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              🎉 Bill Generated Successfully!
+            </h3>
+            <p className="mb-4 text-gray-600 dark:text-gray-300">
+              The bill has been generated and is ready to send.
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <a
+                href={generateWhatsAppUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setShowSuccessModal(false)}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
+              >
+                📱 Send Bill on WhatsApp
+              </a>
+
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+              >
+                👁️ View Bill Details
               </button>
             </div>
           </div>
