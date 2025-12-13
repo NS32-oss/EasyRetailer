@@ -42,7 +42,10 @@ export default function SalesCart() {
   // Calculate totals whenever cart items change
   useEffect(() => {
     const totalDisc = cartItems.reduce((sum, item) => sum + item.discount, 0);
-    const totalAmt = cartItems.reduce((sum, item) => sum + item.amountPayable, 0);
+    const totalAmt = cartItems.reduce(
+      (sum, item) => sum + item.amountPayable,
+      0
+    );
     setTotalDiscount(Math.round(totalDisc * 100) / 100);
     setTotalAmount(Math.round(totalAmt * 100) / 100);
   }, [cartItems]);
@@ -172,7 +175,8 @@ export default function SalesCart() {
         const additionalDiscount =
           (itemOriginalValue / totalBefore) * totalDiscountNeeded;
         const newDiscount = Math.round(additionalDiscount * 100) / 100; // Round to 2 decimal places
-        const newAmountPayable = Math.round((itemOriginalValue - newDiscount) * 100) / 100; // Round to 2 decimal places
+        const newAmountPayable =
+          Math.round((itemOriginalValue - newDiscount) * 100) / 100; // Round to 2 decimal places
         return {
           ...item,
           discount: newDiscount,
@@ -220,32 +224,32 @@ export default function SalesCart() {
     console.log("Customer mobile:", customerMobile);
     console.log("Cart items:", cartItems);
 
-    // Build the bill message
-    let message = `🧾 *Your Bill*\n`;
-    message += `----------------------\n`;
+    let message = `🧾 *INVOICE*\n`;
+    message += `───────────────\n`;
+    message += `*Sale ID:* ${saleId}\n\n`;
 
     cartItems.forEach((item, index) => {
-      message += `Brand: ${item.brand}\n`;
-      message += `Type: ${item.type}\n`;
-      message += `Size: ${item.size}\n`;
-      message += `Qty: ${item.quantity}\n`;
-      message += `Unit Price: ₹${item.unitPrice.toFixed(2)}\n`;
+      message += `*${index + 1}. ${item.brand} - ${item.type}*\n`;
+      message += `• Size: ${item.size}\n`;
+      message += `• Qty: ${item.quantity}\n`;
+      message += `• Unit: ₹${item.unitPrice.toFixed(2)}\n`;
       if (item.discount > 0) {
-        message += `Discount: ₹${item.discount.toFixed(2)}\n`;
+        message += `• Discount: -₹${item.discount.toFixed(2)}\n`;
       }
-      message += `Amount: ₹${item.amountPayable.toFixed(2)}\n`;
+      message += `• Subtotal: ₹${item.amountPayable.toFixed(2)}\n`;
+
       if (index < cartItems.length - 1) {
-        message += `---\n`;
+        message += `───────────────\n`;
       }
     });
 
-    message += `----------------------\n`;
-    message += `Total Discount: ₹${totalDiscount.toFixed(2)}\n`;
-    message += `Final Amount: ₹${totalAmount.toFixed(2)}\n`;
-    message += `Payment Method: ${paymentMethod}\n`;
-    message += `----------------------\n`;
-    message += `Thank you for shopping with us!\n`;
-    message += `Sale ID: ${saleId}`;
+    message += `\n🧮 *Summary*\n`;
+    message += `───────────────\n`;
+    message += `*Total Discount:* ₹${totalDiscount.toFixed(2)}\n`;
+    message += `*Final Amount:* ₹${totalAmount.toFixed(2)}\n`;
+    message += `*Paid Via:* ${paymentMethod}\n`;
+
+    message += `\n🛍️ *Thank you for shopping!*`;
 
     // Encode the message
     const encoded = encodeURIComponent(message);
@@ -348,7 +352,7 @@ export default function SalesCart() {
               // Automatically open WhatsApp with the bill
               setTimeout(() => {
                 const whatsappUrl = generateWhatsAppUrl(data.data._id);
-                window.open(whatsappUrl, '_blank');
+                window.open(whatsappUrl, "_blank");
               }, 500);
             } else {
               throw new Error(billData.message || "Failed to generate bill");
@@ -356,7 +360,9 @@ export default function SalesCart() {
           } catch (error) {
             console.error("Error generating bill:", error);
             setNotification({
-              message: "Sale created but failed to generate bill: " + (error as Error).message,
+              message:
+                "Sale created but failed to generate bill: " +
+                (error as Error).message,
               type: "error",
             });
 
