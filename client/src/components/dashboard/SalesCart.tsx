@@ -344,6 +344,12 @@ export default function SalesCart() {
               setGeneratedSaleId(data.data._id);
               setShowSuccessModal(true);
               setShowBillModal(false);
+
+              // Automatically open WhatsApp with the bill
+              setTimeout(() => {
+                const whatsappUrl = generateWhatsAppUrl(data.data._id);
+                window.open(whatsappUrl, '_blank');
+              }, 500);
             } else {
               throw new Error(billData.message || "Failed to generate bill");
             }
@@ -538,20 +544,10 @@ export default function SalesCart() {
               🎉 Sale Created Successfully!
             </h3>
             <p className="mb-4 text-gray-600 dark:text-gray-300">
-              Your sale has been created and the bill has been generated.
+              Your sale has been created and the bill has been sent on WhatsApp.
             </p>
 
             <div className="flex flex-col gap-3">
-              <a
-                href={generateWhatsAppUrl(generatedSaleId)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => console.log("WhatsApp button clicked")}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
-              >
-                📱 Send Bill on WhatsApp
-              </a>
-
               <button
                 onClick={() => {
                   window.location.href = `/sales-cart-history/${generatedSaleId}`;

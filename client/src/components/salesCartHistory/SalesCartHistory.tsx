@@ -142,6 +142,12 @@ export default function SalesCartHistory() {
         // Show success modal with WhatsApp option
         setShowSuccessModal(true);
         setShowBillModal(false);
+
+        // Automatically open WhatsApp with the bill
+        setTimeout(() => {
+          const whatsappUrl = generateWhatsAppUrl();
+          window.open(whatsappUrl, '_blank');
+        }, 500);
       } else {
         throw new Error(data.message || "Failed to generate bill");
       }
@@ -189,7 +195,7 @@ export default function SalesCartHistory() {
               Generate Bill
             </h3>
             <p className="mb-4 text-gray-600 dark:text-gray-300">
-              Enter the customer's mobile number to send the bill:
+              Enter the customer's mobile number to generate and send the bill on WhatsApp:
             </p>
 
             <div className="mb-4">
@@ -216,7 +222,7 @@ export default function SalesCartHistory() {
                 onClick={generateBill}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
               >
-                Generate Bill
+                Generate & Send on WhatsApp
               </button>
             </div>
           </div>
@@ -230,20 +236,10 @@ export default function SalesCartHistory() {
               🎉 Bill Generated Successfully!
             </h3>
             <p className="mb-4 text-gray-600 dark:text-gray-300">
-              The bill has been generated and is ready to send.
+              The bill has been generated and sent on WhatsApp.
             </p>
 
             <div className="flex flex-col gap-3">
-              <a
-                href={generateWhatsAppUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setShowSuccessModal(false)}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
-              >
-                📱 Send Bill on WhatsApp
-              </a>
-
               <button
                 onClick={() => setShowSuccessModal(false)}
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
