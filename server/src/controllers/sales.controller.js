@@ -5,7 +5,6 @@ import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
 import { calculateDailyStatistics } from "../jobs/calculateDailyStatistics.js";
 import mongoose from "mongoose";
-import twilio from "twilio";
 
 export const createSale = asyncHandler(async (req, res) => {
   const {
@@ -59,6 +58,10 @@ export const createSale = asyncHandler(async (req, res) => {
     }
     productRecord.quantity -= item.quantity;
     await productRecord.save();
+    // If quantity becomes 0, delete the product
+    if (productRecord.quantity === 0) {
+      await Product.findByIdAndDelete(item.product_id);
+    }
   }
   calculateDailyStatistics();
   console.log(sale);
@@ -189,15 +192,6 @@ export const getRevenue = asyncHandler(async (req, res) => {
     );
 });
 
-const formatDate = (isoString) => {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
-
 // Generate a bill for a sale transaction
 export const generateBill = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -213,50 +207,13 @@ export const generateBill = asyncHandler(async (req, res) => {
     throw new apiError(404, "Sale not found");
   }
 
-  // Setup Twilio client using environment variables
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const client = twilio(accountSid, authToken);
-
-  const product = sale.products[0]; // Assuming one product for simplicity
-  console.log(product);
-  const billMessage = `🧾 Bill Receipt
-
-🛒 Items Purchased:
-1. Product ID: ${product.product_id}  
-   - Quantity: ${product.quantity}
-   - Unit Price: $${product.unit_price}
-   - Discount: $${product.discount}
-   - Selling Price: $${product.selling_price}
-
-💰 Total Amount: $${sale.total_price}
-🎁 Final Discount: $${sale.final_discount}
-💳 Payment Method: ${sale.payment_method}
-
-📅 Date: ${formatDate(sale.createdAt)}
-☎️ Contact: ${contact_number}
-
-Thank you for shopping with us! Have a great day. 😊`;
-  try {
-    const message = await client.messages.create({
-      body: billMessage,
-      from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
-      to: contact_number,
-    });
-    console.log("SMS sent:", message.sid);
-
-    // Update the sale: mark bill as generated and assign contact number
-    sale.bill_generated = true;
-    sale.customer_mobile = contact_number;
-    await sale.save();
-  } catch (smsError) {
-    console.error("Error sending SMS:", smsError);
-    // Optionally, you can choose to throw an error or simply log it
-  }
+  // Update the sale: mark bill as generated and assign contact number
+  sale.bill_generated = true;
+  sale.customer_mobile = contact_number;
+  await sale.save();
 
   return res
     .status(200)
     .json(
-      new apiResponse(200, "Bill generated and SMS sent successfully", sale)
-    );
+      new apiResponse(200, "Bill generated successfully", sale));
 });

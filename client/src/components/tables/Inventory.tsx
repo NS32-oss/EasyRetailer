@@ -35,27 +35,33 @@ export default function Inventory({ limit }: InventoryProps) {
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [bulkReport, setBulkReport] = useState<any | null>(null);
 
+  // ... existing code ...
+
   const fetchProducts = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/product`);
       const responseData = await response.json();
       const productsData = responseData.data.products;
-      const processedData = productsData.map((product: any) => ({
-        id: product._id,
-        brand: product.brand,
-        size: product.size,
-        type: product.type,
-        subtype: product.subtype,
-        quantity: product.quantity,
-        costPrice: `₹${product.cost_price.toFixed(2)}`,
-        unitPrice: `₹${product.unit_price.toFixed(2)}`,
-        barcode: product.barcode,
-      }));
+      const processedData = productsData
+        .map((product: any) => ({
+          id: product._id,
+          brand: product.brand,
+          size: product.size,
+          type: product.type,
+          subtype: product.subtype,
+          quantity: product.quantity,
+          costPrice: `₹${product.cost_price.toFixed(2)}`,
+          unitPrice: `₹${product.unit_price.toFixed(2)}`,
+          barcode: product.barcode,
+        }))
+        .filter((product: { quantity: number }) => product.quantity > 0);
       setTableData(limit ? processedData.slice(0, limit) : processedData);
     } catch (err) {
       console.error("Error fetching products data:", err);
     }
   }, [limit]);
+
+  // ... existing code ...
 
   useEffect(() => {
     fetchProducts();
@@ -137,49 +143,63 @@ export default function Inventory({ limit }: InventoryProps) {
           >
             <XMarkIcon className="h-5 w-5" /> Close Bulk Form
           </button>
-
           {/* Additional inline summary (optional, keeps visible outside the form) */}
           {bulkReport && (
-            <div className="mt-3 p-3 bg-slate-50 rounded border">
-              <div className="font-medium mb-2">Last bulk add (summary)</div>
-              <div className="text-sm">
+            <div className="mt-3 p-4 bg-slate-50 rounded-lg border shadow-sm">
+              <div className="font-bold mb-3 text-gray-800 dark:text-black">
+                Bulk Add Summary
+              </div>
+              <div className="space-y-4">
                 {bulkReport.created?.length > 0 && (
-                  <div className="mb-1">
-                    <div className="font-medium">Created</div>
-                    <ul className="list-disc pl-5">
+                  <div>
+                    <div className="font-medium text-green-700 mb-2">
+                      Created Products
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       {bulkReport.created.map((c: any) => (
-                        <li key={c.productId}>
-                          Size: {c.size} — id: {String(c.productId).slice(0, 8)}
-                        </li>
+                        <div
+                          key={c.productId}
+                          className="p-2 bg-green-100 border border-green-200 rounded-md text-sm text-green-800"
+                        >
+                          Size: {c.size.toUpperCase()} — Barcode: {c.barcode}
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
 
                 {bulkReport.updated?.length > 0 && (
-                  <div className="mb-1">
-                    <div className="font-medium">Updated</div>
-                    <ul className="list-disc pl-5">
+                  <div>
+                    <div className="font-medium text-blue-700 mb-2">
+                      Updated Products
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       {bulkReport.updated.map((u: any) => (
-                        <li key={u.productId}>
-                          Size: {u.size} — id: {String(u.productId).slice(0, 8)}
-                        </li>
+                        <div
+                          key={u.productId}
+                          className="p-2 bg-blue-100 border border-blue-200 rounded-md text-sm text-blue-800"
+                        >
+                          Size: {u.size.toUpperCase()} — Barcode: {u.barcode}
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
 
                 {bulkReport.errors?.length > 0 && (
-                  <div className="text-red-600">
-                    <div className="font-medium">Errors</div>
-                    <ul className="list-disc pl-5">
+                  <div>
+                    <div className="font-medium text-red-700 mb-2">Errors</div>
+                    <div className="flex flex-wrap gap-2">
                       {bulkReport.errors.map((er: any, idx: number) => (
-                        <li key={idx}>
-                          Size: {er.size || "unknown"} —{" "}
+                        <div
+                          key={idx}
+                          className="p-2 bg-red-100 border border-red-200 rounded-md text-sm text-red-800"
+                        >
+                          Size: {er.size?.toUpperCase() || "Unknown"} —{" "}
                           {er.message || JSON.stringify(er)}
-                        </li>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </div>
@@ -198,20 +218,9 @@ export default function Inventory({ limit }: InventoryProps) {
                   isHeader
                   className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  Product ID
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
                   Brand
                 </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Size
-                </TableCell>
+
                 <TableCell
                   isHeader
                   className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
@@ -223,6 +232,12 @@ export default function Inventory({ limit }: InventoryProps) {
                   className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
                   Subtype
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Size
                 </TableCell>
                 <TableCell
                   isHeader
@@ -240,7 +255,7 @@ export default function Inventory({ limit }: InventoryProps) {
                   isHeader
                   className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  Unit Price
+                  Selling Price
                 </TableCell>
                 <TableCell
                   isHeader
@@ -250,24 +265,20 @@ export default function Inventory({ limit }: InventoryProps) {
                 </TableCell>
               </TableRow>
             </TableHeader>
-
             <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
               {tableData.map((product) => (
                 <TableRow key={product.id} className="">
-                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 truncate max-w-[120px]">
-                    {product.id}
-                  </TableCell>
                   <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                     {product.brand}
-                  </TableCell>
-                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                    {product.size}
                   </TableCell>
                   <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                     {product.type}
                   </TableCell>
                   <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                     {product.subtype}
+                  </TableCell>
+                  <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                    {product.size}
                   </TableCell>
                   <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                     {product.quantity}

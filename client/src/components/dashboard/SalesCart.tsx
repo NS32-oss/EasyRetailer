@@ -2,13 +2,9 @@
 
 import type React from "react";
 import { useEffect, useState } from "react";
-// import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
 import { Notification } from "../toastNotification/Notification";
-import BarcodeScanner from "../barcodeScanner/BarcodeScanner";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBarcode } from "@fortawesome/free-solid-svg-icons";
 
-import { TrashIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 
 // Define the TypeScript interface for the cart items
 interface CartItem {
@@ -30,27 +26,26 @@ export default function SalesCart() {
   const [barcode, setBarcode] = useState("");
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
-  const [totalDiscountInput, setTotalDiscountInput] = useState(0);
-  const [showScanner, setShowScanner] = useState(false);
+  // Remove totalDiscountInput
+  // const [showScanner, setShowScanner] = useState(false);
   const [showBillModal, setShowBillModal] = useState(false);
   const [customerMobile, setCustomerMobile] = useState("");
   const [mobileError, setMobileError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Card");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [generatedSaleId, setGeneratedSaleId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
     type: "success" | "error" | "info";
   } | null>(null);
 
-  // Calculate totals whenever cart items or total discount input change
+  // Calculate totals whenever cart items change
   useEffect(() => {
-    // Calculate the sum of amountPayable for each item
-    const amount = cartItems.reduce((sum, item) => sum + item.amountPayable, 0);
-
-    // Apply the additional discount from the total discount input
-    const finalAmount = Math.max(0, amount - totalDiscountInput);
-
-    setTotalDiscount(totalDiscountInput);
-    setTotalAmount(finalAmount);
-  }, [cartItems, totalDiscountInput]);
+    const totalDisc = cartItems.reduce((sum, item) => sum + item.discount, 0);
+    const totalAmt = cartItems.reduce((sum, item) => sum + item.amountPayable, 0);
+    setTotalDiscount(Math.round(totalDisc * 100) / 100);
+    setTotalAmount(Math.round(totalAmt * 100) / 100);
+  }, [cartItems]);
 
   // Function to add a product by barcode
   const addProductByBarcode = async (barcodeValue: string) => {
@@ -158,6 +153,36 @@ export default function SalesCart() {
       })
     );
   };
+  // ... existing code ...
+
+  const handleFinalAmountChange = (value: string) => {
+    const newFinal = Number(value);
+    const totalBefore = cartItems.reduce(
+      (sum, item) => sum + item.unitPrice * item.quantity,
+      0
+    );
+    if (totalBefore === 0) return;
+
+    const totalDiscountNeeded = Math.max(0, totalBefore - newFinal);
+
+    // Distribute proportionally
+    setCartItems((prev) =>
+      prev.map((item) => {
+        const itemOriginalValue = item.unitPrice * item.quantity;
+        const additionalDiscount =
+          (itemOriginalValue / totalBefore) * totalDiscountNeeded;
+        const newDiscount = Math.round(additionalDiscount * 100) / 100; // Round to 2 decimal places
+        const newAmountPayable = Math.round((itemOriginalValue - newDiscount) * 100) / 100; // Round to 2 decimal places
+        return {
+          ...item,
+          discount: newDiscount,
+          amountPayable: newAmountPayable,
+        };
+      })
+    );
+  };
+
+  // ... existing code ...
 
   // Function to toggle item selection
   const toggleItemSelection = (id: string) => {
@@ -189,8 +214,53 @@ export default function SalesCart() {
     return mobileRegex.test(mobile);
   };
 
+  // Function to generate WhatsApp message and URL
+  const generateWhatsAppUrl = (saleId: string) => {
+    console.log("Generating WhatsApp URL for sale:", saleId);
+    console.log("Customer mobile:", customerMobile);
+    console.log("Cart items:", cartItems);
+
+    // Build the bill message
+    let message = `🧾 *Your Bill*\n`;
+    message += `----------------------\n`;
+
+    cartItems.forEach((item, index) => {
+      message += `Brand: ${item.brand}\n`;
+      message += `Type: ${item.type}\n`;
+      message += `Size: ${item.size}\n`;
+      message += `Qty: ${item.quantity}\n`;
+      message += `Unit Price: ₹${item.unitPrice.toFixed(2)}\n`;
+      if (item.discount > 0) {
+        message += `Discount: ₹${item.discount.toFixed(2)}\n`;
+      }
+      message += `Amount: ₹${item.amountPayable.toFixed(2)}\n`;
+      if (index < cartItems.length - 1) {
+        message += `---\n`;
+      }
+    });
+
+    message += `----------------------\n`;
+    message += `Total Discount: ₹${totalDiscount.toFixed(2)}\n`;
+    message += `Final Amount: ₹${totalAmount.toFixed(2)}\n`;
+    message += `Payment Method: ${paymentMethod}\n`;
+    message += `----------------------\n`;
+    message += `Thank you for shopping with us!\n`;
+    message += `Sale ID: ${saleId}`;
+
+    // Encode the message
+    const encoded = encodeURIComponent(message);
+
+    // Build WhatsApp URL (add country code 91 for India)
+    const phone = `91${customerMobile}`;
+    const url = `https://wa.me/${phone}?text=${encoded}`;
+
+    console.log("Generated WhatsApp URL:", url);
+    return url;
+  };
+
   // Function to generate bill and create sale
   const handleGenerateBill = async () => {
+    console.log("handleGenerateBill called");
     if (cartItems.length === 0) {
       setNotification({ message: "Cart is empty", type: "error" });
       return;
@@ -203,6 +273,7 @@ export default function SalesCart() {
     }
 
     setMobileError("");
+    console.log("Validation passed, creating sale...");
 
     try {
       // Prepare the sale data with correct calculations
@@ -222,7 +293,7 @@ export default function SalesCart() {
         // Use the calculated totalAmount directly
         total_price: totalAmount,
         final_discount: totalDiscount,
-        payment_method: "Card",
+        payment_method: paymentMethod,
         customer_mobile: customerMobile,
         bill_generated: true,
       };
@@ -257,16 +328,22 @@ export default function SalesCart() {
               }
             );
 
+            console.log("Bill API status:", billResponse.status);
+
             const billData = await billResponse.json();
+            console.log("Bill API response:", billData);
 
             if (billData.status === 200) {
+              console.log("Bill generated successfully, showing success modal");
               setNotification({
                 message: "Sale created and bill generated successfully",
                 type: "success",
               });
 
-              // Redirect to sales history
-              window.location.href = `/sales-cart-history/${data.data._id}`;
+              // Show success modal instead of redirecting immediately
+              setGeneratedSaleId(data.data._id);
+              setShowSuccessModal(true);
+              setShowBillModal(false);
             } else {
               throw new Error(billData.message || "Failed to generate bill");
             }
@@ -329,7 +406,7 @@ export default function SalesCart() {
         // Use the calculated totalAmount directly
         total_price: totalAmount,
         final_discount: totalDiscount,
-        payment_method: "Card",
+        payment_method: paymentMethod,
         customer_mobile: "",
         bill_generated: false,
       };
@@ -376,15 +453,20 @@ export default function SalesCart() {
     addProductByBarcode(barcode);
   };
 
-  // Function to handle barcode detection from scanner
-  const handleBarcodeDetection = (detectedBarcode: string) => {
-    alert(`Detected barcode: ${detectedBarcode}`);
-    addProductByBarcode(detectedBarcode);
-    setShowScanner(false);
-  };
-
   return (
     <>
+      <style>
+        {`
+          input[type="number"] {
+            -moz-appearance: textfield;
+          }
+          input[type="number"]::-webkit-outer-spin-button,
+          input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+        `}
+      </style>
       {notification && (
         <Notification
           message={notification.message}
@@ -427,6 +509,7 @@ export default function SalesCart() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
+                  console.log("No, Skip clicked - creating sale without bill");
                   handleCreateSaleWithoutBill();
                   setShowBillModal(false);
                 }}
@@ -436,11 +519,60 @@ export default function SalesCart() {
               </button>
               <button
                 onClick={() => {
+                  console.log("Yes, Generate Bill clicked");
                   handleGenerateBill();
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
               >
                 Yes, Generate Bill
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSuccessModal && generatedSaleId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              🎉 Sale Created Successfully!
+            </h3>
+            <p className="mb-4 text-gray-600 dark:text-gray-300">
+              Your sale has been created and the bill has been generated.
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <a
+                href={generateWhatsAppUrl(generatedSaleId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => console.log("WhatsApp button clicked")}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
+              >
+                📱 Send Bill on WhatsApp
+              </a>
+
+              <button
+                onClick={() => {
+                  window.location.href = `/sales-cart-history/${generatedSaleId}`;
+                }}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+              >
+                👁️ View Bill Details
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setGeneratedSaleId(null);
+                  // Clear cart and reset form
+                  setCartItems([]);
+                  setCustomerMobile("");
+                  setPaymentMethod("Card");
+                }}
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
+              >
+                ➕ Create New Sale
               </button>
             </div>
           </div>
@@ -455,185 +587,153 @@ export default function SalesCart() {
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
-            {!showScanner ? (
-              <>
-                <form
-                  onSubmit={handleBarcodeSubmit}
-                  className="flex items-center gap-2"
-                >
-                  <input
-                    type="text"
-                    placeholder="Enter barcode"
-                    value={barcode}
-                    onChange={(e) => setBarcode(e.target.value)}
-                    className="w-full sm:w-60 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  />
-                  <button
-                    type="submit"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 whitespace-nowrap"
-                  >
-                    <PlusIcon className="h-4 w-4" /> Add Product
-                  </button>
-                </form>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowScanner(true)}
-                    className="w-1/2 inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 whitespace-nowrap"
-                  >
-                    <FontAwesomeIcon icon={faBarcode} className="h-4 w-4" />
-                    Scan Barcode
-                  </button>
+          <div className="flex items-center gap-3 w-full">
+            <form
+              onSubmit={handleBarcodeSubmit}
+              className="flex items-center gap-2 flex-1"
+            >
+              <input
+                type="text"
+                placeholder="Enter barcode"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 whitespace-nowrap"
+              >
+                <PlusIcon className="h-4 w-4" /> Add Product
+              </button>
+            </form>
 
-                  <button
-                    onClick={deleteSelectedItems}
-                    disabled={!cartItems.some((item) => item.selected)}
-                    className={`w-1/2 inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 whitespace-nowrap ${
-                      !cartItems.some((item) => item.selected)
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                    }`}
-                  >
-                    <TrashIcon className="h-4 w-4" /> Delete Selected
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowScanner(false)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 whitespace-nowrap"
-                >
-                  <XMarkIcon className="h-4 w-4" /> Cancel Scan
-                </button>
-              </div>
-            )}
+            <button
+              onClick={deleteSelectedItems}
+              disabled={!cartItems.some((item) => item.selected)}
+              className={`inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 whitespace-nowrap ${
+                !cartItems.some((item) => item.selected)
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
+            >
+              <TrashIcon className="h-4 w-4" /> Delete Selected
+            </button>
           </div>
         </div>
 
-        {showScanner ? (
-          <div className="mb-6">
-            <BarcodeScanner onBarcodeDetected={handleBarcodeDetection} />
-          </div>
-        ) : (
-          <div className="max-w-full overflow-x-auto">
-            <div className="min-w-[800px]">
-              <table className="table-auto w-full">
-                {/* Table Header */}
-                <thead className="border-gray-100 dark:border-gray-800 border-y">
-                  <tr>
-                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                      Select
-                    </th>
-                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                      Brand
-                    </th>
-                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                      Size
-                    </th>
-                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                      Type
-                    </th>
-                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                      Quantity
-                    </th>
-                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                      Unit Price
-                    </th>
-                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                      Discount
-                    </th>
-                    <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                      Amount Payable
-                    </th>
-                  </tr>
-                </thead>
+        <div className="max-w-full overflow-x-auto">
+          <div className="min-w-[800px]">
+            <table className="table-auto w-full">
+              {/* Table Header */}
+              <thead className="border-gray-100 dark:border-gray-800 border-y">
+                <tr>
+                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                    Select
+                  </th>
+                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                    Brand
+                  </th>
+                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                    Size
+                  </th>
+                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                    Type
+                  </th>
+                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                    Quantity
+                  </th>
+                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                    Unit Price
+                  </th>
+                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                    Discount
+                  </th>
+                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                    Amount Payable
+                  </th>
+                </tr>
+              </thead>
 
-                {/* Table Body */}
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {cartItems.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={8}
-                        className="py-6 text-center text-gray-500 dark:text-gray-400"
-                      >
-                        No items in cart. Add products using the barcode.
+              {/* Table Body */}
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {cartItems.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="py-6 text-center text-gray-500 dark:text-gray-400"
+                    >
+                      No items in cart. Add products using the barcode.
+                    </td>
+                  </tr>
+                ) : (
+                  cartItems.map((item) => (
+                    <tr key={item.id}>
+                      <td className="py-3 px-4">
+                        <input
+                          type="checkbox"
+                          checked={item.selected}
+                          onChange={() => toggleItemSelection(item.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-700"
+                        />
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                        {item.brand}
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                        {item.size}
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                        {item.type}
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
+                            onClick={() => handleQuantityChange(item.id, false)}
+                          >
+                            -
+                          </button>
+                          <span>{item.quantity}</span>
+                          <button
+                            className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
+                            onClick={() => handleQuantityChange(item.id, true)}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                        ₹{item.unitPrice}
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                        <input
+                          type="number"
+                          value={item.discount}
+                          onChange={(e) =>
+                            handleDiscountChange(item.id, e.target.value)
+                          }
+                          className="w-20 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          min="0"
+                        />
+                      </td>
+                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                        <input
+                          type="number"
+                          value={item.amountPayable}
+                          onChange={(e) =>
+                            handleAmountPayableChange(item.id, e.target.value)
+                          }
+                          className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          min="0"
+                        />
                       </td>
                     </tr>
-                  ) : (
-                    cartItems.map((item) => (
-                      <tr key={item.id}>
-                        <td className="py-3 px-4">
-                          <input
-                            type="checkbox"
-                            checked={item.selected}
-                            onChange={() => toggleItemSelection(item.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-700"
-                          />
-                        </td>
-                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                          {item.brand}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                          {item.size}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                          {item.type}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                          <div className="flex items-center gap-2">
-                            <button
-                              className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
-                              onClick={() =>
-                                handleQuantityChange(item.id, false)
-                              }
-                            >
-                              -
-                            </button>
-                            <span>{item.quantity}</span>
-                            <button
-                              className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
-                              onClick={() =>
-                                handleQuantityChange(item.id, true)
-                              }
-                            >
-                              +
-                            </button>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                          ₹{item.unitPrice.toFixed(2)}
-                        </td>
-                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                          <input
-                            type="number"
-                            value={item.discount}
-                            onChange={(e) =>
-                              handleDiscountChange(item.id, e.target.value)
-                            }
-                            className="w-20 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            min="0"
-                          />
-                        </td>
-                        <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                          <input
-                            type="number"
-                            value={item.amountPayable}
-                            onChange={(e) =>
-                              handleAmountPayableChange(item.id, e.target.value)
-                            }
-                            className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                            min="0"
-                          />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+        </div>
 
         {/* Summary Section */}
         {cartItems.length > 0 && (
@@ -645,11 +745,9 @@ export default function SalesCart() {
                 </span>
                 <input
                   type="number"
-                  value={totalDiscountInput}
-                  onChange={(e) =>
-                    setTotalDiscountInput(Number(e.target.value))
-                  }
-                  className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  value={totalDiscount}
+                  readOnly
+                  className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white bg-gray-100"
                   min="0"
                 />
               </div>
@@ -657,15 +755,36 @@ export default function SalesCart() {
                 <span className="text-gray-600 dark:text-gray-400">
                   Final Amount Payable:
                 </span>
-                <span className="font-semibold text-lg text-gray-900 dark:text-white">
-                  ₹{totalAmount.toFixed(2)}
+                <input
+                  type="number"
+                  value={totalAmount}
+                  onChange={(e) => handleFinalAmountChange(e.target.value)}
+                  className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  min="0"
+                />
+              </div>
+              <div className="flex justify-between sm:w-64">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Payment Method:
                 </span>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="Card">Card</option>
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                </select>
               </div>
             </div>
 
             <div className="mt-6 flex justify-end">
               <button
-                onClick={() => setShowBillModal(true)}
+                onClick={() => {
+                  console.log("Create Sale button clicked, opening bill modal");
+                  setShowBillModal(true);
+                }}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 font-medium"
               >
                 Create Sale

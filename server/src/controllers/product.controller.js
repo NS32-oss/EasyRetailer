@@ -67,14 +67,12 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
 
   if (error) {
     console.log("❌ JOI VALIDATION FAILED:", error.details);
-    return res
-      .status(400)
-      .json(
-        new apiResponse(400, "Validation failed", {
-          message: error.details[0].message,
-          details: error.details,
-        })
-      );
+    return res.status(400).json(
+      new apiResponse(400, "Validation failed", {
+        message: error.details[0].message,
+        details: error.details,
+      })
+    );
   }
 
   console.log("✅ JOI VALIDATION PASSED:", value);
@@ -140,12 +138,23 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
         continue;
       }
 
-      const isNew =
-        product.createdAt.getTime() === product.updatedAt.getTime();
+      const isNew = product.createdAt.getTime() === product.updatedAt.getTime();
 
-      if (isNew) created.push({ size, productId: product._id });
-      else updated.push({ size, productId: product._id });
+      if (isNew)
+        created.push({
+          size,
+          productId: product._id,
+          barcode: product.barcode,
+        });
+      else
+        updated.push({
+          size,
+          productId: product._id,
+          barcode: product.barcode,
+        });
     }
+
+    // ... existing code ...
 
     return res.status(200).json(
       new apiResponse(200, "Bulk operation complete", {
@@ -174,7 +183,6 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
     );
   }
 });
-
 
 // Create or update a product
 export const createProduct = asyncHandler(async (req, res) => {
