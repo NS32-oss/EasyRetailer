@@ -350,7 +350,7 @@ export default function SalesCart() {
           } catch (error) {
             console.error("Error generating bill:", error);
             setNotification({
-              message: "Sale created but failed to generate bill: " + error.message,
+              message: "Sale created but failed to generate bill: " + (error as Error).message,
               type: "error",
             });
 
