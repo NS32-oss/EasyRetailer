@@ -7,7 +7,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-import { PlusIcon} from "@heroicons/react/24/outline";
+import { PlusIcon } from "@heroicons/react/24/outline";
 
 interface Brand {
   _id: string;
@@ -22,7 +22,6 @@ interface ProductType {
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
 
 export default function InventoryForm({ onSuccess }: InventoryFormProps) {
-
   // Form state
   const [formData, setFormData] = useState({
     brand: "",
@@ -297,192 +296,198 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-      <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Add New Product
-          </h3>
-        </div>
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-lg">
+      <div className="px-4 py-5 sm:px-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          Add New Product
+        </h3>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          Fill in the details to add a product to inventory
+        </p>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md dark:bg-red-900/30 dark:text-red-400">
-          {error}
-        </div>
-      )}
+      <div className="px-4 py-6 sm:px-6">
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 rounded-xl border border-red-200 dark:border-red-800 text-sm">
+            {error}
+          </div>
+        )}
 
-      {success && (
-        <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md dark:bg-green-900/30 dark:text-green-400">
-          {success}
-        </div>
-      )}
+        {success && (
+          <div className="mb-4 p-4 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-400 rounded-xl border border-green-200 dark:border-green-800 text-sm">
+            {success}
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Brand Field with Autocomplete */}
-        <div className="relative" ref={brandDropdownRef}>
-          <Label>Brand</Label>
-          <Input
-            name="brand"
-            value={formData.brand}
-            onChange={handleInputChange}
-            onFocus={() => setShowBrandDropdown(true)}
-            placeholder="Enter brand name"
-            className="w-full"
-          />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Brand Field with Autocomplete */}
+          <div className="relative" ref={brandDropdownRef}>
+            <Label>Brand</Label>
+            <Input
+              name="brand"
+              value={formData.brand}
+              onChange={handleInputChange}
+              onFocus={() => setShowBrandDropdown(true)}
+              placeholder="Enter brand name"
+              className="w-full"
+            />
 
-          {showBrandDropdown && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
-              {filteredBrands.length > 0 ? (
-                filteredBrands.map((brand) => (
-                  <div
-                    key={brand._id}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 dark:text-white"
-                    onClick={() => handleBrandSelect(brand.name)}
-                  >
-                    {brand.name}
+            {showBrandDropdown && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
+                {filteredBrands.length > 0 ? (
+                  filteredBrands.map((brand) => (
+                    <div
+                      key={brand._id}
+                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-700 dark:text-white text-sm"
+                      onClick={() => handleBrandSelect(brand.name)}
+                    >
+                      {brand.name}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">
+                    No brands found
                   </div>
-                ))
-              ) : (
-                <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                  No brands found
-                </div>
-              )}
+                )}
 
-              {newBrand && (
-                <div
-                  className="px-4 py-2 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30"
-                  onClick={handleCreateBrand}
-                >
-                  + Save "{formData.brand}" as new brand
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Size Field */}
-        <div>
-          <Label>Size</Label>
-          <select
-            name="size"
-            value={formData.size}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-          >
-            {sizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Type Field with Autocomplete */}
-        <div className="relative" ref={typeDropdownRef}>
-          <Label>Type</Label>
-          <Input
-            name="type"
-            value={formData.type}
-            onChange={handleInputChange}
-            onFocus={() => setShowTypeDropdown(true)}
-            placeholder="Enter product type"
-            className="w-full"
-          />
-
-          {showTypeDropdown && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
-              {filteredTypes.length > 0 ? (
-                filteredTypes.map((type) => (
+                {newBrand && (
                   <div
-                    key={type._id}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 dark:text-white"
-                    onClick={() => handleTypeSelect(type.name)}
+                    className="px-4 py-3 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-medium"
+                    onClick={handleCreateBrand}
                   >
-                    {type.name}
+                    + Save "{formData.brand}" as new brand
                   </div>
-                ))
-              ) : (
-                <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                  No product types found
-                </div>
-              )}
+                )}
+              </div>
+            )}
+          </div>
 
-              {newType && (
-                <div className="px-4 py-2 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30">
-                  + Save "{formData.type}" as new product type
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+          {/* Size Field */}
+          <div>
+            <Label>Size</Label>
+            <select
+              name="size"
+              value={formData.size}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm"
+            >
+              {sizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Subtype Field */}
-        <div>
-          <Label>Subtype</Label>
-          <Input
-            name="subtype"
-            value={formData.subtype}
-            onChange={handleInputChange}
-            placeholder="Enter product subtype"
-            className="w-full"
-          />
-        </div>
+          {/* Type Field with Autocomplete */}
+          <div className="relative" ref={typeDropdownRef}>
+            <Label>Type</Label>
+            <Input
+              name="type"
+              value={formData.type}
+              onChange={handleInputChange}
+              onFocus={() => setShowTypeDropdown(true)}
+              placeholder="Enter product type"
+              className="w-full"
+            />
 
-        {/* Quantity Field */}
-        <div>
-          <Label>Quantity</Label>
-          <Input
-            name="quantity"
-            type="number"
-            value={formData.quantity}
-            onChange={handleInputChange}
-            min="1"
-            className="w-full"
-          />
-        </div>
+            {showTypeDropdown && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
+                {filteredTypes.length > 0 ? (
+                  filteredTypes.map((type) => (
+                    <div
+                      key={type._id}
+                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-700 dark:text-white text-sm"
+                      onClick={() => handleTypeSelect(type.name)}
+                    >
+                      {type.name}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">
+                    No product types found
+                  </div>
+                )}
 
-        {/* Cost Price Field */}
-        <div>
-          <Label>Cost Price</Label>
-          <Input
-            name="cost_price"
-            type="number"
-            value={formData.cost_price}
-            onChange={handleInputChange}
-            min="0"
-            step={0.01}
-            className="w-full"
-          />
-        </div>
+                {newType && (
+                  <div
+                    className="px-4 py-3 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-medium"
+                    onClick={handleCreateBrand}
+                  >
+                    + Save "{formData.type}" as new product type
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
-        {/* Unit Price Field */}
-        <div>
-          <Label>Sales Price</Label>
-          <Input
-            name="unit_price"
-            type="number"
-            value={formData.unit_price}
-            onChange={handleInputChange}
-            min="0"
-            step={0.01}
-            className="w-full"
-          />
-        </div>
+          {/* Subtype Field */}
+          <div>
+            <Label>Subtype</Label>
+            <Input
+              name="subtype"
+              value={formData.subtype}
+              onChange={handleInputChange}
+              placeholder="Enter product subtype"
+              className="w-full"
+            />
+          </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className={`px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium flex items-center gap-2 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            <PlusIcon className="h-5 w-5" /> Add Product
-          </button>
-        </div>
-      </form>
+          {/* Quantity Field */}
+          <div>
+            <Label>Quantity</Label>
+            <Input
+              name="quantity"
+              type="number"
+              value={formData.quantity}
+              onChange={handleInputChange}
+              min="1"
+              className="w-full"
+            />
+          </div>
+
+          {/* Cost Price Field */}
+          <div>
+            <Label>Cost Price</Label>
+            <Input
+              name="cost_price"
+              type="number"
+              value={formData.cost_price}
+              onChange={handleInputChange}
+              min="0"
+              step={0.01}
+              className="w-full"
+            />
+          </div>
+
+          {/* Unit Price Field */}
+          <div>
+            <Label>Sales Price</Label>
+            <Input
+              name="unit_price"
+              type="number"
+              value={formData.unit_price}
+              onChange={handleInputChange}
+              min="0"
+              step={0.01}
+              className="w-full"
+            />
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full px-6 py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform ${
+                loading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+            >
+              <PlusIcon className="h-5 w-5" />{" "}
+              {loading ? "Adding..." : "Add Product"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

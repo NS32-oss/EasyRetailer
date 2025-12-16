@@ -1,3 +1,5 @@
+"use client";
+
 // Inventory.tsx (updated)
 import { useEffect, useState, useCallback } from "react";
 import {
@@ -74,9 +76,11 @@ export default function Inventory({ limit }: InventoryProps) {
 
     if (priceRange.min || priceRange.max) {
       filtered = filtered.filter((item) => {
-        const unitPrice = parseFloat(item.unitPrice.replace("₹", ""));
-        const minPrice = priceRange.min ? parseFloat(priceRange.min) : 0;
-        const maxPrice = priceRange.max ? parseFloat(priceRange.max) : Infinity;
+        const unitPrice = Number.parseFloat(item.unitPrice.replace("₹", ""));
+        const minPrice = priceRange.min ? Number.parseFloat(priceRange.min) : 0;
+        const maxPrice = priceRange.max
+          ? Number.parseFloat(priceRange.max)
+          : Number.POSITIVE_INFINITY;
         return unitPrice >= minPrice && unitPrice <= maxPrice;
       });
     }
@@ -115,8 +119,6 @@ export default function Inventory({ limit }: InventoryProps) {
     priceRange.min ||
     priceRange.max;
 
-  // ... existing code ...
-
   const fetchProducts = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/product`);
@@ -141,42 +143,45 @@ export default function Inventory({ limit }: InventoryProps) {
     }
   }, [limit]);
 
-  // ... existing code ...
-
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-      <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 md:pb-6">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 md:static md:bg-transparent md:border-0 md:rounded-2xl md:border md:px-6 md:mb-0">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white md:text-lg">
             Inventory
           </h3>
-        </div>
-
-        <div className="flex items-center gap-3">
           <button
             onClick={() => setShowFilterModal(true)}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-theme-sm font-medium shadow ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm md:rounded-lg md:px-4 md:py-2.5 md:text-sm ${
               hasActiveFilters
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-gray-600 text-white hover:bg-gray-700"
+                ? "bg-green-600 text-white"
+                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
             }`}
           >
-            🔍 Filter {hasActiveFilters && `(${filteredData.length})`}
+            🔍 <span className="hidden sm:inline">Filter</span>
+            {hasActiveFilters && (
+              <span className="bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 rounded-full px-1.5 py-0.5 text-xs font-bold">
+                {filteredData.length}
+              </span>
+            )}
           </button>
+        </div>
 
+        <div className="flex gap-2">
           <button
             onClick={() => {
               setShowInventoryForm(true);
               setShowBulkForm(false);
               setBulkReport(null);
             }}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-theme-sm font-medium text-white shadow hover:bg-blue-700"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg active:scale-95 transition-transform md:flex-initial md:rounded-lg md:px-4 md:py-2.5"
           >
-            <PlusIcon className="h-5 w-5" /> Add Individual
+            <PlusIcon className="h-5 w-5" />
+            <span className="md:inline">Add Individual</span>
           </button>
 
           <button
@@ -184,16 +189,17 @@ export default function Inventory({ limit }: InventoryProps) {
               setShowBulkForm(true);
               setShowInventoryForm(false);
             }}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-theme-sm font-medium text-white shadow hover:bg-blue-700"
+            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg active:scale-95 transition-transform md:flex-initial md:rounded-lg md:px-4 md:py-2.5"
           >
-            <PlusIcon className="h-5 w-5" /> Add Bulk
+            <PlusIcon className="h-5 w-5" />
+            <span className="md:inline">Add Bulk</span>
           </button>
         </div>
       </div>
 
       {/* Individual form */}
       {showInventoryForm && (
-        <div className="mt-6">
+        <div className="px-4 mt-4 md:px-6">
           <InventoryForm
             onSuccess={() => {
               setShowInventoryForm(false);
@@ -202,7 +208,7 @@ export default function Inventory({ limit }: InventoryProps) {
           />
           <button
             onClick={() => setShowInventoryForm(false)}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center gap-2"
+            className="mt-4 w-full px-4 py-3 bg-red-600 text-white rounded-xl font-medium active:scale-95 transition-transform inline-flex items-center justify-center gap-2 md:w-auto md:rounded-lg md:py-2"
           >
             <XMarkIcon className="h-5 w-5" /> Close Form
           </button>
@@ -211,14 +217,11 @@ export default function Inventory({ limit }: InventoryProps) {
 
       {/* Bulk form */}
       {showBulkForm && (
-        <div className="mt-6">
+        <div className="px-4 mt-4 md:px-6">
           <BulkInventoryForm
             onSuccess={(result) => {
-              // result should contain created / updated / errors
               setBulkReport(result);
-              // auto re-fetch inventory as requested
               fetchProducts();
-              // keep showing report (BulkInventoryForm also shows report)
             }}
             onCancel={() => {
               setShowBulkForm(false);
@@ -230,27 +233,26 @@ export default function Inventory({ limit }: InventoryProps) {
               setShowBulkForm(false);
               setBulkReport(null);
             }}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center gap-2"
+            className="mt-4 w-full px-4 py-3 bg-red-600 text-white rounded-xl font-medium active:scale-95 transition-transform inline-flex items-center justify-center gap-2 md:w-auto md:rounded-lg md:py-2"
           >
             <XMarkIcon className="h-5 w-5" /> Close Bulk Form
           </button>
-          {/* Additional inline summary (optional, keeps visible outside the form) */}
           {bulkReport && (
-            <div className="mt-3 p-4 bg-slate-50 rounded-lg border shadow-sm">
-              <div className="font-bold mb-3 text-gray-800 dark:text-black">
+            <div className="mt-3 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+              <div className="font-bold mb-3 text-gray-900 dark:text-white">
                 Bulk Add Summary
               </div>
               <div className="space-y-4">
                 {bulkReport.created?.length > 0 && (
                   <div>
-                    <div className="font-medium text-green-700 mb-2">
+                    <div className="font-medium text-green-700 dark:text-green-400 mb-2 text-sm">
                       Created Products
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {bulkReport.created.map((c: any) => (
                         <div
                           key={c.productId}
-                          className="p-2 bg-green-100 border border-green-200 rounded-md text-sm text-green-800"
+                          className="p-2 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg text-xs text-green-800 dark:text-green-300"
                         >
                           Size: {c.size.toUpperCase()} — Barcode: {c.barcode}
                         </div>
@@ -261,14 +263,14 @@ export default function Inventory({ limit }: InventoryProps) {
 
                 {bulkReport.updated?.length > 0 && (
                   <div>
-                    <div className="font-medium text-blue-700 mb-2">
+                    <div className="font-medium text-blue-700 dark:text-blue-400 mb-2 text-sm">
                       Updated Products
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {bulkReport.updated.map((u: any) => (
                         <div
                           key={u.productId}
-                          className="p-2 bg-blue-100 border border-blue-200 rounded-md text-sm text-blue-800"
+                          className="p-2 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300"
                         >
                           Size: {u.size.toUpperCase()} — Barcode: {u.barcode}
                         </div>
@@ -279,12 +281,14 @@ export default function Inventory({ limit }: InventoryProps) {
 
                 {bulkReport.errors?.length > 0 && (
                   <div>
-                    <div className="font-medium text-red-700 mb-2">Errors</div>
+                    <div className="font-medium text-red-700 dark:text-red-400 mb-2 text-sm">
+                      Errors
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {bulkReport.errors.map((er: any, idx: number) => (
                         <div
                           key={idx}
-                          className="p-2 bg-red-100 border border-red-200 rounded-md text-sm text-red-800"
+                          className="p-2 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-800 dark:text-red-300"
                         >
                           Size: {er.size?.toUpperCase() || "Unknown"} —{" "}
                           {er.message || JSON.stringify(er)}
@@ -299,17 +303,16 @@ export default function Inventory({ limit }: InventoryProps) {
         </div>
       )}
 
-      {/* Filter Modal */}
       {showFilterModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-900 rounded-t-3xl md:rounded-2xl p-6 w-full max-h-[85vh] overflow-y-auto md:max-w-4xl md:max-h-[90vh] shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 🔍 Filter Inventory
               </h3>
               <button
                 onClick={() => setShowFilterModal(false)}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-2 -mr-2"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -318,14 +321,19 @@ export default function Inventory({ limit }: InventoryProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Brand Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Brand ({selectedBrands.length} selected)
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Brand
+                  {selectedBrands.length > 0 && (
+                    <span className="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400">
+                      ({selectedBrands.length} selected)
+                    </span>
+                  )}
                 </label>
-                <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
+                <div className="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-gray-50 dark:bg-gray-800">
                   {brands.map((brand) => (
                     <label
                       key={brand}
-                      className="flex items-center space-x-2 py-1"
+                      className="flex items-center space-x-3 py-2 cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -339,7 +347,7 @@ export default function Inventory({ limit }: InventoryProps) {
                             );
                           }
                         }}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
                         {brand}
@@ -351,14 +359,19 @@ export default function Inventory({ limit }: InventoryProps) {
 
               {/* Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Type ({selectedTypes.length} selected)
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Type
+                  {selectedTypes.length > 0 && (
+                    <span className="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400">
+                      ({selectedTypes.length} selected)
+                    </span>
+                  )}
                 </label>
-                <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
+                <div className="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-gray-50 dark:bg-gray-800">
                   {types.map((type) => (
                     <label
                       key={type}
-                      className="flex items-center space-x-2 py-1"
+                      className="flex items-center space-x-3 py-2 cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -372,7 +385,7 @@ export default function Inventory({ limit }: InventoryProps) {
                             );
                           }
                         }}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
                         {type}
@@ -384,14 +397,19 @@ export default function Inventory({ limit }: InventoryProps) {
 
               {/* Subtype Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Subtype ({selectedSubtypes.length} selected)
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Subtype
+                  {selectedSubtypes.length > 0 && (
+                    <span className="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400">
+                      ({selectedSubtypes.length} selected)
+                    </span>
+                  )}
                 </label>
-                <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
+                <div className="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-gray-50 dark:bg-gray-800">
                   {subtypes.map((subtype) => (
                     <label
                       key={subtype}
-                      className="flex items-center space-x-2 py-1"
+                      className="flex items-center space-x-3 py-2 cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -405,7 +423,7 @@ export default function Inventory({ limit }: InventoryProps) {
                             );
                           }
                         }}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
                         {subtype}
@@ -417,14 +435,19 @@ export default function Inventory({ limit }: InventoryProps) {
 
               {/* Size Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Size ({selectedSizes.length} selected)
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Size
+                  {selectedSizes.length > 0 && (
+                    <span className="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400">
+                      ({selectedSizes.length} selected)
+                    </span>
+                  )}
                 </label>
-                <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-md p-2">
+                <div className="max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl p-3 bg-gray-50 dark:bg-gray-800">
                   {sizes.map((size) => (
                     <label
                       key={size}
-                      className="flex items-center space-x-2 py-1"
+                      className="flex items-center space-x-3 py-2 cursor-pointer"
                     >
                       <input
                         type="checkbox"
@@ -438,7 +461,7 @@ export default function Inventory({ limit }: InventoryProps) {
                             );
                           }
                         }}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
                         {size}
@@ -450,10 +473,10 @@ export default function Inventory({ limit }: InventoryProps) {
 
               {/* Price Range Filter */}
               <div className="md:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
                   Price Range (₹)
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <input
                     type="number"
                     placeholder="Min"
@@ -461,7 +484,7 @@ export default function Inventory({ limit }: InventoryProps) {
                     onChange={(e) =>
                       setPriceRange({ ...priceRange, min: e.target.value })
                     }
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
                   />
                   <input
                     type="number"
@@ -470,16 +493,16 @@ export default function Inventory({ limit }: InventoryProps) {
                     onChange={(e) =>
                       setPriceRange({ ...priceRange, max: e.target.value })
                     }
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
+              <div className="text-sm text-gray-600 dark:text-gray-400 text-center md:text-left">
                 {hasActiveFilters ? (
-                  <span>
+                  <span className="font-medium">
                     Showing {filteredData.length} of {tableData.length} products
                   </span>
                 ) : (
@@ -489,13 +512,13 @@ export default function Inventory({ limit }: InventoryProps) {
               <div className="flex gap-3">
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                  className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-medium active:scale-95 transition-transform md:flex-initial md:py-2"
                 >
                   Clear All
                 </button>
                 <button
                   onClick={() => setShowFilterModal(false)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold shadow-lg active:scale-95 transition-transform md:flex-initial md:py-2"
                 >
                   Apply Filters
                 </button>
@@ -505,124 +528,203 @@ export default function Inventory({ limit }: InventoryProps) {
         </div>
       )}
 
-      {/* Inventory table */}
-      <div className="max-w-full overflow-x-auto mt-6">
-        <div className="min-w-[800px]">
-          <Table className="table-auto w-full">
-            <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
-              <TableRow>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Brand
-                </TableCell>
+      <div className="px-4 mt-4 md:px-6">
+        {/* Mobile: Card List */}
+        <div className="block md:hidden space-y-3">
+          {filteredData.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800 shadow-sm active:scale-98 transition-transform"
+            >
+              {/* Primary Info Row */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h4 className="font-bold text-base text-gray-900 dark:text-white mb-1">
+                    {item.brand}
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {item.type} {item.subtype && `• ${item.subtype}`}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded-full text-xs font-semibold">
+                    {item.size}
+                  </span>
+                </div>
+              </div>
 
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+              {/* Quantity and Price Row */}
+              <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-800">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">
+                    Quantity
+                  </p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    {item.quantity}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">
+                    Selling Price
+                  </p>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {item.unitPrice}
+                  </p>
+                </div>
+              </div>
+
+              {/* Secondary Info */}
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">
+                    Cost Price
+                  </p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {item.costPrice}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">
+                    Barcode
+                  </p>
+                  <p className="text-xs font-mono text-gray-600 dark:text-gray-400">
+                    {item.barcode}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {filteredData.length === 0 && (
+            <div className="text-center py-16">
+              <div className="text-4xl mb-4">📦</div>
+              <p className="text-gray-500 dark:text-gray-400">
+                No products found
+              </p>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 text-blue-600 dark:text-blue-400 font-medium"
                 >
-                  Type
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Subtype
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Size
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Quantity
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Cost Price
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Selling Price
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Barcode
-                </TableCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {filteredData.length === 0 ? (
-                <TableRow>
-                  <td
-                    colSpan={8}
-                    className="py-8 text-center text-gray-500 dark:text-gray-400"
-                  >
-                    {hasActiveFilters ? (
-                      <div>
-                        <div className="text-lg font-medium mb-2">
-                          No products match your filters
-                        </div>
-                        <div className="text-sm">
-                          Try adjusting your filter criteria or clear all
-                          filters
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-lg font-medium mb-2">
-                          No products in inventory
-                        </div>
-                        <div className="text-sm">
-                          Add some products to get started
-                        </div>
-                      </div>
-                    )}
-                  </td>
-                </TableRow>
-              ) : (
-                filteredData.map((product) => (
-                  <TableRow key={product.id} className="">
-                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                      {product.brand}
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop: Table View */}
+        <div className="hidden md:block overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="max-w-full overflow-x-auto">
+            <div className="min-w-[800px]">
+              <Table className="table-auto w-full">
+                <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
+                  <TableRow>
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                    >
+                      Brand
                     </TableCell>
-                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                      {product.type}
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                    >
+                      Type
                     </TableCell>
-                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                      {product.subtype}
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                    >
+                      Subtype
                     </TableCell>
-                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                      {product.size}
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                    >
+                      Size
                     </TableCell>
-                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                      {product.quantity}
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                    >
+                      Quantity
                     </TableCell>
-                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                      {product.costPrice}
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                    >
+                      Cost Price
                     </TableCell>
-                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                      {product.unitPrice}
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                    >
+                      Selling Price
                     </TableCell>
-                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                      {product.barcode}
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                    >
+                      Barcode
                     </TableCell>
                   </TableRow>
-                ))
+                </TableHeader>
+                <TableBody>
+                  {filteredData.map((item) => (
+                    <TableRow
+                      key={item.id}
+                      className="border-gray-100 dark:border-gray-800 border-b last:border-b-0"
+                    >
+                      <TableCell className="py-3 text-gray-800 dark:text-gray-200">
+                        {item.brand}
+                      </TableCell>
+                      <TableCell className="py-3 text-gray-600 dark:text-gray-400">
+                        {item.type}
+                      </TableCell>
+                      <TableCell className="py-3 text-gray-600 dark:text-gray-400">
+                        {item.subtype}
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+                          {item.size}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3 font-medium text-gray-800 dark:text-gray-200">
+                        {item.quantity}
+                      </TableCell>
+                      <TableCell className="py-3 text-gray-600 dark:text-gray-400">
+                        {item.costPrice}
+                      </TableCell>
+                      <TableCell className="py-3 font-medium text-green-600 dark:text-green-400">
+                        {item.unitPrice}
+                      </TableCell>
+                      <TableCell className="py-3 text-xs font-mono text-gray-500 dark:text-gray-500">
+                        {item.barcode}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {filteredData.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="text-4xl mb-4">📦</div>
+                  <p className="text-gray-500 dark:text-gray-400">
+                    No products found
+                  </p>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="mt-4 text-blue-600 dark:text-blue-400 font-medium"
+                    >
+                      Clear filters
+                    </button>
+                  )}
+                </div>
               )}
-            </TableBody>
-          </Table>
+            </div>
+          </div>
         </div>
       </div>
     </div>

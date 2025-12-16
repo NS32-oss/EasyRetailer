@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import type React from "react";
+import { useState, useEffect, useRef } from "react";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { PlusIcon } from "../../icons";
@@ -311,247 +312,259 @@ export default function BulkInventoryForm({
   // JSX — follows the exact card / spacing from BasicTableOne.tsx
   // -----------------------------
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-      <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Add Bulk Products
-          </h3>
-        </div>
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 shadow-lg">
+      <div className="px-4 py-5 sm:px-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+          Add Bulk Products
+        </h3>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          Add multiple sizes at once for the same product
+        </p>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md dark:bg-red-900/30 dark:text-red-400">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Brand Field with Autocomplete */}
-        <div className="relative" ref={brandDropdownRef}>
-          <Label>Brand</Label>
-          <Input
-            name="brand"
-            value={formData.brand}
-            onChange={(e: any) =>
-              setFormData((p) => ({ ...p, brand: e.target.value }))
-            }
-            onFocus={() => setShowBrandDropdown(true)}
-            placeholder="Enter brand name"
-            className="w-full"
-          />
-
-          {showBrandDropdown && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
-              {filteredBrands.length > 0 ? (
-                filteredBrands.map((b) => (
-                  <div
-                    key={b._id}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 dark:text-white"
-                    onClick={() => handleBrandSelect(b.name)}
-                  >
-                    {b.name}
-                  </div>
-                ))
-              ) : (
-                <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                  No brands found
-                </div>
-              )}
-
-              {newBrand && (
-                <div
-                  className="px-4 py-2 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30"
-                  onClick={handleCreateBrand}
-                >
-                  + Save "{formData.brand}" as new brand
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Type Field with Autocomplete */}
-        <div className="relative" ref={typeDropdownRef}>
-          <Label>Type</Label>
-          <Input
-            name="type"
-            value={formData.type}
-            onChange={(e: any) =>
-              setFormData((p) => ({ ...p, type: e.target.value }))
-            }
-            onFocus={() => setShowTypeDropdown(true)}
-            placeholder="Enter product type"
-            className="w-full"
-          />
-
-          {showTypeDropdown && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
-              {filteredTypes.length > 0 ? (
-                filteredTypes.map((t) => (
-                  <div
-                    key={t._id}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer dark:hover:bg-gray-700 dark:text-white"
-                    onClick={() => handleTypeSelect(t.name)}
-                  >
-                    {t.name}
-                  </div>
-                ))
-              ) : (
-                <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
-                  No product types found
-                </div>
-              )}
-
-              {newType && (
-                <div className="px-4 py-2 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30">
-                  + Save "{formData.type}" as new product type
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Subtype Field */}
-        <div>
-          <Label>Subtype</Label>
-          <Input
-            name="subtype"
-            value={formData.subtype}
-            onChange={(e: any) =>
-              setFormData((p) => ({ ...p, subtype: e.target.value }))
-            }
-            placeholder="Enter product subtype"
-            className="w-full"
-          />
-        </div>
-
-        {/* Cost Price Field */}
-        <div>
-          <Label>Cost Price</Label>
-          <Input
-            name="cost_price"
-            type="number"
-            value={formData.cost_price}
-            onChange={(e: any) =>
-              setFormData((p) => ({ ...p, cost_price: e.target.value }))
-            }
-            min="0"
-            step={0.01}
-            className="w-full"
-          />
-        </div>
-
-        {/* Unit Price Field */}
-        <div>
-          <Label>Sales Price</Label>
-          <Input
-            name="unit_price"
-            type="number"
-            value={formData.unit_price}
-            onChange={(e: any) =>
-              setFormData((p) => ({ ...p, unit_price: e.target.value }))
-            }
-            min="0"
-            step={0.01}
-            className="w-full"
-          />
-        </div>
-
-        {/* Sizes Selection */}
-        {availableSizes.length > 0 && (
-          <div>
-            <Label>Sizes</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {availableSizes.map((sz) => {
-                const checked = Boolean(selectedSizes[sz]);
-                return (
-                  <button
-                    key={sz}
-                    type="button"
-                    onClick={() => toggleSize(sz)}
-                    className={`px-3 py-1 rounded-md border ${
-                      checked
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                    }`}
-                  >
-                    {sz.toUpperCase()}
-                  </button>
-                );
-              })}
-            </div>
+      <div className="px-4 py-6 sm:px-6">
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400 rounded-xl border border-red-200 dark:border-red-800 text-sm">
+            {error}
           </div>
         )}
 
-        {/* Selected Sizes with Quantities */}
-        {Object.keys(selectedSizes).length > 0 && (
-          <div>
-            <Label>Selected Sizes</Label>
-            <div className="space-y-3 mt-2">
-              {Object.values(selectedSizes).map((s) => (
-                <div key={s.size} className="flex items-center gap-4">
-                  <div className="w-16 font-medium text-white dark:text-gray-300">
-                    {s.size.toUpperCase()}
-                  </div>
-                  <div className="flex-1">
-                    <Input
-                      type="number"
-                      value={s.quantity}
-                      onChange={(e: any) =>
-                        setQtyForSize(s.size, Number(e.target.value))
-                      }
-                      min="1"
-                      className="w-full"
-                      placeholder="Quantity"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => toggleSize(s.size)}
-                    className="text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Brand Field with Autocomplete */}
+          <div className="relative" ref={brandDropdownRef}>
+            <Label>Brand</Label>
+            <Input
+              name="brand"
+              value={formData.brand}
+              onChange={(e: any) =>
+                setFormData((p) => ({ ...p, brand: e.target.value }))
+              }
+              onFocus={() => setShowBrandDropdown(true)}
+              placeholder="Enter brand name"
+              className="w-full"
+            />
 
-        {/* Submit Button */}
-        <div className="flex justify-end gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className={`px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium flex items-center gap-2 ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            <PlusIcon className="h-5 w-5" /> Add Bulk Products
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              // reset form
-              setFormData({
-                brand: "",
-                type: "",
-                subtype: "",
-                cost_price: "",
-                unit_price: "",
-              });
-              setAvailableSizes([]);
-              setSelectedSizes({});
-              setError("");
-              if (onCancel) onCancel();
-            }}
-            className="px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+            {showBrandDropdown && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
+                {filteredBrands.length > 0 ? (
+                  filteredBrands.map((b) => (
+                    <div
+                      key={b._id}
+                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-700 dark:text-white text-sm"
+                      onClick={() => handleBrandSelect(b.name)}
+                    >
+                      {b.name}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">
+                    No brands found
+                  </div>
+                )}
+
+                {newBrand && (
+                  <div
+                    className="px-4 py-3 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-medium"
+                    onClick={handleCreateBrand}
+                  >
+                    + Save "{formData.brand}" as new brand
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Type Field with Autocomplete */}
+          <div className="relative" ref={typeDropdownRef}>
+            <Label>Type</Label>
+            <Input
+              name="type"
+              value={formData.type}
+              onChange={(e: any) =>
+                setFormData((p) => ({ ...p, type: e.target.value }))
+              }
+              onFocus={() => setShowTypeDropdown(true)}
+              placeholder="Enter product type"
+              className="w-full"
+            />
+
+            {showTypeDropdown && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
+                {filteredTypes.length > 0 ? (
+                  filteredTypes.map((t) => (
+                    <div
+                      key={t._id}
+                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-700 dark:text-white text-sm"
+                      onClick={() => handleTypeSelect(t.name)}
+                    >
+                      {t.name}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">
+                    No product types found
+                  </div>
+                )}
+
+                {newType && (
+                  <div
+                    className="px-4 py-3 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-medium"
+                    onClick={handleCreateBrand}
+                  >
+                    + Save "{formData.type}" as new product type
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Subtype Field */}
+          <div>
+            <Label>Subtype</Label>
+            <Input
+              name="subtype"
+              value={formData.subtype}
+              onChange={(e: any) =>
+                setFormData((p) => ({ ...p, subtype: e.target.value }))
+              }
+              placeholder="Enter product subtype"
+              className="w-full"
+            />
+          </div>
+
+          {/* Cost Price Field */}
+          <div>
+            <Label>Cost Price</Label>
+            <Input
+              name="cost_price"
+              type="number"
+              value={formData.cost_price}
+              onChange={(e: any) =>
+                setFormData((p) => ({ ...p, cost_price: e.target.value }))
+              }
+              min="0"
+              step={0.01}
+              className="w-full"
+            />
+          </div>
+
+          {/* Unit Price Field */}
+          <div>
+            <Label>Sales Price</Label>
+            <Input
+              name="unit_price"
+              type="number"
+              value={formData.unit_price}
+              onChange={(e: any) =>
+                setFormData((p) => ({ ...p, unit_price: e.target.value }))
+              }
+              min="0"
+              step={0.01}
+              className="w-full"
+            />
+          </div>
+
+          {availableSizes.length > 0 && (
+            <div>
+              <Label>Select Sizes</Label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                Tap to select sizes for this product
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {availableSizes.map((sz) => {
+                  const checked = Boolean(selectedSizes[sz]);
+                  return (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => toggleSize(sz)}
+                      className={`px-4 py-2 rounded-xl border font-medium text-sm active:scale-95 transition-all ${
+                        checked
+                          ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {sz.toUpperCase()}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {Object.keys(selectedSizes).length > 0 && (
+            <div>
+              <Label>Set Quantities</Label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                Enter quantity for each selected size
+              </p>
+              <div className="space-y-3">
+                {Object.values(selectedSizes).map((s) => (
+                  <div
+                    key={s.size}
+                    className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="w-16 font-bold text-sm text-gray-900 dark:text-white">
+                      {s.size.toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <Input
+                        type="number"
+                        value={s.quantity}
+                        onChange={(e: any) =>
+                          setQtyForSize(s.size, Number(e.target.value))
+                        }
+                        min="1"
+                        className="w-full"
+                        placeholder="Qty"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleSize(s.size)}
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm font-medium px-2"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full px-6 py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform ${
+                loading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+            >
+              <PlusIcon className="h-5 w-5" />{" "}
+              {loading ? "Adding..." : "Add Bulk Products"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFormData({
+                  brand: "",
+                  type: "",
+                  subtype: "",
+                  cost_price: "",
+                  unit_price: "",
+                });
+                setAvailableSizes([]);
+                setSelectedSizes({});
+                setError("");
+                if (onCancel) onCancel();
+              }}
+              className="w-full px-6 py-3.5 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700 font-medium active:scale-95 transition-transform"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
