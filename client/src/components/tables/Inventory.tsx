@@ -36,7 +36,6 @@ export default function Inventory({ limit }: InventoryProps) {
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [bulkReport, setBulkReport] = useState<any | null>(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [showAddMenu, setShowAddMenu] = useState(false);
 
   // Filter states
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -149,30 +148,15 @@ export default function Inventory({ limit }: InventoryProps) {
   }, [fetchProducts]);
 
   return (
-    <div className="w-full h-full px-3 pt-3">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          {/* MOBILE HEADER */}
-          <div className="flex items-center justify-between md:hidden mb-3">
-            <h3 className="text-lg font-semibold text-gray-900">Inventory</h3>
-
-            <button
-              onClick={() => setShowFilterModal(true)}
-              className={`h-9 px-3 rounded-full flex items-center gap-1 text-sm font-medium ${
-                hasActiveFilters
-                  ? "bg-green-600 text-white"
-                  : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              🔍
-              {hasActiveFilters && (
-                <span className="ml-1 text-xs">{filteredData.length}</span>
-              )}
-            </button>
-          </div>
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            Inventory
+          </h3>
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setShowFilterModal(true)}
             className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-theme-sm font-medium shadow ${
@@ -215,9 +199,7 @@ export default function Inventory({ limit }: InventoryProps) {
               setShowInventoryForm(false);
               fetchProducts();
             }}
-            onCancel={() => setShowInventoryForm(false)}
           />
-
           <button
             onClick={() => setShowInventoryForm(false)}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 inline-flex items-center gap-2"
@@ -231,13 +213,18 @@ export default function Inventory({ limit }: InventoryProps) {
       {showBulkForm && (
         <div className="mt-6">
           <BulkInventoryForm
-            onSuccess={() => {
-              setShowBulkForm(false);
+            onSuccess={(result) => {
+              // result should contain created / updated / errors
+              setBulkReport(result);
+              // auto re-fetch inventory as requested
               fetchProducts();
+              // keep showing report (BulkInventoryForm also shows report)
             }}
-            onCancel={() => setShowBulkForm(false)}
+            onCancel={() => {
+              setShowBulkForm(false);
+              setBulkReport(null);
+            }}
           />
-
           <button
             onClick={() => {
               setShowBulkForm(false);
@@ -519,223 +506,125 @@ export default function Inventory({ limit }: InventoryProps) {
       )}
 
       {/* Inventory table */}
-      <div className="hidden md:block">
-        <div className="max-w-full overflow-x-auto mt-6">
-          <div className="min-w-[800px]">
-            <Table className="table-auto w-full">
-              <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
+      <div className="max-w-full overflow-x-auto mt-6">
+        <div className="min-w-[800px]">
+          <Table className="table-auto w-full">
+            <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
+              <TableRow>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Brand
+                </TableCell>
+
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Type
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Subtype
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Size
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Quantity
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Cost Price
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Selling Price
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Barcode
+                </TableCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {filteredData.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    isHeader
-                    className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                  <td
+                    colSpan={8}
+                    className="py-8 text-center text-gray-500 dark:text-gray-400"
                   >
-                    Brand
-                  </TableCell>
-
-                  <TableCell
-                    isHeader
-                    className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Type
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Subtype
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Size
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Quantity
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Cost Price
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Selling Price
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                  >
-                    Barcode
-                  </TableCell>
+                    {hasActiveFilters ? (
+                      <div>
+                        <div className="text-lg font-medium mb-2">
+                          No products match your filters
+                        </div>
+                        <div className="text-sm">
+                          Try adjusting your filter criteria or clear all
+                          filters
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="text-lg font-medium mb-2">
+                          No products in inventory
+                        </div>
+                        <div className="text-sm">
+                          Add some products to get started
+                        </div>
+                      </div>
+                    )}
+                  </td>
                 </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {filteredData.length === 0 ? (
-                  <TableRow>
-                    <td
-                      colSpan={8}
-                      className="py-8 text-center text-gray-500 dark:text-gray-400"
-                    >
-                      {hasActiveFilters ? (
-                        <div>
-                          <div className="text-lg font-medium mb-2">
-                            No products match your filters
-                          </div>
-                          <div className="text-sm">
-                            Try adjusting your filter criteria or clear all
-                            filters
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="text-lg font-medium mb-2">
-                            No products in inventory
-                          </div>
-                          <div className="text-sm">
-                            Add some products to get started
-                          </div>
-                        </div>
-                      )}
-                    </td>
+              ) : (
+                filteredData.map((product) => (
+                  <TableRow key={product.id} className="">
+                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                      {product.brand}
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                      {product.type}
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                      {product.subtype}
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                      {product.size}
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                      {product.quantity}
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                      {product.costPrice}
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                      {product.unitPrice}
+                    </TableCell>
+                    <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                      {product.barcode}
+                    </TableCell>
                   </TableRow>
-                ) : (
-                  filteredData.map((product) => (
-                    <TableRow key={product.id} className="">
-                      <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                        {product.brand}
-                      </TableCell>
-                      <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                        {product.type}
-                      </TableCell>
-                      <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                        {product.subtype}
-                      </TableCell>
-                      <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                        {product.size}
-                      </TableCell>
-                      <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                        {product.quantity}
-                      </TableCell>
-                      <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                        {product.costPrice}
-                      </TableCell>
-                      <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                        {product.unitPrice}
-                      </TableCell>
-                      <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                        {product.barcode}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
-      {/* MOBILE INVENTORY CARDS */}
-      <div className="block md:hidden space-y-3">
-        {tableData.map((product) => (
-          <div
-            key={product.id}
-            className="bg-white rounded-xl border border-gray-200 p-4"
-          >
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-medium text-gray-900">
-                  {product.brand} {product.type}
-                </p>
-                <p className="text-sm text-gray-500">Size: {product.size}</p>
-                {product.subtype && (
-                  <p className="text-sm text-gray-500">{product.subtype}</p>
-                )}
-              </div>
-
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Qty</p>
-                <p className="font-semibold text-gray-900">
-                  {product.quantity}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-3 flex justify-between items-center">
-              <p className="font-semibold text-gray-900">{product.unitPrice}</p>
-
-              <span className="text-xs text-gray-400">{product.barcode}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* MOBILE ADD MENU */}
-      {showAddMenu && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
-          onClick={() => setShowAddMenu(false)}
-        >
-          <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* <button
-              className="w-full py-3 text-left font-medium"
-              onClick={() => {
-                setShowAddMenu(false);
-                setShowFilterModal(true);
-              }}
-            >
-              🔍 Filter Inventory
-            </button> */}
-
-            <button
-              className="w-full py-3 text-left font-medium"
-              onClick={() => {
-                setShowAddMenu(false);
-                setShowInventoryForm(true);
-              }}
-            >
-              ➕ Add Individual Item
-            </button>
-
-            <button
-              className="w-full py-3 text-left font-medium"
-              onClick={() => {
-                setShowAddMenu(false);
-                setShowBulkForm(true);
-              }}
-            >
-              📦 Add Bulk Items
-            </button>
-
-            <button
-              className="w-full py-3 text-left text-red-500"
-              onClick={() => setShowAddMenu(false)}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MOBILE FAB */}
-      {!showAddMenu && (
-        <div className="fixed bottom-20 right-4 z-50 md:hidden">
-          <button
-            onClick={() => setShowAddMenu(true)}
-            className="h-14 w-14 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg active:scale-95"
-          >
-            +
-          </button>
-        </div>
-      )}
     </div>
   );
 }
