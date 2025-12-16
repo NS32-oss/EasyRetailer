@@ -155,14 +155,56 @@ export default function Inventory({ limit }: InventoryProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 md:pb-6">
-      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 md:static md:bg-transparent md:border-0 md:rounded-2xl md:border md:px-6 md:mb-0">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 md:static md:bg-transparent md:rounded-2xl md:border md:px-6 md:mb-0">
         <div className="flex items-center justify-between mb-3 md:mb-4">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white md:text-lg">
             Inventory
           </h3>
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
+          {/* Left actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setShowInventoryForm(true);
+                setShowBulkForm(false);
+                setBulkReport(null);
+              }}
+              className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all
+        ${
+          activeAction === "individual"
+            ? "bg-blue-700 text-white shadow-md"
+            : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+        }
+      `}
+            >
+              <PlusIcon className="h-4 w-4" />
+              Add Individual
+            </button>
+
+            <button
+              onClick={() => {
+                setShowBulkForm(true);
+                setShowInventoryForm(false);
+              }}
+              className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all
+        ${
+          activeAction === "bulk"
+            ? "bg-blue-700 text-white shadow-md"
+            : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+        }
+      `}
+            >
+              <PlusIcon className="h-4 w-4" />
+              Add Bulk
+            </button>
+          </div>
+
+          {/* Right action */}
           <button
             onClick={() => setShowFilterModal(true)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm md:rounded-lg md:px-4 md:py-2.5 md:text-sm ${
+            className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium shadow-sm md:rounded-lg md:px-4 md:py-2.5 md:text-sm ${
               hasActiveFilters
                 ? "bg-green-600 text-white"
                 : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
@@ -174,43 +216,6 @@ export default function Inventory({ limit }: InventoryProps) {
                 {filteredData.length}
               </span>
             )}
-          </button>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              setShowInventoryForm(true);
-              setShowBulkForm(false);
-              setBulkReport(null);
-            }}
-            className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all
-      ${
-        activeAction === "individual"
-          ? "bg-blue-700 text-white shadow-md"
-          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-      }
-    `}
-          >
-            <PlusIcon className="h-4 w-4" />
-            Add Individual
-          </button>
-
-          <button
-            onClick={() => {
-              setShowBulkForm(true);
-              setShowInventoryForm(false);
-            }}
-            className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all
-      ${
-        activeAction === "bulk"
-          ? "bg-blue-700 text-white shadow-md"
-          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-      }
-    `}
-          >
-            <PlusIcon className="h-4 w-4" />
-            Add Bulk
           </button>
         </div>
       </div>
