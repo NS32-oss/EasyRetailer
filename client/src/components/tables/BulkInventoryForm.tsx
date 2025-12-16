@@ -40,7 +40,6 @@ const TYPE_SIZE_MAP: Record<string, string[]> = {
 
 export default function BulkInventoryForm({
   onSuccess,
-  onCancel,
 }: BulkInventoryFormProps) {
   // form state (strings for inputs to match your InventoryForm handling)
   const [formData, setFormData] = useState({
@@ -542,25 +541,6 @@ export default function BulkInventoryForm({
             >
               <PlusIcon className="h-5 w-5" />{" "}
               {loading ? "Adding..." : "Add Bulk Products"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({
-                  brand: "",
-                  type: "",
-                  subtype: "",
-                  cost_price: "",
-                  unit_price: "",
-                });
-                setAvailableSizes([]);
-                setSelectedSizes({});
-                setError("");
-                if (onCancel) onCancel();
-              }}
-              className="w-full px-6 py-3.5 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700 font-medium active:scale-95 transition-transform"
-            >
-              Cancel
             </button>
           </div>
         </form>
