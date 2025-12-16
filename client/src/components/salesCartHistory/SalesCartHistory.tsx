@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Notification } from "../toastNotification/Notification";
@@ -146,7 +148,7 @@ export default function SalesCartHistory() {
         // Automatically open WhatsApp with the bill
         setTimeout(() => {
           const whatsappUrl = generateWhatsAppUrl();
-          window.open(whatsappUrl, '_blank');
+          window.open(whatsappUrl, "_blank");
         }, 500);
       } else {
         throw new Error(data.message || "Failed to generate bill");
@@ -195,7 +197,8 @@ export default function SalesCartHistory() {
               Generate Bill
             </h3>
             <p className="mb-4 text-gray-600 dark:text-gray-300">
-              Enter the customer's mobile number to generate and send the bill on WhatsApp:
+              Enter the customer's mobile number to generate and send the bill
+              on WhatsApp:
             </p>
 
             <div className="mb-4">
@@ -252,53 +255,113 @@ export default function SalesCartHistory() {
       )}
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-        <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 lg:text-lg">
               Sale Details
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Transaction ID: {sale._id}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Date: {formattedDate}
-            </p>
+            <div className="mt-2 space-y-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+                <span className="font-medium">ID:</span> {sale._id.slice(-8)}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 sm:text-sm">
+                <span className="font-medium">Date:</span> {formattedDate}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {!sale.bill_generated && (
               <button
                 onClick={() => setShowBillModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 text-sm font-medium active:scale-95 transition-transform"
               >
-                Generate Bill
+                <span>📄</span>
+                <span>Generate Bill</span>
               </button>
             )}
             {sale.bill_generated && sale.customer_mobile && (
               <button
                 onClick={() => {
                   const whatsappUrl = generateWhatsAppUrl();
-                  window.open(whatsappUrl, '_blank');
+                  window.open(whatsappUrl, "_blank");
                   setNotification({
                     message: "Bill sent on WhatsApp again",
                     type: "success",
                   });
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-sm font-medium active:scale-95 transition-transform"
               >
-                📱 Send Bill Again
+                <span>📱</span>
+                <span>Send Again</span>
               </button>
             )}
             <button
               onClick={() => window.history.back()}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium active:scale-95 transition-transform"
             >
               Back
             </button>
           </div>
         </div>
 
-        <div className="max-w-full overflow-x-auto">
+        {/* Mobile Card View */}
+        <div className="flex flex-col gap-3 lg:hidden mb-6">
+          {sale.products.map((product) => (
+            <div
+              key={product._id}
+              className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                    {product.brand}
+                  </h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {product.type} • Size {product.size}
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium">
+                  Qty: {product.quantity}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Unit Price
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    ₹{product.unit_price.toFixed(2)}
+                  </span>
+                </div>
+                {product.discount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Discount
+                    </span>
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      -₹{product.discount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Total Amount
+                    </span>
+                    <span className="font-bold text-gray-900 dark:text-white">
+                      ₹{product.selling_price.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden lg:block max-w-full overflow-x-auto">
           <div className="min-w-[800px]">
             <table className="table-auto w-full">
               {/* Table Header */}
@@ -360,44 +423,50 @@ export default function SalesCartHistory() {
           </div>
         </div>
 
-        {/* Summary Section */}
-        <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
-          <div className="flex flex-col gap-2 sm:items-end">
-            <div className="flex justify-between sm:w-64">
+        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+            Payment Summary
+          </h4>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
-                Total Discount:
+                Total Discount
               </span>
-              <span className="font-medium text-gray-800 dark:text-white">
-                ₹{sale.final_discount.toFixed(2)}
+              <span className="font-medium text-green-600 dark:text-green-400">
+                -₹{sale.final_discount.toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between sm:w-64">
+            <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
-                Final Amount:
-              </span>
-              <span className="font-semibold text-lg text-gray-900 dark:text-white">
-                ₹{sale.total_price.toFixed(2)}
-              </span>
-            </div>
-            <div className="flex justify-between sm:w-64">
-              <span className="text-gray-600 dark:text-gray-400">
-                Payment Method:
+                Payment Method
               </span>
               <span className="font-medium text-gray-800 dark:text-white">
                 {sale.payment_method}
               </span>
             </div>
-            <div className="flex justify-between sm:w-64">
+            <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
-                Bill Status:
+                Bill Status
               </span>
               <span
-                className={`font-medium ${
-                  sale.bill_generated ? "text-green-600" : "text-yellow-600"
+                className={`font-medium px-2 py-0.5 rounded-md text-xs ${
+                  sale.bill_generated
+                    ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                    : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
                 }`}
               >
                 {sale.bill_generated ? "Generated" : "Not Generated"}
               </span>
+            </div>
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  Final Amount
+                </span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  ₹{sale.total_price.toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
         </div>

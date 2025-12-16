@@ -4,11 +4,9 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { Notification } from "../toastNotification/Notification";
 
-import { TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
-
 // Define the TypeScript interface for the cart items
 interface CartItem {
-  id: string;
+  id: string; // Changed from _id to id to match API response _id
   brand: string;
   size: string;
   type: string;
@@ -17,6 +15,8 @@ interface CartItem {
   discount: number;
   amountPayable: number;
   selected: boolean;
+  cost_price: number; // Added for display in summary
+  selling_price: number; // Added for display in summary
 }
 
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
@@ -26,8 +26,6 @@ export default function SalesCart() {
   const [barcode, setBarcode] = useState("");
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
-  // Remove totalDiscountInput
-  // const [showScanner, setShowScanner] = useState(false);
   const [showBillModal, setShowBillModal] = useState(false);
   const [customerMobile, setCustomerMobile] = useState("");
   const [mobileError, setMobileError] = useState("");
@@ -38,6 +36,13 @@ export default function SalesCart() {
     message: string;
     type: "success" | "error" | "info";
   } | null>(null);
+
+  // For the new UI elements
+  const [scannedBarcode, setScannedBarcode] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const [extraDiscount, setExtraDiscount] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false); // Assuming this is needed for payment processing
 
   // Calculate totals whenever cart items change
   useEffect(() => {
@@ -53,21 +58,18 @@ export default function SalesCart() {
   // Function to add a product by barcode
   const addProductByBarcode = async (barcodeValue: string) => {
     if (!barcodeValue.trim()) return;
-    // alert(`Adding product with barcode  1: ${barcodeValue}`);
     try {
-      // Fetch product details from the API
       const response = await fetch(
         `${API_BASE_URL}/api/v1/product/barcode/${barcodeValue}`
       );
       const data = await response.json();
-      console.log("Product data:", data);
-      // alert(`Adding product with barcode  2: ${barcodeValue}`);
+
       if (data.status == 200) {
         const product = data.data;
         const unitPrice = product.unit_price;
 
         const newItem: CartItem = {
-          id: product._id, // Use the product ID from the API
+          id: product._id,
           brand: product.brand,
           size: product.size,
           type: product.type,
@@ -76,16 +78,33 @@ export default function SalesCart() {
           discount: 0,
           amountPayable: unitPrice,
           selected: false,
+          cost_price: unitPrice, // Assuming cost_price is the same as unit_price initially
+          selling_price: unitPrice, // Assuming selling_price is the same as unit_price initially
         };
 
-        setCartItems((prev) => [...prev, newItem]);
+        // Check if item already exists and update quantity
+        setCartItems((prev) => {
+          const existingItemIndex = prev.findIndex(
+            (item) => item.id === newItem.id
+          );
+          if (existingItemIndex > -1) {
+            const updatedItems = [...prev];
+            updatedItems[existingItemIndex].quantity += 1;
+            updatedItems[existingItemIndex].amountPayable =
+              updatedItems[existingItemIndex].unitPrice *
+              updatedItems[existingItemIndex].quantity;
+            return updatedItems;
+          }
+          return [...prev, newItem];
+        });
+
         setBarcode("");
+        setScannedBarcode(""); // Clear scanned barcode input as well
         setNotification({
           message: "Product added successfully",
           type: "success",
         });
       } else {
-        alert("Product not found");
         setNotification({ message: "Product not found", type: "error" });
       }
     } catch (error) {
@@ -156,8 +175,8 @@ export default function SalesCart() {
       })
     );
   };
-  // ... existing code ...
 
+  // Function to handle final amount change for the entire cart
   const handleFinalAmountChange = (value: string) => {
     const newFinal = Number(value);
     const totalBefore = cartItems.reduce(
@@ -186,8 +205,6 @@ export default function SalesCart() {
     );
   };
 
-  // ... existing code ...
-
   // Function to toggle item selection
   const toggleItemSelection = (id: string) => {
     setCartItems((prev) =>
@@ -213,17 +230,12 @@ export default function SalesCart() {
 
   // Function to validate mobile number
   const validateMobileNumber = (mobile: string): boolean => {
-    // Check if mobile number is exactly 10 digits
     const mobileRegex = /^\d{10}$/;
     return mobileRegex.test(mobile);
   };
 
   // Function to generate WhatsApp message and URL
   const generateWhatsAppUrl = (saleId: string) => {
-    console.log("Generating WhatsApp URL for sale:", saleId);
-    console.log("Customer mobile:", customerMobile);
-    console.log("Cart items:", cartItems);
-
     let message = `🧾 *INVOICE*\n`;
     message += `───────────────\n`;
     message += `*Sale ID:* ${saleId}\n\n`;
@@ -251,58 +263,46 @@ export default function SalesCart() {
 
     message += `\n🛍️ *Thank you for shopping!*`;
 
-    // Encode the message
     const encoded = encodeURIComponent(message);
-
-    // Build WhatsApp URL (add country code 91 for India)
     const phone = `91${customerMobile}`;
     const url = `https://wa.me/${phone}?text=${encoded}`;
 
-    console.log("Generated WhatsApp URL:", url);
     return url;
   };
 
   // Function to generate bill and create sale
   const handleGenerateBill = async () => {
-    console.log("handleGenerateBill called");
     if (cartItems.length === 0) {
       setNotification({ message: "Cart is empty", type: "error" });
       return;
     }
 
-    // Validate mobile number
     if (!validateMobileNumber(customerMobile)) {
       setMobileError("Please enter a valid 10-digit mobile number");
       return;
     }
 
     setMobileError("");
-    console.log("Validation passed, creating sale...");
 
     try {
-      // Prepare the sale data with correct calculations
       const saleData = {
         products: cartItems.map((item) => ({
           product_id: item.id,
           quantity: item.quantity,
           unit_price: item.unitPrice,
           discount: item.discount,
-          // Make sure selling_price is the final amount for this item only
           selling_price: item.amountPayable,
-          cost_price: item.unitPrice,
+          cost_price: item.unitPrice, // Assuming cost_price is the same as unitPrice
           brand: item.brand,
           size: item.size,
           type: item.type,
         })),
-        // Use the calculated totalAmount directly
         total_price: totalAmount,
         final_discount: totalDiscount,
         payment_method: paymentMethod,
         customer_mobile: customerMobile,
         bill_generated: true,
       };
-
-      console.log("Sending sale data:", saleData);
 
       const response = await fetch(`${API_BASE_URL}/api/v1/sales`, {
         method: "POST",
@@ -313,12 +313,8 @@ export default function SalesCart() {
       });
 
       const data = await response.json();
-      console.log("API response:", data);
 
       if (data.status === 201) {
-        console.log("Sale created:", saleData);
-
-        // Now generate the bill
         if (data.data && data.data._id) {
           try {
             const billResponse = await fetch(
@@ -332,24 +328,18 @@ export default function SalesCart() {
               }
             );
 
-            console.log("Bill API status:", billResponse.status);
-
             const billData = await billResponse.json();
-            console.log("Bill API response:", billData);
 
             if (billData.status === 200) {
-              console.log("Bill generated successfully, showing success modal");
               setNotification({
                 message: "Sale created and bill generated successfully",
                 type: "success",
               });
 
-              // Show success modal instead of redirecting immediately
               setGeneratedSaleId(data.data._id);
               setShowSuccessModal(true);
               setShowBillModal(false);
 
-              // Automatically open WhatsApp with the bill
               setTimeout(() => {
                 const whatsappUrl = generateWhatsAppUrl(data.data._id);
                 window.open(whatsappUrl, "_blank");
@@ -365,9 +355,6 @@ export default function SalesCart() {
                 (error as Error).message,
               type: "error",
             });
-
-            // Don't redirect on bill generation failure - show the error instead
-            // window.location.href = `/sales-cart-history/${data.data._id}`;
           }
         } else {
           console.error("Sale ID not found in response");
@@ -392,7 +379,7 @@ export default function SalesCart() {
       return;
     }
 
-    // Validate cart items
+    // Validate cart items (if needed, based on your backend requirements)
     const invalidItems = cartItems.filter(
       (item) => !item.type || !item.size || !item.brand
     );
@@ -402,7 +389,6 @@ export default function SalesCart() {
     }
 
     try {
-      // Prepare the sale data with correct calculations
       const saleData = {
         products: cartItems.map((item) => ({
           product_id: item.id,
@@ -410,20 +396,17 @@ export default function SalesCart() {
           unit_price: item.unitPrice,
           discount: item.discount,
           selling_price: item.amountPayable,
-          cost_price: item.unitPrice,
+          cost_price: item.unitPrice, // Assuming cost_price is the same as unitPrice
           type: item.type,
           size: item.size,
           brand: item.brand,
         })),
-        // Use the calculated totalAmount directly
         total_price: totalAmount,
         final_discount: totalDiscount,
         payment_method: paymentMethod,
-        customer_mobile: "",
+        customer_mobile: "", // Not provided for sales without bill
         bill_generated: false,
       };
-
-      console.log("Sending sale data:", saleData);
 
       const response = await fetch(`${API_BASE_URL}/api/v1/sales`, {
         method: "POST",
@@ -434,16 +417,13 @@ export default function SalesCart() {
       });
 
       const data = await response.json();
-      console.log("API response:", data);
 
       if (data.status === 201) {
-        console.log("Sale created:", saleData);
         setNotification({
           message: "Sale created successfully",
           type: "success",
         });
 
-        // Redirect to sales history
         if (data.data && data.data._id) {
           window.location.href = `/sales-cart-history/${data.data._id}`;
         } else {
@@ -459,10 +439,108 @@ export default function SalesCart() {
     }
   };
 
-  // Function to handle barcode input submission
-  const handleBarcodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addProductByBarcode(barcode);
+  // Function to handle barcode input submission for adding products
+  const handleBarcodeSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault(); // Prevent default form submission if it's a form event
+    if (scannedBarcode.trim()) {
+      addProductByBarcode(scannedBarcode);
+    }
+  };
+
+  // Function to handle barcode key down event for adding products
+  const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addProductByBarcode(scannedBarcode);
+    }
+  };
+
+  // Function to calculate cart summary (used in the checkout section)
+  const cartSummary = cartItems.reduce(
+    (acc, item) => {
+      const itemCostPrice = item.unitPrice * item.quantity;
+      const itemSellingPrice = item.amountPayable;
+      const itemDiscount = item.discount;
+
+      acc.totalCostPrice += itemCostPrice;
+      acc.totalDiscount += itemDiscount;
+      acc.totalSellingPrice += itemSellingPrice;
+      return acc;
+    },
+    { totalCostPrice: 0, totalDiscount: 0, totalSellingPrice: 0 }
+  );
+
+  // Function to open the payment modal
+  const handleOpenPaymentModal = () => {
+    if (cartItems.length === 0) {
+      setNotification({ message: "Cart is empty", type: "error" });
+      return;
+    }
+    // Apply extra discount if any
+    if (extraDiscount > 0) {
+      applyExtraDiscount(extraDiscount);
+    }
+    setShowPaymentModal(true);
+  };
+
+  // Function to apply extra discount to the cart items
+  const applyExtraDiscount = (discountPercentage: number) => {
+    const totalAmountBeforeDiscount = cartSummary.totalSellingPrice;
+    if (totalAmountBeforeDiscount === 0) return;
+
+    const discountAmount =
+      (totalAmountBeforeDiscount * discountPercentage) / 100;
+    const newTotalAmount = totalAmountBeforeDiscount - discountAmount;
+
+    // Distribute discount proportionally to items
+    setCartItems((prev) =>
+      prev.map((item) => {
+        const itemValue = item.amountPayable; // Use current amount payable
+        const additionalDiscount =
+          (itemValue / totalAmountBeforeDiscount) * discountAmount;
+        const newItemAmountPayable =
+          Math.round((item.amountPayable - additionalDiscount) * 100) / 100;
+        const newItemDiscount =
+          Math.round((item.discount + additionalDiscount) * 100) / 100;
+
+        return {
+          ...item,
+          discount: newItemDiscount,
+          amountPayable: newItemAmountPayable,
+        };
+      })
+    );
+    setExtraDiscount(0); // Reset extra discount input
+  };
+
+  // Function to clear the entire cart
+  const clearCart = () => {
+    setCartItems([]);
+    setNotification({ message: "Cart cleared", type: "info" });
+  };
+
+  // Function to update quantity of an item in the cart
+  const updateQuantity = (itemId: string, change: number) => {
+    setCartItems((prev) =>
+      prev.map((item) => {
+        if (item.id === itemId) {
+          const newQuantity = Math.max(1, item.quantity + change);
+          const newAmountPayable = item.unitPrice * newQuantity - item.discount;
+          return {
+            ...item,
+            quantity: newQuantity,
+            amountPayable: newAmountPayable,
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Function to remove an item from the cart
+  const removeFromCart = (itemId: string) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+    setNotification({ message: "Item removed from cart", type: "info" });
   };
 
   return (
@@ -521,7 +599,6 @@ export default function SalesCart() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
-                  console.log("No, Skip clicked - creating sale without bill");
                   handleCreateSaleWithoutBill();
                   setShowBillModal(false);
                 }}
@@ -531,7 +608,6 @@ export default function SalesCart() {
               </button>
               <button
                 onClick={() => {
-                  console.log("Yes, Generate Bill clicked");
                   handleGenerateBill();
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
@@ -581,219 +657,432 @@ export default function SalesCart() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-        <div className="flex flex-col gap-9 mb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 whitespace-nowrap">
-              Sales Cart
+      {/* Payment Modal (Assuming this is a new addition for payment processing) */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              Payment
             </h3>
-          </div>
+            <p className="mb-4 text-gray-600 dark:text-gray-300">
+              Please select your payment method.
+            </p>
 
-          <div className="flex items-center gap-3 w-full">
-            <form
-              onSubmit={handleBarcodeSubmit}
-              className="flex items-center gap-2 flex-1"
-            >
-              <input
-                type="text"
-                placeholder="Enter barcode"
-                value={barcode}
-                onChange={(e) => setBarcode(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-              />
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 whitespace-nowrap"
+            <div className="mb-4">
+              <label className="block text-gray-700 dark:text-gray-300 mb-2">
+                Payment Method:
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
-                <PlusIcon className="h-4 w-4" /> Add Product
-              </button>
-            </form>
-
-            <button
-              onClick={deleteSelectedItems}
-              disabled={!cartItems.some((item) => item.selected)}
-              className={`inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 whitespace-nowrap ${
-                !cartItems.some((item) => item.selected)
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
-            >
-              <TrashIcon className="h-4 w-4" /> Delete Selected
-            </button>
-          </div>
-        </div>
-
-        <div className="max-w-full overflow-x-auto">
-          <div className="min-w-[800px]">
-            <table className="table-auto w-full">
-              {/* Table Header */}
-              <thead className="border-gray-100 dark:border-gray-800 border-y">
-                <tr>
-                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                    Select
-                  </th>
-                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                    Brand
-                  </th>
-                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                    Size
-                  </th>
-                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                    Type
-                  </th>
-                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                    Quantity
-                  </th>
-                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                    Unit Price
-                  </th>
-                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                    Discount
-                  </th>
-                  <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
-                    Amount Payable
-                  </th>
-                </tr>
-              </thead>
-
-              {/* Table Body */}
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {cartItems.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="py-6 text-center text-gray-500 dark:text-gray-400"
-                    >
-                      No items in cart. Add products using the barcode.
-                    </td>
-                  </tr>
-                ) : (
-                  cartItems.map((item) => (
-                    <tr key={item.id}>
-                      <td className="py-3 px-4">
-                        <input
-                          type="checkbox"
-                          checked={item.selected}
-                          onChange={() => toggleItemSelection(item.id)}
-                          className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:bg-gray-700"
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                        {item.brand}
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                        {item.size}
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                        {item.type}
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
-                            onClick={() => handleQuantityChange(item.id, false)}
-                          >
-                            -
-                          </button>
-                          <span>{item.quantity}</span>
-                          <button
-                            className="h-6 w-6 flex items-center justify-center border border-gray-300 rounded dark:border-gray-700"
-                            onClick={() => handleQuantityChange(item.id, true)}
-                          >
-                            +
-                          </button>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                        ₹{item.unitPrice}
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                        <input
-                          type="number"
-                          value={item.discount}
-                          onChange={(e) =>
-                            handleDiscountChange(item.id, e.target.value)
-                          }
-                          className="w-20 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                          min="0"
-                        />
-                      </td>
-                      <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
-                        <input
-                          type="number"
-                          value={item.amountPayable}
-                          onChange={(e) =>
-                            handleAmountPayableChange(item.id, e.target.value)
-                          }
-                          className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                          min="0"
-                        />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Summary Section */}
-        {cartItems.length > 0 && (
-          <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
-            <div className="flex flex-col gap-2 sm:items-end">
-              <div className="flex justify-between sm:w-64">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Total Discount:
-                </span>
-                <input
-                  type="number"
-                  value={totalDiscount}
-                  readOnly
-                  className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white bg-gray-100"
-                  min="0"
-                />
-              </div>
-              <div className="flex justify-between sm:w-64">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Final Amount Payable:
-                </span>
-                <input
-                  type="number"
-                  value={totalAmount}
-                  onChange={(e) => handleFinalAmountChange(e.target.value)}
-                  className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                  min="0"
-                />
-              </div>
-              <div className="flex justify-between sm:w-64">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Payment Method:
-                </span>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-24 h-8 px-2 border border-gray-300 rounded dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-                >
-                  <option value="Card">Card</option>
-                  <option value="Cash">Cash</option>
-                  <option value="UPI">UPI</option>
-                </select>
-              </div>
+                <option value="Card">Card</option>
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+              </select>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              >
+                Cancel
+              </button>
               <button
                 onClick={() => {
-                  console.log("Create Sale button clicked, opening bill modal");
-                  setShowBillModal(true);
+                  setIsProcessing(true);
+                  // Here you would integrate with a payment gateway
+                  // For now, we'll simulate a successful payment and proceed to bill generation
+                  setTimeout(() => {
+                    setShowPaymentModal(false);
+                    setShowBillModal(true); // Proceed to bill generation modal
+                    setIsProcessing(false);
+                  }, 1000);
                 }}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-md hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 font-medium"
+                disabled={isProcessing}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
               >
-                Create Sale
+                {isProcessing ? "Processing..." : "Confirm Payment"}
               </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="lg:col-span-2">
+          <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 lg:px-6 lg:py-4">
+              <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 lg:text-lg">
+                Cart Items ({cartItems.length})
+              </h3>
+            </div>
+
+            <div className="p-4 lg:p-0">
+              {/* Mobile Card View */}
+              <div className="flex flex-col gap-3 lg:hidden">
+                {cartItems.length === 0 ? (
+                  <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+                    <div className="mb-3 text-4xl">🛒</div>
+                    <p className="text-sm">Your cart is empty</p>
+                    <p className="mt-1 text-xs">Add products to get started</p>
+                  </div>
+                ) : (
+                  cartItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                            {item.brand}
+                          </h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {item.type} • {item.size}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors active:scale-95"
+                          aria-label="Remove item"
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M18 6L6 18M6 6L18 18"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQuantity(item.id, -1)}
+                            className="flex items-center justify-center w-8 h-8 rounded-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M5 12H19"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </button>
+                          <span className="w-10 text-center font-semibold text-gray-900 dark:text-white">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.id, 1)}
+                            className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white active:scale-95 transition-transform"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M12 5V19M5 12H19"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="font-semibold text-gray-900 dark:text-white">
+                            ₹{item.amountPayable.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            ₹{item.unitPrice.toFixed(2)} each
+                          </div>
+                        </div>
+                      </div>
+
+                      {item.discount > 0 && (
+                        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-green-600 dark:text-green-400">
+                              Discount
+                            </span>
+                            <span className="font-medium text-green-600 dark:text-green-400">
+                              -₹{item.discount.toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden lg:block max-w-full overflow-x-auto">
+                <div className="min-w-[800px]">
+                  <table className="table-auto w-full">
+                    <thead className="border-gray-100 dark:border-gray-800 border-y">
+                      <tr>
+                        <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                          Brand
+                        </th>
+                        <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                          Size
+                        </th>
+                        <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                          Type
+                        </th>
+                        <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                          Quantity
+                        </th>
+                        <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                          Cost Price
+                        </th>
+                        <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                          Discount
+                        </th>
+                        <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                          Amount
+                        </th>
+                        <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      {cartItems.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={8}
+                            className="py-12 text-center text-gray-500 dark:text-gray-400"
+                          >
+                            <div className="mb-3 text-4xl">🛒</div>
+                            <p>Your cart is empty</p>
+                            <p className="mt-1 text-sm">
+                              Add products to get started
+                            </p>
+                          </td>
+                        </tr>
+                      ) : (
+                        cartItems.map((item) => (
+                          <tr key={item.id}>
+                            <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                              {item.brand}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                              {item.size}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                              {item.type}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => updateQuantity(item.id, -1)}
+                                  className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                                >
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      d="M5 12H19"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                </button>
+                                <span className="w-8 text-center font-medium">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => updateQuantity(item.id, 1)}
+                                  className="p-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                >
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      d="M12 5V19M5 12H19"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                              ₹{item.unitPrice.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300">
+                              ₹{item.discount.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 text-sm dark:text-gray-300 font-medium">
+                              ₹{item.amountPayable.toFixed(2)}
+                            </td>
+                            <td className="py-3 px-4">
+                              <button
+                                onClick={() => removeFromCart(item.id)}
+                                className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                aria-label="Remove item"
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path
+                                    d="M18 6L6 18M6 6L18 18"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="sticky top-20 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+            <div className="p-4 lg:p-6">
+              <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 mb-4 lg:text-lg">
+                Order Summary
+              </h3>
+
+              <div className="space-y-3 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Subtotal
+                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    ₹{cartSummary.totalCostPrice.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Discount
+                  </span>
+                  <span className="font-medium text-green-600 dark:text-green-400">
+                    -₹{cartSummary.totalDiscount.toFixed(2)}
+                  </span>
+                </div>
+                <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-900 dark:text-white">
+                      Total
+                    </span>
+                    <span className="text-xl font-bold text-gray-900 dark:text-white">
+                      ₹{cartSummary.totalSellingPrice.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Barcode Scanner
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={scannedBarcode}
+                      onChange={(e) => setScannedBarcode(e.target.value)}
+                      onKeyDown={handleBarcodeKeyDown}
+                      placeholder="Scan or enter barcode"
+                      className="flex-1 px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                      disabled={isScanning}
+                    />
+                    <button
+                      onClick={handleBarcodeSubmit}
+                      disabled={isScanning}
+                      className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium active:scale-95 transition-transform"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Extra Discount (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={extraDiscount}
+                    onChange={(e) =>
+                      setExtraDiscount(
+                        Math.max(0, Number.parseFloat(e.target.value) || 0)
+                      )
+                    }
+                    placeholder="0"
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  />
+                </div>
+
+                <button
+                  onClick={handleOpenPaymentModal}
+                  disabled={cartItems.length === 0 || isProcessing}
+                  className="w-full px-4 py-3.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm active:scale-98 transition-transform"
+                >
+                  {isProcessing ? "Processing..." : "Proceed to Payment"}
+                </button>
+
+                <button
+                  onClick={clearCart}
+                  disabled={cartItems.length === 0}
+                  className="w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm active:scale-98 transition-transform"
+                >
+                  Clear Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

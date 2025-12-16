@@ -65,19 +65,22 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-      <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+          <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 lg:text-lg">
             Recent Orders
           </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {tableData.length} transactions
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
+        <div className="flex items-center gap-2">
+          <button className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 active:scale-95 transition-transform sm:px-4 sm:py-2.5 sm:text-sm">
             <svg
-              className="stroke-current fill-white dark:fill-gray-800"
-              width="20"
-              height="20"
+              className="stroke-current"
+              width="18"
+              height="18"
               viewBox="0 0 20 20"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -98,25 +101,79 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
               />
               <path
                 d="M12.0826 3.33331C13.5024 3.33331 14.6534 4.48431 14.6534 5.90414C14.6534 7.32398 13.5024 8.47498 12.0826 8.47498C10.6627 8.47498 9.51172 7.32398 9.51172 5.90415C9.51172 4.48432 10.6627 3.33331 12.0826 3.33331Z"
-                fill=""
+                fill="currentColor"
                 stroke=""
                 strokeWidth="1.5"
               />
               <path
                 d="M7.91745 11.525C6.49762 11.525 5.34662 12.676 5.34662 14.0959C5.34661 15.5157 6.49762 16.6667 7.91745 16.6667C9.33728 16.6667 10.4883 15.5157 10.4883 14.0959C10.4883 12.676 9.33728 11.525 7.91745 11.525Z"
-                fill=""
+                fill="currentColor"
                 stroke=""
                 strokeWidth="1.5"
               />
             </svg>
-            Filter
+            <span className="hidden sm:inline">Filter</span>
           </button>
-          <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
+          <button className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 active:scale-95 transition-transform sm:px-4 sm:py-2.5 sm:text-sm">
             See all
           </button>
         </div>
       </div>
-      <div className="max-w-full overflow-x-auto">
+
+      {/* Mobile Card View */}
+      <div className="flex flex-col gap-3 lg:hidden">
+        {tableData.map((sale) => (
+          <div
+            key={sale.id}
+            onClick={() => handleRowClick(sale.id)}
+            className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 active:scale-98 transition-all cursor-pointer"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {sale.date}
+                </p>
+                <p className="text-xs font-mono text-gray-600 dark:text-gray-400 truncate">
+                  ID: {sale.id.slice(-8)}
+                </p>
+              </div>
+              <span className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium whitespace-nowrap ml-2">
+                {sale.paymentMethod}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Subtotal
+                </p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {sale.subtotal}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Discount
+                </p>
+                <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                  {sale.discount}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Net Amount
+                </p>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">
+                  {sale.netAmount}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden lg:block max-w-full overflow-x-auto">
         <div className="min-w-[800px]">
           <table className="table-auto w-full">
             {/* Table Header */}
