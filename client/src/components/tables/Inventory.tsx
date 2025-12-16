@@ -12,6 +12,7 @@ import {
 import InventoryForm from "./BasicTableOne";
 import BulkInventoryForm from "./BulkInventoryForm";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 interface Product {
   id: string;
@@ -204,15 +205,22 @@ export default function Inventory({ limit }: InventoryProps) {
           {/* Right action */}
           <button
             onClick={() => setShowFilterModal(true)}
-            className={`inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium shadow-sm md:rounded-lg md:px-4 md:py-2.5 md:text-sm ${
-              hasActiveFilters
-                ? "bg-green-600 text-white"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-            }`}
+            className={`inline-flex items-center justify-center gap-1 rounded-md
+    px-2 py-2 text-xs font-medium transition
+    md:rounded-lg md:px-4 md:py-2.5 md:text-sm
+    ${
+      hasActiveFilters
+        ? "bg-green-600 text-white"
+        : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+    }`}
           >
-            🔍 <span className="hidden sm:inline">Filter</span>
+            <MagnifyingGlassIcon className="h-4 w-4" />
+
+            {/* text only on desktop */}
+            <span className="hidden md:inline">Filter</span>
+
             {hasActiveFilters && (
-              <span className="bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 rounded-full px-1.5 py-0.5 text-xs font-bold">
+              <span className="ml-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-bold text-green-700">
                 {filteredData.length}
               </span>
             )}
