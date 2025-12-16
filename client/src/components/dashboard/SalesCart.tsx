@@ -1,6 +1,5 @@
 "use client";
 
-import type React from "react";
 import { useEffect, useState } from "react";
 import { Notification } from "../toastNotification/Notification";
 
@@ -23,7 +22,6 @@ const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
 
 export default function SalesCart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  // const [barcode, setBarcode] = useState("");
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [showBillModal, setShowBillModal] = useState(false);
@@ -38,8 +36,6 @@ export default function SalesCart() {
   } | null>(null);
 
   // For the new UI elements
-  const [scannedBarcode, setScannedBarcode] = useState("");
-  // const [isScanning, setIsScanning] = useState(false);
   const [extraDiscount, setExtraDiscount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false); // Assuming this is needed for payment processing
@@ -54,64 +50,6 @@ export default function SalesCart() {
     setTotalDiscount(Math.round(totalDisc * 100) / 100);
     setTotalAmount(Math.round(totalAmt * 100) / 100);
   }, [cartItems]);
-
-  // Function to add a product by barcode
-  const addProductByBarcode = async (barcodeValue: string) => {
-    if (!barcodeValue.trim()) return;
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/product/barcode/${barcodeValue}`
-      );
-      const data = await response.json();
-
-      if (data.status == 200) {
-        const product = data.data;
-        const unitPrice = product.unit_price;
-
-        const newItem: CartItem = {
-          id: product._id,
-          brand: product.brand,
-          size: product.size,
-          type: product.type,
-          quantity: 1,
-          unitPrice: unitPrice,
-          discount: 0,
-          amountPayable: unitPrice,
-          selected: false,
-          cost_price: unitPrice, // Assuming cost_price is the same as unit_price initially
-          selling_price: unitPrice, // Assuming selling_price is the same as unit_price initially
-        };
-
-        // Check if item already exists and update quantity
-        setCartItems((prev) => {
-          const existingItemIndex = prev.findIndex(
-            (item) => item.id === newItem.id
-          );
-          if (existingItemIndex > -1) {
-            const updatedItems = [...prev];
-            updatedItems[existingItemIndex].quantity += 1;
-            updatedItems[existingItemIndex].amountPayable =
-              updatedItems[existingItemIndex].unitPrice *
-              updatedItems[existingItemIndex].quantity;
-            return updatedItems;
-          }
-          return [...prev, newItem];
-        });
-
-        // setBarcode("");
-        setScannedBarcode(""); // Clear scanned barcode input as well
-        setNotification({
-          message: "Product added successfully",
-          type: "success",
-        });
-      } else {
-        setNotification({ message: "Product not found", type: "error" });
-      }
-    } catch (error) {
-      console.error("Error fetching product:", error);
-      setNotification({ message: "Failed to fetch product", type: "error" });
-    }
-  };
 
   // // Function to handle quantity change
   // const handleQuantityChange = (id: string, increment: boolean) => {
@@ -176,34 +114,34 @@ export default function SalesCart() {
   //   );
   // };
 
-  // // Function to handle final amount change for the entire cart
-  // const handleFinalAmountChange = (value: string) => {
-  //   const newFinal = Number(value);
-  //   const totalBefore = cartItems.reduce(
-  //     (sum, item) => sum + item.unitPrice * item.quantity,
-  //     0
-  //   );
-  //   if (totalBefore === 0) return;
+  // Function to handle final amount change for the entire cart
+  const handleFinalAmountChange = (value: string) => {
+    const newFinal = Number(value);
+    const totalBefore = cartItems.reduce(
+      (sum, item) => sum + item.unitPrice * item.quantity,
+      0
+    );
+    if (totalBefore === 0) return;
 
-  //   const totalDiscountNeeded = Math.max(0, totalBefore - newFinal);
+    const totalDiscountNeeded = Math.max(0, totalBefore - newFinal);
 
-  //   // Distribute proportionally
-  //   setCartItems((prev) =>
-  //     prev.map((item) => {
-  //       const itemOriginalValue = item.unitPrice * item.quantity;
-  //       const additionalDiscount =
-  //         (itemOriginalValue / totalBefore) * totalDiscountNeeded;
-  //       const newDiscount = Math.round(additionalDiscount * 100) / 100; // Round to 2 decimal places
-  //       const newAmountPayable =
-  //         Math.round((itemOriginalValue - newDiscount) * 100) / 100; // Round to 2 decimal places
-  //       return {
-  //         ...item,
-  //         discount: newDiscount,
-  //         amountPayable: newAmountPayable,
-  //       };
-  //     })
-  //   );
-  // };
+    // Distribute proportionally
+    setCartItems((prev) =>
+      prev.map((item) => {
+        const itemOriginalValue = item.unitPrice * item.quantity;
+        const additionalDiscount =
+          (itemOriginalValue / totalBefore) * totalDiscountNeeded;
+        const newDiscount = Math.round(additionalDiscount * 100) / 100; // Round to 2 decimal places
+        const newAmountPayable =
+          Math.round((itemOriginalValue - newDiscount) * 100) / 100; // Round to 2 decimal places
+        return {
+          ...item,
+          discount: newDiscount,
+          amountPayable: newAmountPayable,
+        };
+      })
+    );
+  };
 
   // // Function to toggle item selection
   // const toggleItemSelection = (id: string) => {
@@ -439,22 +377,6 @@ export default function SalesCart() {
     }
   };
 
-  // Function to handle barcode input submission for adding products
-  const handleBarcodeSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault(); // Prevent default form submission if it's a form event
-    if (scannedBarcode.trim()) {
-      addProductByBarcode(scannedBarcode);
-    }
-  };
-
-  // Function to handle barcode key down event for adding products
-  const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addProductByBarcode(scannedBarcode);
-    }
-  };
-
   // Function to calculate cart summary (used in the checkout section)
   const cartSummary = cartItems.reduce(
     (acc, item) => {
@@ -675,7 +597,7 @@ export default function SalesCart() {
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
                 <option value="Card">Card</option>
                 <option value="Cash">Cash</option>
@@ -702,7 +624,7 @@ export default function SalesCart() {
                   }, 1000);
                 }}
                 disabled={isProcessing}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm font-medium active:scale-95 transition-transform"
               >
                 {isProcessing ? "Processing..." : "Confirm Payment"}
               </button>
@@ -1025,43 +947,20 @@ export default function SalesCart() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Barcode Scanner
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={scannedBarcode}
-                      onChange={(e) => setScannedBarcode(e.target.value)}
-                      onKeyDown={handleBarcodeKeyDown}
-                      placeholder="Scan or enter barcode"
-                      className="flex-1 px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                      // disabled={isScanning}
-                    />
-                    <button
-                      onClick={handleBarcodeSubmit}
-                      // disabled={isScanning}
-                      className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium active:scale-95 transition-transform"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Extra Discount (%)
+                    Final Amount
                   </label>
                   <input
                     type="number"
-                    value={extraDiscount}
-                    onChange={(e) =>
-                      setExtraDiscount(
-                        Math.max(0, Number.parseFloat(e.target.value) || 0)
-                      )
-                    }
-                    placeholder="0"
+                    value={totalAmount}
+                    onChange={(e) => handleFinalAmountChange(e.target.value)}
+                    placeholder="Final amount"
+                    step="0.01"
+                    min="0"
                     className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                   />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Edit to apply discount automatically
+                  </p>
                 </div>
 
                 <button

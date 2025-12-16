@@ -1,79 +1,59 @@
-import { useState, useEffect } from "react";
-import Chart from "react-apexcharts";
-import { ApexOptions } from "apexcharts";
-import ChartTab from "../common/ChartTab";
+"use client"
 
-const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
+import { useState, useEffect } from "react"
+import Chart from "react-apexcharts"
+import type { ApexOptions } from "apexcharts"
+import ChartTab from "../common/ChartTab"
+
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL
 
 export default function MonthlySalesChart() {
-  const [seriesData, setSeriesData] = useState<number[]>([]);
-  const [timeRange, setTimeRange] = useState<"Daily" | "Monthly" | "Yearly">(
-    "Daily"
-  );
+  const [seriesData, setSeriesData] = useState<number[]>([])
+  const [timeRange, setTimeRange] = useState<"Daily" | "Monthly" | "Yearly">("Daily")
 
   const fetchSalesData = async (range: "Daily" | "Monthly" | "Yearly") => {
     try {
-      const now = new Date();
-      let startDate: string = "";
-      let endDate: string = "";
+      const now = new Date()
+      let startDate = ""
+      let endDate = ""
 
       if (range === "Daily") {
-        startDate = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          1
-        ).toLocaleDateString("en-CA");
-        endDate = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate()
-        ).toLocaleDateString("en-CA");
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString("en-CA")
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toLocaleDateString("en-CA")
       } else if (range === "Monthly") {
-        startDate = new Date(
-          now.getFullYear(),
-          now.getMonth() - 11,
-          1
-        ).toLocaleDateString("en-CA");
-        endDate = new Date(
-          now.getFullYear(),
-          now.getMonth() + 1,
-          0
-        ).toLocaleDateString("en-CA");
+        startDate = new Date(now.getFullYear(), now.getMonth() - 11, 1).toLocaleDateString("en-CA")
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toLocaleDateString("en-CA")
       } else if (range === "Yearly") {
-        startDate = new Date(now.getFullYear() - 10, 0, 1).toLocaleDateString(
-          "en-CA"
-        );
-        endDate = new Date(now.getFullYear(), 11, 31).toLocaleDateString(
-          "en-CA"
-        );
+        startDate = new Date(now.getFullYear() - 10, 0, 1).toLocaleDateString("en-CA")
+        endDate = new Date(now.getFullYear(), 11, 31).toLocaleDateString("en-CA")
       }
 
-      const url = new URL(`${API_BASE_URL}/api/v1/statistics`);
-      url.searchParams.append("startDate", startDate);
-      url.searchParams.append("endDate", endDate);
-      url.searchParams.append("groupBy", range);
+      const url = new URL(`${API_BASE_URL}/api/v1/statistics`)
+      url.searchParams.append("startDate", startDate)
+      url.searchParams.append("endDate", endDate)
+      url.searchParams.append("groupBy", range)
 
-      const response = await fetch(url);
+      const response = await fetch(url)
 
       if (!response.ok) {
-        throw new Error("Failed to fetch sales data");
+        throw new Error("Failed to fetch sales data")
       }
 
-      const jsonData = await response.json();
+      const jsonData = await response.json()
       if (jsonData.data && jsonData.data.length > 0) {
-        const salesData = jsonData.data.map((item: any) => item.totalProfit);
-        setSeriesData(salesData);
+        const salesData = jsonData.data.map((item: any) => item.totalProfit)
+        setSeriesData(salesData)
       } else {
-        setSeriesData([]);
+        setSeriesData([])
       }
     } catch (error) {
-      console.error("Error fetching sales data:", error);
+      console.error("Error fetching sales data:", error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchSalesData(timeRange);
-  }, [timeRange]);
+    fetchSalesData(timeRange)
+  }, [timeRange])
 
   const options: ApexOptions = {
     colors: ["#465fff"],
@@ -106,15 +86,12 @@ export default function MonthlySalesChart() {
         timeRange === "Daily"
           ? Array.from({ length: new Date().getDate() }, (_, i) => i + 1)
           : timeRange === "Monthly"
-          ? Array.from({ length: 12 }, (_, i) => {
-              const date = new Date();
-              date.setMonth(date.getMonth() - 11 + i);
-              return date.toLocaleString("default", { month: "short" });
-            })
-          : Array.from(
-              { length: 10 },
-              (_, i) => new Date().getFullYear() - 9 + i
-            ),
+            ? Array.from({ length: 12 }, (_, i) => {
+                const date = new Date()
+                date.setMonth(date.getMonth() - 11 + i)
+                return date.toLocaleString("default", { month: "short" })
+              })
+            : Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 9 + i),
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
@@ -131,32 +108,27 @@ export default function MonthlySalesChart() {
       x: { show: false },
       y: { formatter: (val: number) => `${val}` },
     },
-  };
+  }
 
   const series = [
     {
       name: "Sales",
-      data:
-        seriesData.length > 0
-          ? seriesData
-          : Array(options.xaxis?.categories?.length || 0).fill(0),
+      data: seriesData.length > 0 ? seriesData : Array(options.xaxis?.categories?.length || 0).fill(0),
     },
-  ];
+  ]
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white px-4 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-5 sm:pt-5 md:px-6 md:pt-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-          {timeRange} Sales
-        </h3>
+        <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">{timeRange} Sales</h3>
         <ChartTab onSelect={setTimeRange} />
       </div>
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">
-        <div className="-ml-5 min-w-[650px] xl:min-w-full pl-2">
+        <div className="-ml-4 min-w-[320px] sm:min-w-[500px] pl-2 md:-ml-5 md:min-w-[650px] xl:min-w-full">
           <Chart options={options} series={series} type="bar" height={180} />
         </div>
       </div>
     </div>
-  );
+  )
 }

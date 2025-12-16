@@ -1,10 +1,11 @@
+import type React from "react"
 // react plugin for creating vector maps
-import { VectorMap } from "@react-jvectormap/core";
-import { worldMill } from "@react-jvectormap/world";
+import { VectorMap } from "@react-jvectormap/core"
+import { worldMill } from "@react-jvectormap/world"
 
 // Define the component props
 interface CountryMapProps {
-  mapColor?: string;
+  mapColor?: string
 }
 const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
   return (
@@ -87,7 +88,7 @@ const CountryMap: React.FC<CountryMapProps> = ({ mapColor }) => {
         selectedHover: {},
       }}
     />
-  );
-};
+  )
+}
 
-export default CountryMap;
+export default CountryMap
