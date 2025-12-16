@@ -110,6 +110,12 @@ export default function Inventory({ limit }: InventoryProps) {
     setPriceRange({ min: "", max: "" });
   };
 
+  const activeAction = showInventoryForm
+    ? "individual"
+    : showBulkForm
+    ? "bulk"
+    : null;
+
   // Check if any filters are active
   const hasActiveFilters =
     selectedBrands.length > 0 ||
@@ -178,10 +184,16 @@ export default function Inventory({ limit }: InventoryProps) {
               setShowBulkForm(false);
               setBulkReport(null);
             }}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg active:scale-95 transition-transform md:flex-initial md:rounded-lg md:px-4 md:py-2.5"
+            className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all
+      ${
+        activeAction === "individual"
+          ? "bg-blue-700 text-white shadow-md"
+          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+      }
+    `}
           >
-            <PlusIcon className="h-5 w-5" />
-            <span className="md:inline">Add Individual</span>
+            <PlusIcon className="h-4 w-4" />
+            Add Individual
           </button>
 
           <button
@@ -189,10 +201,16 @@ export default function Inventory({ limit }: InventoryProps) {
               setShowBulkForm(true);
               setShowInventoryForm(false);
             }}
-            className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg active:scale-95 transition-transform md:flex-initial md:rounded-lg md:px-4 md:py-2.5"
+            className={`inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all
+      ${
+        activeAction === "bulk"
+          ? "bg-blue-700 text-white shadow-md"
+          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+      }
+    `}
           >
-            <PlusIcon className="h-5 w-5" />
-            <span className="md:inline">Add Bulk</span>
+            <PlusIcon className="h-4 w-4" />
+            Add Bulk
           </button>
         </div>
       </div>
