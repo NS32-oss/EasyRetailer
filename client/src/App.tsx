@@ -23,6 +23,7 @@ import Inventory from "./components/tables/Inventory";
 import SalesCart from "./components/dashboard/SalesCart";
 import SalesCartHistory from "./components/salesCartHistory/SalesCartHistory";
 import Barcode from "./components/charts/bar/BarChartOne";
+import MobileLayout from "./layout/MobileLayout";
 
 export default function App() {
   return (
@@ -31,7 +32,9 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          <Route
+            element={window.innerWidth < 768 ? <MobileLayout /> : <AppLayout />}
+          >
             <Route index path="/" element={<Home />} />
 
             {/* Others Page */}
@@ -42,7 +45,10 @@ export default function App() {
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
             <Route path="/sales-history" element={<SalesHistory />} />
-            <Route path="/sales-cart-history/:saleId" element={<SalesCartHistory />} />
+            <Route
+              path="/sales-cart-history/:saleId"
+              element={<SalesCartHistory />}
+            />
 
             {/* Tables */}
             <Route path="/inventory" element={<Inventory />} />

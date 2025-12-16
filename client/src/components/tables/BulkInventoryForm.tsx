@@ -311,7 +311,20 @@ export default function BulkInventoryForm({
   // JSX — follows the exact card / spacing from BasicTableOne.tsx
   // -----------------------------
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
+    <div className="w-full h-[100dvh] bg-white px-4 py-4 md:h-auto md:rounded-2xl md:border md:border-gray-200">
+      <div className="flex items-center gap-3 mb-4 md:hidden">
+        <button
+          type="button"
+          onClick={() => onCancel?.()}
+          className="text-gray-700 text-sm"
+        >
+          ← Back
+        </button>
+
+        <h2 className="font-semibold text-gray-900">
+          {/** change title per form */}
+        </h2>
+      </div>
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
