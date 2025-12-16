@@ -23,7 +23,7 @@ const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
 
 export default function SalesCart() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [barcode, setBarcode] = useState("");
+  // const [barcode, setBarcode] = useState("");
   const [totalDiscount, setTotalDiscount] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [showBillModal, setShowBillModal] = useState(false);
@@ -39,7 +39,7 @@ export default function SalesCart() {
 
   // For the new UI elements
   const [scannedBarcode, setScannedBarcode] = useState("");
-  const [isScanning, setIsScanning] = useState(false);
+  // const [isScanning, setIsScanning] = useState(false);
   const [extraDiscount, setExtraDiscount] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false); // Assuming this is needed for payment processing
@@ -98,7 +98,7 @@ export default function SalesCart() {
           return [...prev, newItem];
         });
 
-        setBarcode("");
+        // setBarcode("");
         setScannedBarcode(""); // Clear scanned barcode input as well
         setNotification({
           message: "Product added successfully",
@@ -113,120 +113,120 @@ export default function SalesCart() {
     }
   };
 
-  // Function to handle quantity change
-  const handleQuantityChange = (id: string, increment: boolean) => {
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const newQuantity = increment
-            ? item.quantity + 1
-            : Math.max(1, item.quantity - 1);
-          const newAmountPayable = item.unitPrice * newQuantity - item.discount;
+  // // Function to handle quantity change
+  // const handleQuantityChange = (id: string, increment: boolean) => {
+  //   setCartItems((prev) =>
+  //     prev.map((item) => {
+  //       if (item.id === id) {
+  //         const newQuantity = increment
+  //           ? item.quantity + 1
+  //           : Math.max(1, item.quantity - 1);
+  //         const newAmountPayable = item.unitPrice * newQuantity - item.discount;
 
-          return {
-            ...item,
-            quantity: newQuantity,
-            amountPayable: newAmountPayable,
-          };
-        }
-        return item;
-      })
-    );
-  };
+  //         return {
+  //           ...item,
+  //           quantity: newQuantity,
+  //           amountPayable: newAmountPayable,
+  //         };
+  //       }
+  //       return item;
+  //     })
+  //   );
+  // };
 
-  // Function to handle discount change
-  const handleDiscountChange = (id: string, value: string) => {
-    const discountValue = Number.parseFloat(value) || 0;
+  // // Function to handle discount change
+  // const handleDiscountChange = (id: string, value: string) => {
+  //   const discountValue = Number.parseFloat(value) || 0;
 
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const totalPrice = item.unitPrice * item.quantity;
-          const newAmountPayable = Math.max(0, totalPrice - discountValue);
+  //   setCartItems((prev) =>
+  //     prev.map((item) => {
+  //       if (item.id === id) {
+  //         const totalPrice = item.unitPrice * item.quantity;
+  //         const newAmountPayable = Math.max(0, totalPrice - discountValue);
 
-          return {
-            ...item,
-            discount: discountValue,
-            amountPayable: newAmountPayable,
-          };
-        }
-        return item;
-      })
-    );
-  };
+  //         return {
+  //           ...item,
+  //           discount: discountValue,
+  //           amountPayable: newAmountPayable,
+  //         };
+  //       }
+  //       return item;
+  //     })
+  //   );
+  // };
 
-  // Function to handle amount payable change
-  const handleAmountPayableChange = (id: string, value: string) => {
-    const amountValue = Number.parseFloat(value) || 0;
+  // // Function to handle amount payable change
+  // const handleAmountPayableChange = (id: string, value: string) => {
+  //   const amountValue = Number.parseFloat(value) || 0;
 
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const totalPrice = item.unitPrice * item.quantity;
-          const newDiscount = Math.max(0, totalPrice - amountValue);
+  //   setCartItems((prev) =>
+  //     prev.map((item) => {
+  //       if (item.id === id) {
+  //         const totalPrice = item.unitPrice * item.quantity;
+  //         const newDiscount = Math.max(0, totalPrice - amountValue);
 
-          return {
-            ...item,
-            discount: newDiscount,
-            amountPayable: amountValue,
-          };
-        }
-        return item;
-      })
-    );
-  };
+  //         return {
+  //           ...item,
+  //           discount: newDiscount,
+  //           amountPayable: amountValue,
+  //         };
+  //       }
+  //       return item;
+  //     })
+  //   );
+  // };
 
-  // Function to handle final amount change for the entire cart
-  const handleFinalAmountChange = (value: string) => {
-    const newFinal = Number(value);
-    const totalBefore = cartItems.reduce(
-      (sum, item) => sum + item.unitPrice * item.quantity,
-      0
-    );
-    if (totalBefore === 0) return;
+  // // Function to handle final amount change for the entire cart
+  // const handleFinalAmountChange = (value: string) => {
+  //   const newFinal = Number(value);
+  //   const totalBefore = cartItems.reduce(
+  //     (sum, item) => sum + item.unitPrice * item.quantity,
+  //     0
+  //   );
+  //   if (totalBefore === 0) return;
 
-    const totalDiscountNeeded = Math.max(0, totalBefore - newFinal);
+  //   const totalDiscountNeeded = Math.max(0, totalBefore - newFinal);
 
-    // Distribute proportionally
-    setCartItems((prev) =>
-      prev.map((item) => {
-        const itemOriginalValue = item.unitPrice * item.quantity;
-        const additionalDiscount =
-          (itemOriginalValue / totalBefore) * totalDiscountNeeded;
-        const newDiscount = Math.round(additionalDiscount * 100) / 100; // Round to 2 decimal places
-        const newAmountPayable =
-          Math.round((itemOriginalValue - newDiscount) * 100) / 100; // Round to 2 decimal places
-        return {
-          ...item,
-          discount: newDiscount,
-          amountPayable: newAmountPayable,
-        };
-      })
-    );
-  };
+  //   // Distribute proportionally
+  //   setCartItems((prev) =>
+  //     prev.map((item) => {
+  //       const itemOriginalValue = item.unitPrice * item.quantity;
+  //       const additionalDiscount =
+  //         (itemOriginalValue / totalBefore) * totalDiscountNeeded;
+  //       const newDiscount = Math.round(additionalDiscount * 100) / 100; // Round to 2 decimal places
+  //       const newAmountPayable =
+  //         Math.round((itemOriginalValue - newDiscount) * 100) / 100; // Round to 2 decimal places
+  //       return {
+  //         ...item,
+  //         discount: newDiscount,
+  //         amountPayable: newAmountPayable,
+  //       };
+  //     })
+  //   );
+  // };
 
-  // Function to toggle item selection
-  const toggleItemSelection = (id: string) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, selected: !item.selected } : item
-      )
-    );
-  };
+  // // Function to toggle item selection
+  // const toggleItemSelection = (id: string) => {
+  //   setCartItems((prev) =>
+  //     prev.map((item) =>
+  //       item.id === id ? { ...item, selected: !item.selected } : item
+  //     )
+  //   );
+  // };
 
-  // Function to delete selected items
-  const deleteSelectedItems = () => {
-    const selectedItems = cartItems.filter((item) => item.selected);
-    setCartItems((prev) => prev.filter((item) => !item.selected));
+  // // Function to delete selected items
+  // const deleteSelectedItems = () => {
+  //   const selectedItems = cartItems.filter((item) => item.selected);
+  //   setCartItems((prev) => prev.filter((item) => !item.selected));
 
-    // Show notification for deleted items
-    if (selectedItems.length > 0) {
-      setNotification({
-        message: `${selectedItems.length} item(s) removed from cart`,
-        type: "info",
-      });
-    }
-  };
+  //   // Show notification for deleted items
+  //   if (selectedItems.length > 0) {
+  //     setNotification({
+  //       message: `${selectedItems.length} item(s) removed from cart`,
+  //       type: "info",
+  //     });
+  //   }
+  // };
 
   // Function to validate mobile number
   const validateMobileNumber = (mobile: string): boolean => {
@@ -490,7 +490,7 @@ export default function SalesCart() {
 
     const discountAmount =
       (totalAmountBeforeDiscount * discountPercentage) / 100;
-    const newTotalAmount = totalAmountBeforeDiscount - discountAmount;
+    // const newTotalAmount = totalAmountBeforeDiscount - discountAmount;
 
     // Distribute discount proportionally to items
     setCartItems((prev) =>
@@ -1035,11 +1035,11 @@ export default function SalesCart() {
                       onKeyDown={handleBarcodeKeyDown}
                       placeholder="Scan or enter barcode"
                       className="flex-1 px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                      disabled={isScanning}
+                      // disabled={isScanning}
                     />
                     <button
                       onClick={handleBarcodeSubmit}
-                      disabled={isScanning}
+                      // disabled={isScanning}
                       className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium active:scale-95 transition-transform"
                     >
                       Add
