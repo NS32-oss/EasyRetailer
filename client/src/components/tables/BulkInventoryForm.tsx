@@ -273,8 +273,6 @@ export default function BulkInventoryForm({
     };
 
     try {
-      console.log("🔥 BULK request payload:", JSON.stringify(payload, null, 2));
-
       const res = await fetch(`${API_BASE_URL}/api/v1/product/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -41,10 +41,6 @@ const bulkSchema = Joi.object({
 });
 
 export const createProductsBulk = asyncHandler(async (req, res) => {
-  console.log("🔥 BULK ROUTE HIT");
-
-  console.log("🔥 RAW BODY:", JSON.stringify(req.body, null, 2));
-
   // --- FORCE COERCION ---
   try {
     req.body.cost_price = Number(req.body.cost_price);
@@ -57,16 +53,13 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
       }));
     }
   } catch (err) {
-    console.log("❌ COERCION ERROR:", err);
+    // coercion error
   }
-
-  console.log("🔥 AFTER COERCION:", JSON.stringify(req.body, null, 2));
 
   // --- JOI VALIDATION ---
   const { error, value } = bulkSchema.validate(req.body, { convert: true });
 
   if (error) {
-    console.log("❌ JOI VALIDATION FAILED:", error.details);
     return res.status(400).json(
       new apiResponse(400, "Validation failed", {
         message: error.details[0].message,
@@ -74,8 +67,6 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
       })
     );
   }
-
-  console.log("✅ JOI VALIDATION PASSED:", value);
 
   // --- NORMALIZED VALUES ---
   let { brand, type, subtype, cost_price, unit_price, sizes } = value;
@@ -108,10 +99,8 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
       })
     );
   } catch (err) {
-    console.log("❌ ERROR WHILE GENERATING OPS:", err);
+    // error generating ops
   }
-
-  console.log("🔥 OPS TO BULKWRITE:", JSON.stringify(ops, null, 2));
 
   const created = [];
   const updated = [];
@@ -119,8 +108,6 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
 
   try {
     const result = await Product.bulkWrite(ops, { ordered: false });
-
-    console.log("🔥 BULKWRITE RESULT:", result);
 
     // fetch each product
     for (const { size } of sizes) {
@@ -164,10 +151,6 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
       })
     );
   } catch (error) {
-    console.log("❌ BULKWRITE ERROR:", error);
-    console.log("❌ ERROR MESSAGE:", error.message);
-    console.log("❌ ERROR CODE:", error.code);
-
     if (error.code === 11000) {
       return res.status(400).json(
         new apiResponse(400, "Duplicate key (barcode)", {

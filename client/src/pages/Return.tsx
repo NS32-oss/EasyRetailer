@@ -82,7 +82,6 @@ export default function Return() {
         const sortedSales = data.data.sales.sort(
           (a: Sale, b: Sale) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         )
-        console.log("Sales fetched:", sortedSales) // Debug: check if returnStatus is included
         setSales(sortedSales)
       }
     } catch (error) {

@@ -125,7 +125,7 @@ export default function StatisticsChart() {
           </p>
         </div>
         <div className="flex items-start w-full gap-3 sm:justify-end">
-          <ChartTab onSelect={(option) => console.log(option)} />
+          <ChartTab onSelect={() => {}} />
         </div>
       </div>
 

@@ -74,7 +74,4 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Log a message indicating the app is running
-console.log("App.js is running");
-
 export default app;

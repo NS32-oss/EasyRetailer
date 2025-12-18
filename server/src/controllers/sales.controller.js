@@ -60,7 +60,6 @@ export const createSale = asyncHandler(async (req, res) => {
     await productRecord.save();
   }
   calculateDailyStatistics();
-  console.log(sale);
   return res
     .status(201)
     .json(
@@ -162,7 +161,6 @@ export const getSaleById = asyncHandler(async (req, res) => {
 //calculate revenue for any time period
 export const getRevenue = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
-  console.log(startDate, endDate);
   // Build filter object
   const filter = {};
 

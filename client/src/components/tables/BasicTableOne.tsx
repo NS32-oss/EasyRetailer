@@ -200,7 +200,6 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
       });
 
       const data = await response.json();
-      console.log("Brand creation response:", data);
       if (data.status === 201) {
         // Add the new brand to the list
         setBrands((prev) =>

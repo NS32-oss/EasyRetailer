@@ -82,7 +82,6 @@ export const getStatistics = asyncHandler(async (req, res) => {
       }
     });
 
-    console.log("Monthly Aggregated Data:", monthlyData);
     return res
       .status(200)
       .json(
@@ -235,10 +234,6 @@ export const getStatistics = asyncHandler(async (req, res) => {
     const stats = await Statistics.find({
       date: { $gte: startString, $lte: endString },
     }).sort({ date: 1 });
-
-    if (!stats || stats.length === 0) {
-      console.log("No statistics found for the specified date range");
-    }
 
     return res
       .status(200)
