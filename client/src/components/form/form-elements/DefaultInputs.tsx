@@ -13,7 +13,7 @@ export default function DefaultInputs() {
     { value: "template", label: "Template" },
     { value: "development", label: "Development" },
   ];
-  const handleSelectChange = (value: string) => {
+  const handleSelectChange = (_value: string) => {
     // value changed
   };
   const [dateOfBirth, setDateOfBirth] = useState("");
