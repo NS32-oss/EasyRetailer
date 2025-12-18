@@ -25,6 +25,7 @@ interface Sale {
   payment_method: string
   customer_mobile: string
   bill_generated: boolean
+  returnStatus?: "none" | "partial" | "full"
   createdAt: string
 }
 
@@ -64,6 +65,7 @@ export default function Return() {
     message: string
     type: "success" | "error" | "info"
   } | null>(null)
+  const [validationError, setValidationError] = useState<string>("")
 
   useEffect(() => {
     fetchSales()
@@ -80,6 +82,7 @@ export default function Return() {
         const sortedSales = data.data.sales.sort(
           (a: Sale, b: Sale) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         )
+        console.log("Sales fetched:", sortedSales) // Debug: check if returnStatus is included
         setSales(sortedSales)
       }
     } catch (error) {
@@ -111,11 +114,13 @@ export default function Return() {
   }
 
   const handleReturnQuantityChange = (productId: string, quantity: number) => {
+    setValidationError("")
     setReturnProducts((prev) =>
       prev.map((product) => {
         if (product.product_id === productId) {
           const returnQty = Math.min(Math.max(0, quantity), product.original_quantity)
-          // Calculate refund proportionally with discount
+          // Calculate refund proportionally based on selling price per unit
+          // selling_price is the final price after discount, so we use it directly
           const pricePerUnit = product.selling_price / product.original_quantity
           const refundAmount = pricePerUnit * returnQty
 
@@ -142,14 +147,18 @@ export default function Return() {
     const itemsToReturn = returnProducts.filter((p) => p.return_quantity > 0)
 
     if (itemsToReturn.length === 0) {
-      setNotification({ message: "Please select at least one item to return", type: "error" })
+      setValidationError("Select at least one item to return")
+      setNotification({ message: "Select at least one item to return", type: "error" })
       return
     }
 
     if (!returnReason.trim()) {
-      setNotification({ message: "Please provide a reason for return", type: "error" })
+      setValidationError("Reason is required")
+      setNotification({ message: "Reason is required", type: "error" })
       return
     }
+
+    setValidationError("")
 
     setShowConfirmModal(true)
   }
@@ -162,7 +171,11 @@ export default function Return() {
 
       const returnData: ReturnRequest = {
         sale_id: selectedSale._id,
-        products: itemsToReturn,
+        products: itemsToReturn.map((item) => ({
+          ...item,
+          saleProductId: item._id, // backend expects sale line id
+          return_quantity: item.return_quantity,
+        })),
         total_refund: getTotalRefund(),
         reason: returnReason,
         return_date: new Date().toISOString(),
@@ -191,6 +204,9 @@ export default function Return() {
         setReturnProducts([])
         setReturnReason("")
         setShowConfirmModal(false)
+        
+        // Refresh sales list to update badges and hide fully returned sales
+        await fetchSales()
       } else {
         throw new Error(data.message || "Failed to process return")
       }
@@ -212,14 +228,19 @@ export default function Return() {
     }
   }
 
-  const filteredSales = sales.filter((sale) => {
-    const searchLower = searchQuery.toLowerCase()
-    return (
-      sale._id.toLowerCase().includes(searchLower) ||
-      sale.customer_mobile.includes(searchQuery) ||
-      sale.products.some((p) => p.brand.toLowerCase().includes(searchLower))
-    )
-  })
+  const filteredSales = sales
+    .filter((sale) => {
+      const searchLower = searchQuery.toLowerCase()
+      return (
+        sale._id.toLowerCase().includes(searchLower) ||
+        (sale.customer_mobile || "").includes(searchQuery) ||
+        sale.products.some((p) => (p.brand || "").toLowerCase().includes(searchLower))
+      )
+    })
+    .filter((sale) => {
+      const status = sale.returnStatus || "none"
+      return status === "none" // hide partial and full returns from the list
+    })
 
   return (
     <>
@@ -295,6 +316,7 @@ export default function Return() {
                   <button
                     key={sale._id}
                     onClick={() => handleSaleSelect(sale)}
+                    disabled={(sale.returnStatus || "none") !== "none"}
                     className={`w-full text-left p-4 rounded-xl border transition-all active:scale-98 ${
                       selectedSale?._id === sale._id
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
@@ -315,9 +337,25 @@ export default function Return() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                      <span>{sale.products.length} items</span>
+                      <span className="flex items-center gap-2">
+                        {sale.products.length} items
+                        {sale.returnStatus && sale.returnStatus !== "none" && (
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                              sale.returnStatus === "full"
+                                ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                                : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                            }`}
+                          >
+                            {sale.returnStatus === "full" ? "Returned" : "Partial"}
+                          </span>
+                        )}
+                      </span>
                       <span>{sale.customer_mobile}</span>
                     </div>
+                    {sale.returnStatus === "full" && (
+                      <p className="mt-2 text-xs text-red-600 dark:text-red-400">Fully returned</p>
+                    )}
                   </button>
                 ))}
               </div>
@@ -349,6 +387,11 @@ export default function Return() {
             </div>
           ) : (
             <div className="p-4 sm:p-6">
+              {selectedSale.returnStatus === "full" && (
+                <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 border border-red-200 text-sm">
+                  This sale was fully returned. No further returns can be created.
+                </div>
+              )}
               <div className="space-y-4">
                 {/* Products List */}
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
@@ -401,11 +444,17 @@ export default function Return() {
                   </label>
                   <textarea
                     value={returnReason}
-                    onChange={(e) => setReturnReason(e.target.value)}
+                    onChange={(e) => {
+                      setReturnReason(e.target.value)
+                      setValidationError("")
+                    }}
                     placeholder="Enter reason for return..."
                     rows={3}
                     className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white resize-none"
                   />
+                  {validationError && !returnReason.trim() && (
+                    <p className="mt-1 text-xs text-red-600">{validationError}</p>
+                  )}
                 </div>
 
                 {/* Summary */}
@@ -436,11 +485,19 @@ export default function Return() {
                   </button>
                   <button
                     onClick={handleProcessReturn}
-                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 text-sm font-medium active:scale-95 transition-transform"
+                    disabled={
+                      selectedSale.returnStatus === "full" ||
+                      !returnProducts.some((p) => p.return_quantity > 0) ||
+                      !returnReason.trim()
+                    }
+                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 text-sm font-medium active:scale-95 transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     Process Return
                   </button>
                 </div>
+                {validationError && (
+                  <p className="text-xs text-red-600 mt-1 text-right">{validationError}</p>
+                )}
               </div>
             </div>
           )}

@@ -1,32 +1,78 @@
 import mongoose from "mongoose";
 
+const returnItemSchema = new mongoose.Schema(
+  {
+    saleProductId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true, // _id of the line item inside sale.products
+    },
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    requestedQty: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    approvedQty: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+    unitPrice: {
+      type: Number,
+      required: true, // selling price per unit actually paid
+    },
+    refundAmount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    reason: {
+      type: String,
+      default: "",
+    },
+  },
+  { _id: false }
+);
+
 const returnSchema = new mongoose.Schema(
   {
-    sale_id: {
+    sale: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Sales",
       required: true,
     },
-    returned_products: [
-      {
-        product_id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-          required: true,
-        },
-        quantity: { type: Number, required: true },
-        return_reason: { type: String },
-        refund_amount: { type: Number, default: 0 },
-      },
-    ],
-    return_type: {
-      type: String,
-      enum: ["Exchange", "Refund", "Extra Payment"],
-      required: true,
+    items: {
+      type: [returnItemSchema],
+      validate: (arr) => Array.isArray(arr) && arr.length > 0,
     },
-    updated_inventory: { type: Boolean, default: false },
+    totalRefund: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected", "processed"],
+      default: "processed",
+    },
+    reason: {
+      type: String,
+      default: "",
+    },
+    note: {
+      type: String,
+    },
+    updatedInventory: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps:  true }
+  { timestamps: true }
 );
 
- export const Returns = mongoose.model("Returns", returnSchema);
+export const Return = mongoose.model("Return", returnSchema);

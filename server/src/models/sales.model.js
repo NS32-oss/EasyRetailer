@@ -64,6 +64,11 @@ const salesSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    returnStatus: {
+      type: String,
+      enum: ["none", "partial", "full"],
+      default: "none",
+    },
   },
   { timestamps: true }
 );

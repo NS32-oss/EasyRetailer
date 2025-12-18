@@ -10,6 +10,7 @@ interface Sale {
   discount: string; // Discount applied to the sale (as a percentage)
   netAmount: string; // Final price after discount (as a string with currency symbol)
   paymentMethod: string; // Payment method used for the sale
+  returnStatus?: "none" | "partial" | "full";
 }
 
 interface RecentOrdersProps {
@@ -42,6 +43,7 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
             discount: `${discountPercentage}%`,
             netAmount: `₹${netAmount.toFixed(2)}`,
             paymentMethod: sale.payment_method,
+            returnStatus: sale.returnStatus || "none",
           };
         });
 
@@ -142,6 +144,20 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
               </span>
             </div>
 
+            <div className="flex items-center gap-2 mb-2 text-xs">
+              {sale.returnStatus && sale.returnStatus !== "none" && (
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full font-semibold ${
+                    sale.returnStatus === "full"
+                      ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                  }`}
+                >
+                  {sale.returnStatus === "full" ? "Returned" : "Partial"}
+                </span>
+              )}
+            </div>
+
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -197,6 +213,9 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
                 <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
                   Payment Method
                 </th>
+                <th className="py-3 font-medium text-gray-500 text-start text-xs dark:text-gray-400 px-4">
+                  Returns
+                </th>
               </tr>
             </thead>
 
@@ -225,6 +244,21 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
                   </td>
                   <td className="py-3 px-4 text-gray-500 text-sm dark:text-gray-400">
                     {sale.paymentMethod}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    {sale.returnStatus && sale.returnStatus !== "none" ? (
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          sale.returnStatus === "full"
+                            ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                            : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                        }`}
+                      >
+                        {sale.returnStatus === "full" ? "Returned" : "Partial"}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">None</span>
+                    )}
                   </td>
                 </tr>
               ))}

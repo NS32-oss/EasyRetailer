@@ -155,8 +155,8 @@ export default function Inventory({ limit }: InventoryProps) {
   }, [fetchProducts]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 md:pb-6">
-      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 md:static md:bg-transparent md:rounded-2xl md:border md:px-6 md:mb-0">
+    <div>
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 md:static md:bg-transparent md:rounded-2xl md:border md:px-6 md:mb-6">
         <div className="flex items-center justify-between mb-3 md:mb-4">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white md:text-lg">
             Inventory
@@ -336,9 +336,9 @@ export default function Inventory({ limit }: InventoryProps) {
 
       {showFilterModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-900 rounded-t-3xl md:rounded-2xl p-6 w-full max-h-[85vh] overflow-y-auto md:max-w-4xl md:max-h-[90vh] shadow-2xl">
+          <div className="bg-white dark:bg-gray-900 rounded-t-3xl md:rounded-2xl p-4 sm:p-6 w-full max-h-[85vh] overflow-y-auto md:max-w-4xl md:max-h-[90vh] shadow-2xl">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                 🔍 Filter Inventory
               </h3>
               <button
@@ -349,7 +349,138 @@ export default function Inventory({ limit }: InventoryProps) {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Mobile: Collapsible Filter Sections */}
+            <div className="md:hidden space-y-3">
+              {/* Brand Filter - Collapsible */}
+              <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                  Brand {selectedBrands.length > 0 && <span className="text-xs text-blue-600">({selectedBrands.length})</span>}
+                </summary>
+                <div className="max-h-40 overflow-y-auto p-3 bg-white dark:bg-gray-900 space-y-2">
+                  {brands.map((brand) => (
+                    <label key={brand} className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedBrands.includes(brand)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedBrands([...selectedBrands, brand]);
+                          } else {
+                            setSelectedBrands(selectedBrands.filter((b) => b !== brand));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{brand}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+
+              {/* Type Filter - Collapsible */}
+              <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                  Type {selectedTypes.length > 0 && <span className="text-xs text-blue-600">({selectedTypes.length})</span>}
+                </summary>
+                <div className="max-h-40 overflow-y-auto p-3 bg-white dark:bg-gray-900 space-y-2">
+                  {types.map((type) => (
+                    <label key={type} className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedTypes.includes(type)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTypes([...selectedTypes, type]);
+                          } else {
+                            setSelectedTypes(selectedTypes.filter((t) => t !== type));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{type}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+
+              {/* Subtype Filter - Collapsible */}
+              <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                  Subtype {selectedSubtypes.length > 0 && <span className="text-xs text-blue-600">({selectedSubtypes.length})</span>}
+                </summary>
+                <div className="max-h-40 overflow-y-auto p-3 bg-white dark:bg-gray-900 space-y-2">
+                  {subtypes.map((subtype) => (
+                    <label key={subtype} className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedSubtypes.includes(subtype)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSubtypes([...selectedSubtypes, subtype]);
+                          } else {
+                            setSelectedSubtypes(selectedSubtypes.filter((s) => s !== subtype));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{subtype}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+
+              {/* Size Filter - Collapsible */}
+              <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                  Size {selectedSizes.length > 0 && <span className="text-xs text-blue-600">({selectedSizes.length})</span>}
+                </summary>
+                <div className="max-h-40 overflow-y-auto p-3 bg-white dark:bg-gray-900 space-y-2">
+                  {sizes.map((size) => (
+                    <label key={size} className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedSizes.includes(size)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSizes([...selectedSizes, size]);
+                          } else {
+                            setSelectedSizes(selectedSizes.filter((s) => s !== size));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{size}</span>
+                    </label>
+                  ))}
+                </div>
+              </details>
+
+              {/* Price Range - Collapsible */}
+              <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+                  Price Range
+                </summary>
+                <div className="p-3 bg-white dark:bg-gray-900 space-y-3">
+                  <input
+                    type="number"
+                    placeholder="Min ₹"
+                    value={priceRange.min}
+                    onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max ₹"
+                    value={priceRange.max}
+                    onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                  />
+                </div>
+              </details>
+            </div>
+
+            {/* Desktop: Grid Layout */}
+            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Brand Filter */}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
@@ -559,7 +690,7 @@ export default function Inventory({ limit }: InventoryProps) {
         </div>
       )}
 
-      <div className="px-4 mt-4 md:px-6">
+      <div className="px-4 mt-4 md:px-0">
         {/* Mobile: Card List */}
         <div className="block md:hidden space-y-3">
           {filteredData.map((item) => (
@@ -647,55 +778,55 @@ export default function Inventory({ limit }: InventoryProps) {
         {/* Desktop: Table View */}
         <div className="hidden md:block overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
           <div className="max-w-full overflow-x-auto">
-            <div className="min-w-[800px]">
-              <Table className="table-auto w-full">
-                <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
+            <div className="inline-block min-w-full">
+              <Table className="w-full border-collapse">
+                <TableHeader className="border-gray-100 dark:border-gray-800 border-y bg-gray-50 dark:bg-gray-900/50">
                   <TableRow>
                     <TableCell
                       isHeader
-                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
                     >
                       Brand
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
                     >
                       Type
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
                     >
                       Subtype
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/12"
                     >
                       Size
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-center w-1/12"
                     >
                       Quantity
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-right w-1/8"
                     >
                       Cost Price
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-right w-1/8"
                     >
                       Selling Price
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="py-3 font-medium text-gray-600 dark:text-gray-400"
+                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/6"
                     >
                       Barcode
                     </TableCell>
@@ -705,32 +836,32 @@ export default function Inventory({ limit }: InventoryProps) {
                   {filteredData.map((item) => (
                     <TableRow
                       key={item.id}
-                      className="border-gray-100 dark:border-gray-800 border-b last:border-b-0"
+                      className="border-gray-100 dark:border-gray-800 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                     >
-                      <TableCell className="py-3 text-gray-800 dark:text-gray-200">
+                      <TableCell className="py-3 px-4 text-gray-900 dark:text-gray-100 text-left">
                         {item.brand}
                       </TableCell>
-                      <TableCell className="py-3 text-gray-600 dark:text-gray-400">
+                      <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-left">
                         {item.type}
                       </TableCell>
-                      <TableCell className="py-3 text-gray-600 dark:text-gray-400">
+                      <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-left">
                         {item.subtype}
                       </TableCell>
-                      <TableCell className="py-3">
+                      <TableCell className="py-3 px-4 text-left">
                         <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
                           {item.size}
                         </span>
                       </TableCell>
-                      <TableCell className="py-3 font-medium text-gray-800 dark:text-gray-200">
+                      <TableCell className="py-3 px-4 font-medium text-gray-900 dark:text-gray-100 text-center">
                         {item.quantity}
                       </TableCell>
-                      <TableCell className="py-3 text-gray-600 dark:text-gray-400">
+                      <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-right">
                         {item.costPrice}
                       </TableCell>
-                      <TableCell className="py-3 font-medium text-green-600 dark:text-green-400">
+                      <TableCell className="py-3 px-4 font-medium text-green-600 dark:text-green-400 text-right">
                         {item.unitPrice}
                       </TableCell>
-                      <TableCell className="py-3 text-xs font-mono text-gray-500 dark:text-gray-500">
+                      <TableCell className="py-3 px-4 text-xs font-mono text-gray-500 dark:text-gray-500 text-left">
                         {item.barcode}
                       </TableCell>
                     </TableRow>

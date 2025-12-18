@@ -58,10 +58,6 @@ export const createSale = asyncHandler(async (req, res) => {
     }
     productRecord.quantity -= item.quantity;
     await productRecord.save();
-    // If quantity becomes 0, delete the product
-    if (productRecord.quantity === 0) {
-      await Product.findByIdAndDelete(item.product_id);
-    }
   }
   calculateDailyStatistics();
   console.log(sale);
