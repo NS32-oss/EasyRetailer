@@ -60,7 +60,7 @@ export default function MonthlySalesChart() {
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "bar",
-      height: 180,
+      height: 280,
       toolbar: {
         show: false,
       },
@@ -126,7 +126,7 @@ export default function MonthlySalesChart() {
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">
         <div className="-ml-4 min-w-[320px] sm:min-w-[500px] pl-2 md:-ml-5 md:min-w-[650px] xl:min-w-full">
-          <Chart options={options} series={series} type="bar" height={180} />
+          <Chart options={options} series={series} type="bar" height={280} />
         </div>
       </div>
     </div>

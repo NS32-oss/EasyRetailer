@@ -12,7 +12,7 @@ export default function StatisticsChart() {
     colors: ["#465FFF", "#9CB9FF"], // Define line colors
     chart: {
       fontFamily: "Outfit, sans-serif",
-      height: 310,
+      height: 320,
       type: "line", // Set the chart type to 'line'
       toolbar: {
         show: false, // Hide chart toolbar
@@ -130,8 +130,8 @@ export default function StatisticsChart() {
       </div>
 
       <div className="max-w-full overflow-x-auto custom-scrollbar">
-        <div className="min-w-[1000px] xl:min-w-full">
-          <Chart options={options} series={series} type="area" height={310} />
+        <div className="min-w-[600px] md:min-w-[1000px] xl:min-w-full">
+          <Chart options={options} series={series} type="area" height={320} />
         </div>
       </div>
     </div>
