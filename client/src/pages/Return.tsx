@@ -285,8 +285,8 @@ export default function Return() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Panel: Sale Selection */}
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+        {/* Left Panel: Sale Selection - Hidden on mobile when form is open */}
+        <div className={`overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] ${selectedSale ? "hidden lg:block" : "block"}`}>
           <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
             <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 lg:text-lg mb-4">
               Select Sale to Return
@@ -362,36 +362,39 @@ export default function Return() {
           </div>
         </div>
 
-        {/* Right Panel: Return Form */}
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
-            <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 lg:text-lg">Return Items</h3>
-          </div>
-
-          {!selectedSale ? (
-            <div className="p-6 text-center">
-              <div className="text-gray-400 dark:text-gray-500 mb-4">
-                <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
-                Select a sale from the left panel to start processing a return
-              </p>
+        {/* Right Panel: Return Form - Modal drawer on mobile, side panel on desktop */}
+        {selectedSale ? (
+          // Mobile drawer view
+          <div className="fixed inset-0 z-50 flex flex-col lg:static lg:z-auto lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white dark:lg:border-gray-800 dark:lg:bg-white/[0.03]">
+            {/* Mobile header with back button */}
+            <div className="lg:hidden sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setSelectedSale(null)
+                  setReturnProducts([])
+                  setReturnReason("")
+                }}
+                className="text-blue-600 dark:text-blue-400 font-medium text-sm"
+              >
+                ← Back to Sales
+              </button>
+              <h3 className="text-base font-semibold text-gray-800 dark:text-white">Return Items</h3>
+              <div className="w-16" /> {/* spacer for centering */}
             </div>
-          ) : (
-            <div className="p-4 sm:p-6">
+
+            {/* Desktop header */}
+            <div className="hidden lg:block p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
+              <h3 className="text-base font-semibold text-gray-800 dark:text-white/90 lg:text-lg">Return Items</h3>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto lg:overflow-y-visible">
               {selectedSale.returnStatus === "full" && (
-                <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 border border-red-200 text-sm">
+                <div className="p-4 lg:p-6 mb-4 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 rounded-xl mx-4 lg:mx-0 lg:mb-0 lg:rounded-none">
                   This sale was fully returned. No further returns can be created.
                 </div>
               )}
-              <div className="space-y-4">
+              <div className="p-4 sm:p-6 space-y-4">
                 {/* Products List */}
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
                   {returnProducts.map((product) => (
@@ -499,8 +502,27 @@ export default function Return() {
                 )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          // Empty state on desktop
+          <div className="hidden lg:flex overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] items-center justify-center p-6">
+            <div className="text-center">
+              <div className="text-gray-400 dark:text-gray-500 mb-4">
+                <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Select a sale from the left panel to start processing a return
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )
