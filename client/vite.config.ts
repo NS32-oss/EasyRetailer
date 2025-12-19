@@ -19,10 +19,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          // React core libraries
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
-            return 'react-vendor';
-          }
           // Clerk authentication
           if (id.includes('node_modules/@clerk')) {
             return 'clerk';
@@ -31,7 +27,7 @@ export default defineConfig({
           if (id.includes('node_modules/recharts')) {
             return 'recharts';
           }
-          // Other node_modules
+          // All other node_modules including React
           if (id.includes('node_modules')) {
             return 'vendor';
           }
@@ -40,5 +36,8 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom', 'react-router-dom'],
   },
 });
