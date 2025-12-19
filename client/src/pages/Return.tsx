@@ -365,7 +365,7 @@ export default function Return() {
         {/* Right Panel: Return Form - Modal drawer on mobile, side panel on desktop */}
         {selectedSale ? (
           // Mobile drawer view
-          <div className="fixed inset-0 z-50 flex flex-col lg:static lg:z-auto lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white dark:lg:border-gray-800 dark:lg:bg-white/[0.03]">
+          <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900 lg:static lg:z-auto lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white dark:lg:border-gray-800 dark:lg:bg-white/[0.03]">
             {/* Mobile header with back button */}
             <div className="lg:hidden sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
               <button
