@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Notification } from "../components/toastNotification/Notification"
+import { useSidebar } from "../context/SidebarContext"
 
 interface ReturnProduct {
   product_id: string
@@ -54,6 +55,7 @@ interface ReturnRequest {
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL
 
 export default function Return() {
+  const { isMobileOpen } = useSidebar()
   const [sales, setSales] = useState<Sale[]>([])
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [returnProducts, setReturnProducts] = useState<ReturnProduct[]>([])
@@ -70,6 +72,15 @@ export default function Return() {
   useEffect(() => {
     fetchSales()
   }, [])
+
+  // Close return drawer when sidebar opens on mobile
+  useEffect(() => {
+    if (isMobileOpen && selectedSale) {
+      setSelectedSale(null)
+      setReturnProducts([])
+      setReturnReason("")
+    }
+  }, [isMobileOpen])
 
   const fetchSales = async () => {
     try {
