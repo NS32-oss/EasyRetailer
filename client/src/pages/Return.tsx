@@ -248,7 +248,7 @@ export default function Return() {
       )}
 
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Confirm Return</h3>
             <div className="mb-4 space-y-2">
@@ -365,7 +365,7 @@ export default function Return() {
         {/* Right Panel: Return Form - Modal drawer on mobile, side panel on desktop */}
         {selectedSale ? (
           // Mobile drawer view
-          <div className="fixed inset-0 z-50 flex flex-col bg-white dark:bg-gray-900 lg:static lg:z-auto lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white dark:lg:border-gray-800 dark:lg:bg-white/[0.03]">
+          <div className="fixed inset-0 z-30 flex flex-col bg-white dark:bg-gray-900 lg:static lg:z-auto lg:overflow-hidden lg:rounded-2xl lg:border lg:border-gray-200 lg:bg-white dark:lg:border-gray-800 dark:lg:bg-white/[0.03]">
             {/* Mobile header with back button */}
             <div className="lg:hidden sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 flex items-center justify-between">
               <button
