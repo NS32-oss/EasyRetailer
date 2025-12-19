@@ -86,9 +86,11 @@ const AppHeader: React.FC = () => {
               </svg>
             )}
           </button>
-          <Link to="/" className="lg:hidden">
-            <Brand variant="full" size="md" />
-          </Link>
+          {!isMobileOpen && (
+            <Link to="/" className="lg:hidden">
+              <Brand variant="full" size="md" />
+            </Link>
+          )}
 
           <button
             onClick={toggleApplicationMenu}
