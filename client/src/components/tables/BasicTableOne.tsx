@@ -17,6 +17,13 @@ interface Brand {
 interface ProductType {
   _id: string;
   name: string;
+  sizes: string[];
+}
+
+interface ProductSubtype {
+  _id: string;
+  name: string;
+  type: string;
 }
 
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
@@ -25,40 +32,36 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
   // Form state
   const [formData, setFormData] = useState({
     brand: "",
-    size: "M",
-    type: "",
-    subtype: "",
+    typeId: "",
+    subtypeId: "",
+    size: "",
     quantity: 1,
     cost_price: 0,
     unit_price: 0,
   });
 
   // Dropdown data
-  const [brands, setBrands] = useState<Brand[]>([]); // Initialize as an empty array
-
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [filteredBrands, setFilteredBrands] = useState<Brand[]>([]);
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
   const [newBrand, setNewBrand] = useState(false);
+  const [brandInputValue, setBrandInputValue] = useState("");
 
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
   const [filteredTypes, setFilteredTypes] = useState<ProductType[]>([]);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
-  const [newType, setNewType] = useState(false);
+  const [typeInputValue, setTypeInputValue] = useState("");
 
-  // Size options
-  const sizeOptions = [
-    "XS",
-    "S",
-    "M",
-    "L",
-    "XL",
-    "XXL",
-    "3XL",
-    "4XL",
-    "5XL",
-    "6XL",
-    "7XL",
-  ];
+  const [subtypes, setSubtypes] = useState<ProductSubtype[]>([]);
+  const [filteredSubtypes, setFilteredSubtypes] = useState<ProductSubtype[]>([]);
+  const [showSubtypeDropdown, setShowSubtypeDropdown] = useState(false);
+  const [subtypeInputValue, setSubtypeInputValue] = useState("");
+  const [newSubtype, setNewSubtype] = useState(false);
+
+  const [typeLoadingSubtypes, setTypeLoadingSubtypes] = useState(false);
+
+  // Size options from selected type
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
 
   // Loading and error states
   const [loading, setLoading] = useState(false);
@@ -68,40 +71,53 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
   // Refs for dropdowns
   const brandDropdownRef = useRef<HTMLDivElement>(null);
   const typeDropdownRef = useRef<HTMLDivElement>(null);
+  const subtypeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch brands and product types on component mount
   useEffect(() => {
     fetchBrands();
-    fetchProductTypes();
+    fetchTypes();
   }, []);
 
   // Filter brands based on input
   useEffect(() => {
-    if (formData.brand) {
-      const filtered = (brands || []).filter((brand) =>
-        brand.name.toLowerCase().includes(formData.brand.toLowerCase())
+    if (brandInputValue) {
+      const filtered = brands.filter((brand) =>
+        brand.name.toLowerCase().includes(brandInputValue.toLowerCase())
       );
       setFilteredBrands(filtered);
-      setNewBrand(filtered.length === 0 && formData.brand.trim() !== "");
+      setNewBrand(filtered.length === 0 && brandInputValue.trim() !== "");
     } else {
-      setFilteredBrands(brands || []);
+      setFilteredBrands(brands);
       setNewBrand(false);
     }
-  }, [formData.brand, brands]);
+  }, [brandInputValue, brands]);
 
   // Filter product types based on input
   useEffect(() => {
-    if (formData.type) {
+    if (typeInputValue) {
       const filtered = productTypes.filter((type) =>
-        type.name.toLowerCase().includes(formData.type.toLowerCase())
+        type.name.toLowerCase().includes(typeInputValue.toLowerCase())
       );
       setFilteredTypes(filtered);
-      setNewType(filtered.length === 0 && formData.type.trim() !== "");
     } else {
       setFilteredTypes(productTypes);
-      setNewType(false);
     }
-  }, [formData.type, productTypes]);
+  }, [typeInputValue, productTypes]);
+
+  // Filter subtypes based on input
+  useEffect(() => {
+    if (subtypeInputValue) {
+      const filtered = subtypes.filter((s) =>
+        s.name.toLowerCase().includes(subtypeInputValue.toLowerCase())
+      );
+      setFilteredSubtypes(filtered);
+      setNewSubtype(filtered.length === 0 && subtypeInputValue.trim() !== "");
+    } else {
+      setFilteredSubtypes(subtypes);
+      setNewSubtype(false);
+    }
+  }, [subtypeInputValue, subtypes]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -118,6 +134,12 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
       ) {
         setShowTypeDropdown(false);
       }
+      if (
+        subtypeDropdownRef.current &&
+        !subtypeDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowSubtypeDropdown(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -131,33 +153,48 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/v1/brand`);
       const data = await response.json();
-      // console.log("Brands data:", data);
       if (data.status === 200) {
         setBrands(data.data);
       }
     } catch (error) {
       console.error("Error fetching brands:", error);
-      // If API fails, use some default brands
-      setBrands([
-        { _id: "1", name: "Gucci" },
-        { _id: "2", name: "H&M" },
-        { _id: "3", name: "Zara" },
-        { _id: "4", name: "Nike" },
-        { _id: "5", name: "Adidas" },
-      ]);
     }
   };
 
-  // Fetch product types from API
-  const fetchProductTypes = async () => {
-    setProductTypes([
-      { _id: "1", name: "Shirt" },
-      { _id: "2", name: "Pant" },
-      { _id: "3", name: "Trouser" },
-      { _id: "4", name: "Handkerchief" },
-      { _id: "5", name: "Blazer" },
-      { _id: "6", name: "Sweater" },
-    ]);
+  const fetchTypes = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/types`);
+      const data = await response.json();
+      if (data.status === 200 || Array.isArray(data.data)) {
+        const types = Array.isArray(data.data) ? data.data : data.data || [];
+        setProductTypes(types);
+      }
+    } catch (err) {
+      console.error("Error fetching types:", err);
+    }
+  };
+
+  const fetchSubtypesByType = async (typeId: string) => {
+    if (!typeId) {
+      setSubtypes([]);
+      setFilteredSubtypes([]);
+      return;
+    }
+    setTypeLoadingSubtypes(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/v1/subtypes/type/${typeId}`
+      );
+      const data = await response.json();
+      if (data.status === 200 || Array.isArray(data.data)) {
+        const fetchedSubtypes = Array.isArray(data.data) ? data.data : data.data || [];
+        setSubtypes(fetchedSubtypes);
+      }
+    } catch (err) {
+      console.error("Error fetching subtypes:", err);
+    } finally {
+      setTypeLoadingSubtypes(false);
+    }
   };
 
   // Handle form input changes
@@ -177,15 +214,27 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
   };
 
   // Handle brand selection
-  const handleBrandSelect = (brandName: string) => {
-    setFormData((prev) => ({ ...prev, brand: brandName }));
+  const handleBrandSelect = (brandId: string, brandName: string) => {
+    setBrandInputValue(brandName);
+    setFormData((prev) => ({ ...prev, brand: brandId }));
     setShowBrandDropdown(false);
   };
 
   // Handle type selection
-  const handleTypeSelect = (typeName: string) => {
-    setFormData((prev) => ({ ...prev, type: typeName }));
+  const handleTypeSelect = (typeId: string, typeName: string, sizes: string[]) => {
+    setTypeInputValue(typeName);
+    setFormData((prev) => ({ ...prev, typeId, subtypeId: "", size: "" }));
+    setSubtypeInputValue("");
+    setAvailableSizes(sizes);
     setShowTypeDropdown(false);
+    fetchSubtypesByType(typeId);
+  };
+
+  // Handle subtype selection
+  const handleSubtypeSelect = (subtypeId: string, subtypeName: string) => {
+    setSubtypeInputValue(subtypeName);
+    setFormData((prev) => ({ ...prev, subtypeId }));
+    setShowSubtypeDropdown(false);
   };
 
   // Create new brand
@@ -196,15 +245,15 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: formData.brand }),
+        body: JSON.stringify({ name: brandInputValue }),
       });
 
       const data = await response.json();
       if (data.status === 201) {
-        // Add the new brand to the list
         setBrands((prev) =>
           Array.isArray(prev) ? [...prev, data.data] : [data.data]
         );
+        handleBrandSelect(data.data._id, data.data.name);
         setNewBrand(false);
       } else {
         setError("Failed to create new brand");
@@ -212,44 +261,39 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
     } catch (error) {
       console.error("Error creating brand:", error);
       setError("Failed to create new brand");
-
-      // For demo purposes, add the brand locally if API fails
-      const newBrandObj = { _id: Date.now().toString(), name: formData.brand };
-      setBrands((prev) => [...prev, newBrandObj]);
-      setNewBrand(false);
     }
   };
 
-  // Create new product type
-  // const handleCreateType = async () => {
-  //   try {
-  //     const response = await fetch(`${API_BASE_URL}/api/v1/product-types`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ name: formData.type }),
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (data.status === 201) {
-  //       // Add the new type to the list
-  //       setProductTypes((prev) => [...prev, data.data.type]);
-  //       setNewType(false);
-  //     } else {
-  //       setError("Failed to create new product type");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error creating product type:", error);
-  //     setError("Failed to create new product type");
-
-  //     // For demo purposes, add the type locally if API fails
-  //     const newTypeObj = { _id: Date.now().toString(), name: formData.type };
-  //     setProductTypes((prev) => [...prev, newTypeObj]);
-  //     setNewType(false);
-  //   }
-  // };
+  // Create new subtype
+  const handleCreateSubtype = async () => {
+    if (!formData.typeId) {
+      setError("Please select a type first");
+      return;
+    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/subtypes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: subtypeInputValue,
+          typeId: formData.typeId,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 201) {
+        setSubtypes((prev) =>
+          Array.isArray(prev) ? [...prev, data.data] : [data.data]
+        );
+        handleSubtypeSelect(data.data._id, data.data.name);
+        setNewSubtype(false);
+      } else {
+        setError(data.message || "Failed to create new subtype");
+      }
+    } catch (err: any) {
+      console.error("Error creating subtype:", err);
+      setError(err.message || "Failed to create new subtype");
+    }
+  };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -264,7 +308,15 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          brand: formData.brand,
+          type: formData.typeId,
+          subtype: formData.subtypeId,
+          size: formData.size,
+          quantity: formData.quantity,
+          cost_price: formData.cost_price,
+          unit_price: formData.unit_price,
+        }),
       });
 
       const data = await response.json();
@@ -276,13 +328,18 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
         // Reset form
         setFormData({
           brand: "",
-          size: "M",
-          type: "",
-          subtype: "",
+          typeId: "",
+          subtypeId: "",
+          size: "",
           quantity: 1,
           cost_price: 0,
           unit_price: 0,
         });
+        setBrandInputValue("");
+        setTypeInputValue("");
+        setSubtypeInputValue("");
+        setAvailableSizes([]);
+        setSubtypes([]);
       } else {
         setError(data.message || "Failed to add product");
       }
@@ -324,8 +381,8 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
             <Label>Brand</Label>
             <Input
               name="brand"
-              value={formData.brand}
-              onChange={handleInputChange}
+              value={brandInputValue}
+              onChange={(e: any) => setBrandInputValue(e.target.value)}
               onFocus={() => setShowBrandDropdown(true)}
               placeholder="Enter brand name"
               className="w-full"
@@ -338,7 +395,7 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
                     <div
                       key={brand._id}
                       className="px-4 py-3 hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-700 dark:text-white text-sm"
-                      onClick={() => handleBrandSelect(brand.name)}
+                      onClick={() => handleBrandSelect(brand._id, brand.name)}
                     >
                       {brand.name}
                     </div>
@@ -354,28 +411,11 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
                     className="px-4 py-3 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-medium"
                     onClick={handleCreateBrand}
                   >
-                    + Save "{formData.brand}" as new brand
+                    + Save "{brandInputValue}" as new brand
                   </div>
                 )}
               </div>
             )}
-          </div>
-
-          {/* Size Field */}
-          <div>
-            <Label>Size</Label>
-            <select
-              name="size"
-              value={formData.size}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm"
-            >
-              {sizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
           </div>
 
           {/* Type Field with Autocomplete */}
@@ -383,8 +423,8 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
             <Label>Type</Label>
             <Input
               name="type"
-              value={formData.type}
-              onChange={handleInputChange}
+              value={typeInputValue}
+              onChange={(e: any) => setTypeInputValue(e.target.value)}
               onFocus={() => setShowTypeDropdown(true)}
               placeholder="Enter product type"
               className="w-full"
@@ -397,7 +437,7 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
                     <div
                       key={type._id}
                       className="px-4 py-3 hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-700 dark:text-white text-sm"
-                      onClick={() => handleTypeSelect(type.name)}
+                      onClick={() => handleTypeSelect(type._id, type.name, type.sizes)}
                     >
                       {type.name}
                     </div>
@@ -407,30 +447,79 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
                     No product types found
                   </div>
                 )}
-
-                {newType && (
-                  <div
-                    className="px-4 py-3 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-medium"
-                    onClick={handleCreateBrand}
-                  >
-                    + Save "{formData.type}" as new product type
-                  </div>
-                )}
               </div>
             )}
           </div>
 
-          {/* Subtype Field */}
-          <div>
-            <Label>Subtype</Label>
-            <Input
-              name="subtype"
-              value={formData.subtype}
-              onChange={handleInputChange}
-              placeholder="Enter product subtype"
-              className="w-full"
-            />
-          </div>
+          {/* Subtype Field with Dependent Dropdown */}
+          {formData.typeId && (
+            <div className="relative" ref={subtypeDropdownRef}>
+              <Label>Subtype</Label>
+              {typeLoadingSubtypes && (
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Loading subtypes...
+                </div>
+              )}
+              <Input
+                name="subtype"
+                value={subtypeInputValue}
+                onChange={(e: any) => setSubtypeInputValue(e.target.value)}
+                onFocus={() => setShowSubtypeDropdown(true)}
+                placeholder="Enter or select product subtype"
+                className="w-full"
+                disabled={typeLoadingSubtypes || subtypes.length === 0}
+              />
+
+              {showSubtypeDropdown && !typeLoadingSubtypes && (
+                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-auto dark:bg-gray-800 dark:border-gray-700">
+                  {filteredSubtypes.length > 0 ? (
+                    filteredSubtypes.map((s) => (
+                      <div
+                        key={s._id}
+                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer dark:hover:bg-gray-700 dark:text-white text-sm"
+                        onClick={() => handleSubtypeSelect(s._id, s.name)}
+                      >
+                        {s.name}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">
+                      No subtypes found
+                    </div>
+                  )}
+
+                  {newSubtype && (
+                    <div
+                      className="px-4 py-3 text-blue-600 border-t border-gray-200 hover:bg-blue-50 cursor-pointer dark:border-gray-700 dark:text-blue-400 dark:hover:bg-blue-900/30 text-sm font-medium"
+                      onClick={handleCreateSubtype}
+                    >
+                      + Save "{subtypeInputValue}" as new subtype
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Size Field - Dynamic based on Type */}
+          {availableSizes.length > 0 && (
+            <div>
+              <Label>Size</Label>
+              <select
+                name="size"
+                value={formData.size}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm"
+              >
+                <option value="">Select size</option>
+                {availableSizes.map((size) => (
+                  <option key={size} value={size}>
+                    {size.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Quantity Field */}
           <div>
