@@ -18,13 +18,23 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'clerk': ['@clerk/clerk-react'],
-          // UI library chunks
-          'recharts': ['recharts'],
-          // Split other large dependencies
+        manualChunks(id) {
+          // React core libraries
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
+            return 'react-vendor';
+          }
+          // Clerk authentication
+          if (id.includes('node_modules/@clerk')) {
+            return 'clerk';
+          }
+          // Recharts
+          if (id.includes('node_modules/recharts')) {
+            return 'recharts';
+          }
+          // Other node_modules
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
       },
     },
