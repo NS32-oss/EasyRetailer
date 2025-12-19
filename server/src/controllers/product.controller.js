@@ -1,9 +1,12 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import { Product } from "../models/product.model.js";
+import { Type } from "../models/type.model.js";
+import { Subtype } from "../models/subtype.model.js";
 import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
 import Joi from "joi";
 import { generateBarcode } from "../utils/barcodeGenerator.js";
+import mongoose from "mongoose";
 
 // Define the validation schema using Joi
 const productSchema = Joi.object({
@@ -22,8 +25,8 @@ const productSchema = Joi.object({
 // ------------------------------
 const bulkSchema = Joi.object({
   brand: Joi.string().trim().required(),
-  type: Joi.string().trim().required(),
-  subtype: Joi.string().trim().allow("").optional(),
+  type: Joi.string().required(), // ObjectId as string
+  subtype: Joi.string().trim().allow("").optional(), // ObjectId as string or empty
 
   // Allow numbers OR numeric strings (Joi will convert)
   cost_price: Joi.number().positive().required(),
@@ -71,9 +74,55 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
   // --- NORMALIZED VALUES ---
   let { brand, type, subtype, cost_price, unit_price, sizes } = value;
 
+  // Validate type is a valid ObjectId
+  if (!mongoose.Types.ObjectId.isValid(type)) {
+    return res.status(400).json(
+      new apiResponse(400, "Validation failed", {
+        message: "Invalid type ID",
+      })
+    );
+  }
+
+  // Verify type exists
+  const typeExists = await Type.findById(type);
+  if (!typeExists) {
+    return res.status(400).json(
+      new apiResponse(400, "Validation failed", {
+        message: "Type does not exist",
+      })
+    );
+  }
+
+  // If subtype is provided, validate it
+  if (subtype) {
+    if (!mongoose.Types.ObjectId.isValid(subtype)) {
+      return res.status(400).json(
+        new apiResponse(400, "Validation failed", {
+          message: "Invalid subtype ID",
+        })
+      );
+    }
+
+    const subtypeExists = await Subtype.findById(subtype);
+    if (!subtypeExists) {
+      return res.status(400).json(
+        new apiResponse(400, "Validation failed", {
+          message: "Subtype does not exist",
+        })
+      );
+    }
+
+    // Verify subtype belongs to the selected type
+    if (subtypeExists.type.toString() !== type) {
+      return res.status(400).json(
+        new apiResponse(400, "Validation failed", {
+          message: "Subtype does not belong to the selected type",
+        })
+      );
+    }
+  }
+
   brand = brand.toLowerCase();
-  type = type.toLowerCase();
-  subtype = subtype?.toLowerCase() || "";
 
   // --- BUILD OPS ---
   let ops = [];
@@ -85,9 +134,9 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
 
         return {
           updateOne: {
-            filter: { brand, type, subtype, size: lowerSize },
+            filter: { brand, type, subtype: subtype || null, size: lowerSize },
             update: {
-              $set: { cost_price, unit_price, subtype },
+              $set: { cost_price, unit_price, type, subtype: subtype || null },
               $setOnInsert: {
                 barcode: await generateBarcode(),
               },
@@ -116,9 +165,9 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
       const product = await Product.findOne({
         brand,
         type,
-        subtype,
+        subtype: subtype || null,
         size: lowerSize,
-      });
+      }).populate("type subtype");
 
       if (!product) {
         errors.push({ size, message: "Not found after upsert" });

@@ -11,11 +11,13 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
     type: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Type",
       required: true,
     },
     subtype: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subtype",
     },
     quantity: {
       type: Number,
