@@ -13,6 +13,7 @@ import InventoryForm from "./BasicTableOne";
 import BulkInventoryForm from "./BulkInventoryForm";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import Loader, { SkeletonLoader } from "../common/Loader";
 
 interface Product {
   id: string;
@@ -39,6 +40,7 @@ export default function Inventory({ limit }: InventoryProps) {
   const [showBulkForm, setShowBulkForm] = useState(false);
   const [bulkReport, setBulkReport] = useState<any | null>(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filter states
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -128,6 +130,7 @@ export default function Inventory({ limit }: InventoryProps) {
 
   const fetchProducts = useCallback(async () => {
     try {
+      setIsLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/v1/product`);
       const responseData = await response.json();
       const productsData = responseData.data.products;
@@ -136,8 +139,8 @@ export default function Inventory({ limit }: InventoryProps) {
           id: product._id,
           brand: product.brand,
           size: product.size,
-          type: product.type,
-          subtype: product.subtype,
+          type: product.type?.name || product.type,
+          subtype: product.subtype?.name || product.subtype,
           quantity: product.quantity,
           costPrice: `₹${product.cost_price.toFixed(2)}`,
           unitPrice: `₹${product.unit_price.toFixed(2)}`,
@@ -147,6 +150,8 @@ export default function Inventory({ limit }: InventoryProps) {
       setTableData(limit ? processedData.slice(0, limit) : processedData);
     } catch (err) {
       console.error("Error fetching products data:", err);
+    } finally {
+      setIsLoading(false);
     }
   }, [limit]);
 
@@ -354,11 +359,19 @@ export default function Inventory({ limit }: InventoryProps) {
               {/* Brand Filter - Collapsible */}
               <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                 <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
-                  Brand {selectedBrands.length > 0 && <span className="text-xs text-blue-600">({selectedBrands.length})</span>}
+                  Brand{" "}
+                  {selectedBrands.length > 0 && (
+                    <span className="text-xs text-blue-600">
+                      ({selectedBrands.length})
+                    </span>
+                  )}
                 </summary>
                 <div className="max-h-40 overflow-y-auto p-3 bg-white dark:bg-gray-900 space-y-2">
                   {brands.map((brand) => (
-                    <label key={brand} className="flex items-center space-x-3 cursor-pointer">
+                    <label
+                      key={brand}
+                      className="flex items-center space-x-3 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedBrands.includes(brand)}
@@ -366,12 +379,16 @@ export default function Inventory({ limit }: InventoryProps) {
                           if (e.target.checked) {
                             setSelectedBrands([...selectedBrands, brand]);
                           } else {
-                            setSelectedBrands(selectedBrands.filter((b) => b !== brand));
+                            setSelectedBrands(
+                              selectedBrands.filter((b) => b !== brand)
+                            );
                           }
                         }}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{brand}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {brand}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -380,11 +397,19 @@ export default function Inventory({ limit }: InventoryProps) {
               {/* Type Filter - Collapsible */}
               <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                 <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
-                  Type {selectedTypes.length > 0 && <span className="text-xs text-blue-600">({selectedTypes.length})</span>}
+                  Type{" "}
+                  {selectedTypes.length > 0 && (
+                    <span className="text-xs text-blue-600">
+                      ({selectedTypes.length})
+                    </span>
+                  )}
                 </summary>
                 <div className="max-h-40 overflow-y-auto p-3 bg-white dark:bg-gray-900 space-y-2">
                   {types.map((type) => (
-                    <label key={type} className="flex items-center space-x-3 cursor-pointer">
+                    <label
+                      key={type}
+                      className="flex items-center space-x-3 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedTypes.includes(type)}
@@ -392,12 +417,16 @@ export default function Inventory({ limit }: InventoryProps) {
                           if (e.target.checked) {
                             setSelectedTypes([...selectedTypes, type]);
                           } else {
-                            setSelectedTypes(selectedTypes.filter((t) => t !== type));
+                            setSelectedTypes(
+                              selectedTypes.filter((t) => t !== type)
+                            );
                           }
                         }}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{type}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {type}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -406,11 +435,19 @@ export default function Inventory({ limit }: InventoryProps) {
               {/* Subtype Filter - Collapsible */}
               <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                 <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
-                  Subtype {selectedSubtypes.length > 0 && <span className="text-xs text-blue-600">({selectedSubtypes.length})</span>}
+                  Subtype{" "}
+                  {selectedSubtypes.length > 0 && (
+                    <span className="text-xs text-blue-600">
+                      ({selectedSubtypes.length})
+                    </span>
+                  )}
                 </summary>
                 <div className="max-h-40 overflow-y-auto p-3 bg-white dark:bg-gray-900 space-y-2">
                   {subtypes.map((subtype) => (
-                    <label key={subtype} className="flex items-center space-x-3 cursor-pointer">
+                    <label
+                      key={subtype}
+                      className="flex items-center space-x-3 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedSubtypes.includes(subtype)}
@@ -418,12 +455,16 @@ export default function Inventory({ limit }: InventoryProps) {
                           if (e.target.checked) {
                             setSelectedSubtypes([...selectedSubtypes, subtype]);
                           } else {
-                            setSelectedSubtypes(selectedSubtypes.filter((s) => s !== subtype));
+                            setSelectedSubtypes(
+                              selectedSubtypes.filter((s) => s !== subtype)
+                            );
                           }
                         }}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{subtype}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {subtype}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -432,11 +473,19 @@ export default function Inventory({ limit }: InventoryProps) {
               {/* Size Filter - Collapsible */}
               <details className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                 <summary className="bg-gray-50 dark:bg-gray-800 px-4 py-3 font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
-                  Size {selectedSizes.length > 0 && <span className="text-xs text-blue-600">({selectedSizes.length})</span>}
+                  Size{" "}
+                  {selectedSizes.length > 0 && (
+                    <span className="text-xs text-blue-600">
+                      ({selectedSizes.length})
+                    </span>
+                  )}
                 </summary>
                 <div className="max-h-40 overflow-y-auto p-3 bg-white dark:bg-gray-900 space-y-2">
                   {sizes.map((size) => (
-                    <label key={size} className="flex items-center space-x-3 cursor-pointer">
+                    <label
+                      key={size}
+                      className="flex items-center space-x-3 cursor-pointer"
+                    >
                       <input
                         type="checkbox"
                         checked={selectedSizes.includes(size)}
@@ -444,12 +493,16 @@ export default function Inventory({ limit }: InventoryProps) {
                           if (e.target.checked) {
                             setSelectedSizes([...selectedSizes, size]);
                           } else {
-                            setSelectedSizes(selectedSizes.filter((s) => s !== size));
+                            setSelectedSizes(
+                              selectedSizes.filter((s) => s !== size)
+                            );
                           }
                         }}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{size}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {size}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -465,14 +518,18 @@ export default function Inventory({ limit }: InventoryProps) {
                     type="number"
                     placeholder="Min ₹"
                     value={priceRange.min}
-                    onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })}
+                    onChange={(e) =>
+                      setPriceRange({ ...priceRange, min: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
                   />
                   <input
                     type="number"
                     placeholder="Max ₹"
                     value={priceRange.max}
-                    onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })}
+                    onChange={(e) =>
+                      setPriceRange({ ...priceRange, max: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
                   />
                 </div>
@@ -757,7 +814,7 @@ export default function Inventory({ limit }: InventoryProps) {
             </div>
           ))}
 
-          {filteredData.length === 0 && (
+          {filteredData.length === 0 && !isLoading && (
             <div className="text-center py-16">
               <div className="text-4xl mb-4">📦</div>
               <p className="text-gray-500 dark:text-gray-400">
@@ -773,120 +830,132 @@ export default function Inventory({ limit }: InventoryProps) {
               )}
             </div>
           )}
+
+          {isLoading && (
+            <div className="py-8">
+              <Loader message="Loading inventory..." />
+            </div>
+          )}
         </div>
 
         {/* Desktop: Table View */}
         <div className="hidden md:block overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="max-w-full overflow-x-auto">
-            <div className="inline-block min-w-full">
-              <Table className="w-full border-collapse">
-                <TableHeader className="border-gray-100 dark:border-gray-800 border-y bg-gray-50 dark:bg-gray-900/50">
-                  <TableRow>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
-                    >
-                      Brand
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
-                    >
-                      Type
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
-                    >
-                      Subtype
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/12"
-                    >
-                      Size
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-center w-1/12"
-                    >
-                      Quantity
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-right w-1/8"
-                    >
-                      Cost Price
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-right w-1/8"
-                    >
-                      Selling Price
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/6"
-                    >
-                      Barcode
-                    </TableCell>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData.map((item) => (
-                    <TableRow
-                      key={item.id}
-                      className="border-gray-100 dark:border-gray-800 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                    >
-                      <TableCell className="py-3 px-4 text-gray-900 dark:text-gray-100 text-left">
-                        {item.brand}
+          {isLoading ? (
+            <div className="p-8">
+              <SkeletonLoader rows={8} />
+            </div>
+          ) : (
+            <div className="max-w-full overflow-x-auto">
+              <div className="inline-block min-w-full">
+                <Table className="w-full border-collapse">
+                  <TableHeader className="border-gray-100 dark:border-gray-800 border-y bg-gray-50 dark:bg-gray-900/50">
+                    <TableRow>
+                      <TableCell
+                        isHeader
+                        className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
+                      >
+                        Brand
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-left">
-                        {item.type}
+                      <TableCell
+                        isHeader
+                        className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
+                      >
+                        Type
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-left">
-                        {item.subtype}
+                      <TableCell
+                        isHeader
+                        className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/8"
+                      >
+                        Subtype
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-left">
-                        <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
-                          {item.size}
-                        </span>
+                      <TableCell
+                        isHeader
+                        className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/12"
+                      >
+                        Size
                       </TableCell>
-                      <TableCell className="py-3 px-4 font-medium text-gray-900 dark:text-gray-100 text-center">
-                        {item.quantity}
+                      <TableCell
+                        isHeader
+                        className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-center w-1/12"
+                      >
+                        Quantity
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-right">
-                        {item.costPrice}
+                      <TableCell
+                        isHeader
+                        className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-right w-1/8"
+                      >
+                        Cost Price
                       </TableCell>
-                      <TableCell className="py-3 px-4 font-medium text-green-600 dark:text-green-400 text-right">
-                        {item.unitPrice}
+                      <TableCell
+                        isHeader
+                        className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-right w-1/8"
+                      >
+                        Selling Price
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-xs font-mono text-gray-500 dark:text-gray-500 text-left">
-                        {item.barcode}
+                      <TableCell
+                        isHeader
+                        className="py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-left w-1/6"
+                      >
+                        Barcode
                       </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((item) => (
+                      <TableRow
+                        key={item.id}
+                        className="border-gray-100 dark:border-gray-800 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                      >
+                        <TableCell className="py-3 px-4 text-gray-900 dark:text-gray-100 text-left">
+                          {item.brand}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-left">
+                          {item.type}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-left">
+                          {item.subtype}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-left">
+                          <span className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">
+                            {item.size}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 font-medium text-gray-900 dark:text-gray-100 text-center">
+                          {item.quantity}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-gray-600 dark:text-gray-400 text-right">
+                          {item.costPrice}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 font-medium text-green-600 dark:text-green-400 text-right">
+                          {item.unitPrice}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-xs font-mono text-gray-500 dark:text-gray-500 text-left">
+                          {item.barcode}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
-              {filteredData.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="text-4xl mb-4">📦</div>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    No products found
-                  </p>
-                  {hasActiveFilters && (
-                    <button
-                      onClick={clearFilters}
-                      className="mt-4 text-blue-600 dark:text-blue-400 font-medium"
-                    >
-                      Clear filters
-                    </button>
-                  )}
-                </div>
-              )}
+                {filteredData.length === 0 && !isLoading && (
+                  <div className="text-center py-12">
+                    <div className="text-4xl mb-4">📦</div>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      No products found
+                    </p>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearFilters}
+                        className="mt-4 text-blue-600 dark:text-blue-400 font-medium"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -311,11 +311,14 @@ export const getAllProducts = asyncHandler(async (req, res) => {
   const totalItems = await Product.countDocuments(filter);
   const totalPages = Math.ceil(totalItems / limitNumber);
 
-  // Retrieve products with applied filters, pagination, and sorting
+  // Retrieve products with applied filters, pagination, and sorting - OPTIMIZED with lean()
   const products = await Product.find(filter)
+    .populate("type", "name")
+    .populate("subtype", "name")
     .sort(sortCriteria)
     .skip((pageNumber - 1) * limitNumber)
-    .limit(limitNumber);
+    .limit(limitNumber)
+    .lean();
 
   // Return the result using the custom API response format
   return res.status(200).json(

@@ -73,4 +73,11 @@ const salesSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for performance
+salesSchema.index({ sale_date: -1 });
+salesSchema.index({ productId: 1 });
+salesSchema.index({ barcode: 1 });
+salesSchema.index({ returnStatus: 1 });
+salesSchema.index({ sale_date: -1, returnStatus: 1 });
+
 export const Sales = mongoose.model("Sales", salesSchema);

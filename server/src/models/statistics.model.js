@@ -46,4 +46,7 @@ const statisticsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Index for performance - date is the primary query field
+statisticsSchema.index({ date: -1 }, { unique: true });
+
 export const Statistics = mongoose.model("Statistics", statisticsSchema);

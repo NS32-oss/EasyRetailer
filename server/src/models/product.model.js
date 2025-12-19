@@ -47,4 +47,11 @@ productSchema.index({
   colour: "text",
 });
 
+// Performance indexes
+productSchema.index({ brand: 1 });
+productSchema.index({ type: 1 });
+productSchema.index({ barcode: 1 });
+productSchema.index({ brand: 1, type: 1, size: 1 });
+productSchema.index({ quantity: 1 });
+
 export const Product = mongoose.model("Product", productSchema);

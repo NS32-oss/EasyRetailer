@@ -87,4 +87,10 @@ const returnSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Indexes for performance
+returnSchema.index({ saleId: 1 });
+returnSchema.index({ return_date: -1 });
+returnSchema.index({ productId: 1 });
+returnSchema.index({ return_date: -1, saleId: 1 });
+
 export const Return = mongoose.model("Return", returnSchema);
