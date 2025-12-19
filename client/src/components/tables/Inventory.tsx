@@ -156,7 +156,7 @@ export default function Inventory({ limit }: InventoryProps) {
 
   return (
     <div>
-      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 md:static md:bg-transparent md:rounded-2xl md:border md:px-6 md:mb-6">
+      <div className="sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 md:static md:bg-transparent md:rounded-2xl md:border md:px-6 md:mb-6">
         <div className="flex items-center justify-between mb-3 md:mb-4">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white md:text-lg">
             Inventory
