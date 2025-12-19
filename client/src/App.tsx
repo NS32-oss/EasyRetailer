@@ -1,29 +1,33 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
-import { useState, useEffect } from "react";
-import SignIn from "./pages/AuthPages/SignIn";
-import SignUp from "./pages/AuthPages/SignUp";
-import NotFound from "./pages/OtherPage/NotFound";
-import UserProfiles from "./pages/UserProfiles";
-import Videos from "./pages/UiElements/Videos";
-import Images from "./pages/UiElements/Images";
-import Alerts from "./pages/UiElements/Alerts";
-import Badges from "./pages/UiElements/Badges";
-import Avatars from "./pages/UiElements/Avatars";
-import Buttons from "./pages/UiElements/Buttons";
-import LineChart from "./pages/Charts/LineChart";
-import BarChart from "./pages/Charts/BarChart";
-import FormElements from "./pages/Forms/FormElements";
-import Blank from "./pages/Blank";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { PageLoader } from "./components/common/Loader";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
+
+// Eager load critical components
 import Home from "./pages/Dashboard/Home";
-import SalesHistory from "./pages/Forms/SalesHistory";
-import Inventory from "./components/tables/Inventory";
-import SalesCart from "./components/dashboard/SalesCart";
-import SalesCartHistory from "./components/salesCartHistory/SalesCartHistory";
-import Barcode from "./components/charts/bar/BarChartOne";
-import Return from "./pages/Return";
-import { PageLoader } from "./components/common/Loader";
+import SignIn from "./pages/AuthPages/SignIn";
+import SignUp from "./pages/AuthPages/SignUp";
+
+// Lazy load other pages
+const NotFound = lazy(() => import("./pages/OtherPage/NotFound"));
+const UserProfiles = lazy(() => import("./pages/UserProfiles"));
+const Videos = lazy(() => import("./pages/UiElements/Videos"));
+const Images = lazy(() => import("./pages/UiElements/Images"));
+const Alerts = lazy(() => import("./pages/UiElements/Alerts"));
+const Badges = lazy(() => import("./pages/UiElements/Badges"));
+const Avatars = lazy(() => import("./pages/UiElements/Avatars"));
+const Buttons = lazy(() => import("./pages/UiElements/Buttons"));
+const LineChart = lazy(() => import("./pages/Charts/LineChart"));
+const BarChart = lazy(() => import("./pages/Charts/BarChart"));
+const FormElements = lazy(() => import("./pages/Forms/FormElements"));
+const Blank = lazy(() => import("./pages/Blank"));
+const SalesHistory = lazy(() => import("./pages/Forms/SalesHistory"));
+const Inventory = lazy(() => import("./components/tables/Inventory"));
+const SalesCart = lazy(() => import("./components/dashboard/SalesCart"));
+const SalesCartHistory = lazy(() => import("./components/salesCartHistory/SalesCartHistory"));
+const Barcode = lazy(() => import("./components/charts/bar/BarChartOne"));
+const Return = lazy(() => import("./pages/Return"));
 
 export default function App() {
   const [isAppReady, setIsAppReady] = useState(false);
@@ -46,6 +50,7 @@ export default function App() {
     <>
       <Router>
         <ScrollToTop />
+        <Suspense fallback={<PageLoader message="Loading..." />}>
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
@@ -86,7 +91,8 @@ export default function App() {
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </Router>
     </>
-  )
+  );
 }
