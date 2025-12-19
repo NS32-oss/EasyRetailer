@@ -18,6 +18,7 @@ import {
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
+import Brand from "../components/common/Brand";
 
 type NavItem = {
   name: string;
@@ -268,29 +269,9 @@ const AppSidebar: React.FC = () => {
       >
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <img
-                className="dark:hidden"
-                src="/images/logo/logo-dark.png"
-                alt="Logo"
-                width={190}
-                height={70}
-              />
-              <img
-                className="hidden dark:block"
-                src="/images/logo/logo.png"
-                alt="Logo"
-                width={180}
-                height={60}
-              />
-            </>
+            <Brand variant="full" size="lg" />
           ) : (
-            <img
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            <Brand variant="icon" size="sm" />
           )}
         </Link>
       </div>

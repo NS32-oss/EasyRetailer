@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
+import Brand from "../components/common/Brand";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 
@@ -86,16 +87,7 @@ const AppHeader: React.FC = () => {
             )}
           </button>
           <Link to="/" className="lg:hidden">
-            <img
-              className="dark:hidden h-8"
-              src="/images/logo/logo-dark.png"
-              alt="Logo"
-            />
-            <img
-              className="hidden dark:block h-8"
-              src="/images/logo/logo.png"
-              alt="Logo"
-            />
+            <Brand variant="full" size="md" />
           </Link>
 
           <button

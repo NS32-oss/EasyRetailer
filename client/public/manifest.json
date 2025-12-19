@@ -1,0 +1,59 @@
+{
+  "name": "EasyRetailer - Inventory Management",
+  "short_name": "EasyRetailer",
+  "description": "Complete inventory management system for retail businesses with barcode scanning, sales tracking, and returns management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/images/logo/easyretailer-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Add Product",
+      "short_name": "Add",
+      "description": "Quickly add a new product",
+      "url": "/inventory",
+      "icons": [
+        {
+          "src": "/images/logo/logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Sales Cart",
+      "short_name": "Sales",
+      "description": "Open sales cart",
+      "url": "/sales-cart",
+      "icons": [
+        {
+          "src": "/images/logo/logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Returns",
+      "short_name": "Returns",
+      "description": "Process returns",
+      "url": "/return",
+      "icons": [
+        {
+          "src": "/images/logo/logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
