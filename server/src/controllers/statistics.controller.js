@@ -39,8 +39,8 @@ export const getStatistics = asyncHandler(async (req, res) => {
             year: { $substr: ["$date", 0, 4] },
             month: { $substr: ["$date", 5, 2] },
           },
-          totalRevenue: { $sum: "$totalRevenue" },
-          totalProfit: { $sum: "$totalProfit" },
+          totalRevenue: { $sum: "$netRevenue" },
+          totalProfit: { $sum: "$netProfit" },
         },
       },
       {
@@ -113,8 +113,8 @@ export const getStatistics = asyncHandler(async (req, res) => {
       {
         $group: {
           _id: { year: { $substr: ["$date", 0, 4] } },
-          totalRevenue: { $sum: "$totalRevenue" },
-          totalProfit: { $sum: "$totalProfit" },
+          totalRevenue: { $sum: "$netRevenue" },
+          totalProfit: { $sum: "$netProfit" },
         },
       },
       {
@@ -181,8 +181,8 @@ export const getStatistics = asyncHandler(async (req, res) => {
             month: { $substr: ["$date", 5, 2] },
             day: { $substr: ["$date", 8, 2] },
           },
-          totalRevenue: { $sum: "$totalRevenue" },
-          totalProfit: { $sum: "$totalProfit" },
+          totalRevenue: { $sum: "$netRevenue" },
+          totalProfit: { $sum: "$netProfit" },
         },
       },
       {

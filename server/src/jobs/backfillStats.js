@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { Sales } from "../models/sales.model.js";
+import { Return } from "../models/return.model.js";
 import { Statistics } from "../models/statistics.model.js";
 
 // Load environment variables (if using .env)
@@ -79,11 +80,26 @@ const backfillDailyStatistics = async () => {
 
       const data = stats[0] || { totalRevenue: 0, totalProfit: 0 };
 
+      // Returns aggregated for the same day
+      const returnsStats = await Return.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end }, status: { $in: ["processed", "approved"] } } },
+        { $unwind: "$items" },
+        { $group: { _id: null, returnsRefund: { $sum: "$items.refundAmount" }, returnsProfitImpact: { $sum: "$items.profitImpact" } } },
+        { $project: { _id: 0, returnsRefund: 1, returnsProfitImpact: 1 } },
+      ]);
+      const r = returnsStats[0] || { returnsRefund: 0, returnsProfitImpact: 0 };
+      const netRevenue = (data.totalRevenue || 0) - (r.returnsRefund || 0);
+      const netProfit = (data.totalProfit || 0) - (r.returnsProfitImpact || 0);
+
       await Statistics.findOneAndUpdate(
         { date: dateStr },
         {
-          totalRevenue: data.totalRevenue,
-          totalProfit: data.totalProfit,
+          totalRevenue: data.totalRevenue || 0,
+          totalProfit: data.totalProfit || 0,
+          returnsRefund: r.returnsRefund || 0,
+          returnsProfitImpact: r.returnsProfitImpact || 0,
+          netRevenue,
+          netProfit,
           date: dateStr,
         },
         { upsert: true, new: true }

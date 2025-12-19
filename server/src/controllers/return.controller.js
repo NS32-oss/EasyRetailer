@@ -5,6 +5,7 @@ import apiResponse from "../utils/apiResponse.js";
 import { Sales } from "../models/sales.model.js";
 import { Product } from "../models/product.model.js";
 import { Return } from "../models/return.model.js";
+import { calculateDailyStatistics } from "../jobs/calculateDailyStatistics.js";
 
 // Helper to round currency to 2 decimals
 const round2 = (value) => Math.round(value * 100) / 100;
@@ -78,6 +79,8 @@ export const createReturn = asyncHandler(async (req, res) => {
 
     const unitPrice = saleItem.selling_price / saleItem.quantity;
     const refundAmount = round2(unitPrice * requestedQty);
+    const perUnitCost = Number.isFinite(saleItem.cost_price) ? saleItem.cost_price : 0;
+    const profitImpact = round2((unitPrice - perUnitCost) * requestedQty);
 
     return {
       saleProductId,
@@ -86,16 +89,19 @@ export const createReturn = asyncHandler(async (req, res) => {
       approvedQty: requestedQty, // auto-approve for now
       unitPrice,
       refundAmount,
+        profitImpact,
       reason: p.reason || reason || "",
     };
   });
 
   const totalRefund = round2(items.reduce((sum, item) => sum + item.refundAmount, 0));
+  const totalProfitImpact = round2(items.reduce((sum, item) => sum + item.profitImpact, 0));
 
   const newReturn = await Return.create({
     sale: sale_id,
     items,
     totalRefund,
+    totalProfitImpact,
     status: "processed", // instantly process; adjust if you want manual approval
     reason,
     updatedInventory: false,
@@ -142,6 +148,12 @@ export const createReturn = asyncHandler(async (req, res) => {
 
   sale.returnStatus = allReturned ? "full" : "partial";
   await sale.save();
+
+  // Recompute statistics for return date only
+  const returnDateStr = newReturn.createdAt
+    ? new Date(newReturn.createdAt).toLocaleDateString("en-CA")
+    : new Date().toLocaleDateString("en-CA");
+  await calculateDailyStatistics(returnDateStr);
 
   return res
     .status(201)

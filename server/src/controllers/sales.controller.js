@@ -59,7 +59,11 @@ export const createSale = asyncHandler(async (req, res) => {
     productRecord.quantity -= item.quantity;
     await productRecord.save();
   }
-  calculateDailyStatistics();
+  // Recompute stats only for the sale day to keep dashboard fresh
+  const saleDateStr = sale.createdAt
+    ? new Date(sale.createdAt).toLocaleDateString("en-CA")
+    : new Date().toLocaleDateString("en-CA");
+  await calculateDailyStatistics(saleDateStr);
   return res
     .status(201)
     .json(

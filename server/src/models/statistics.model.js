@@ -11,11 +11,36 @@ const statisticsSchema = new mongoose.Schema(
     totalRevenue: {
       type: Number,
       required: true,
+      default: 0,
     },
-    // Count of sales transactions (number of sales documents)
+    // Sum of profit from sales for the day (gross, before returns)
     totalProfit: {
       type: Number,
       required: true,
+      default: 0,
+    },
+    // Sum of refunds from processed returns on this day
+    returnsRefund: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    // Sum of profit impact from processed returns on this day
+    returnsProfitImpact: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    // Net metrics = sales minus returns (for operational dashboards)
+    netRevenue: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    netProfit: {
+      type: Number,
+      required: true,
+      default: 0,
     },
   },
   { timestamps: true }

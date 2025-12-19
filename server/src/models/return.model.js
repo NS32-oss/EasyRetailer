@@ -31,6 +31,12 @@ const returnItemSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+    profitImpact: {
+      // Impact on profit for this returned item (positive number to subtract from profit)
+      type: Number,
+      required: true,
+      default: 0,
+    },
     reason: {
       type: String,
       default: "",
@@ -51,6 +57,12 @@ const returnSchema = new mongoose.Schema(
       validate: (arr) => Array.isArray(arr) && arr.length > 0,
     },
     totalRefund: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    totalProfitImpact: {
+      // Sum of profitImpact for all items
       type: Number,
       required: true,
       default: 0,
