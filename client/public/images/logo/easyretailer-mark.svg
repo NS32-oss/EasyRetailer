@@ -1,11 +1,16 @@
 <svg width="256" height="256" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="brandGradient" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563eb" />
-      <stop offset="1" stop-color="#22d3ee" />
+    <linearGradient id="brandGradient" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0ea5e9" />
+      <stop offset="1" stop-color="#6366f1" />
+    </linearGradient>
+    <linearGradient id="brandAccent" x1="18" y1="20" x2="44" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e0f2fe" stop-opacity="0.85" />
+      <stop offset="1" stop-color="#c7d2fe" stop-opacity="0.6" />
     </linearGradient>
   </defs>
-  <rect x="6" y="6" width="52" height="52" rx="14" fill="url(#brandGradient)" />
-  <path d="M20 18h16c5.523 0 10 4.477 10 10s-4.477 10-10 10H28v8h-8V18Zm8 6v8h8a4 4 0 0 0 0-8h-8Z" fill="white" />
-  <path d="M34 28h4c3.866 0 7 3.134 7 7v11h-8V36a2 2 0 0 0-2-2h-1l-5.5 12H20l7.5-18H34Z" fill="white" opacity="0.92" />
+  <rect x="8" y="8" width="48" height="48" rx="16" fill="url(#brandGradient)" />
+  <path d="M20 16h18c5.523 0 10 4.477 10 10 0 5.153-3.92 9.417-8.99 9.95L34 36h-6v10h-8V16Z" fill="url(#brandAccent)" opacity="0.95" />
+  <path d="M29.5 22H36c3.866 0 7 3.134 7 7v15h-8V32a3 3 0 0 0-3-3h-3l-4.9 11H18l6.7-15.3A4 4 0 0 1 29.5 22Z" fill="white" />
+  <path d="M20 44h22v4H20z" fill="white" opacity="0.9" />
 </svg>

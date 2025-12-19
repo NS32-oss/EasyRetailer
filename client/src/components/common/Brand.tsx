@@ -32,21 +32,26 @@ const Brand: React.FC<BrandProps> = ({ variant = "full", size = "md", className 
         aria-hidden
       >
         <defs>
-          <linearGradient id="brandGradient" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#2563eb" />
-            <stop offset="1" stopColor="#22d3ee" />
+          <linearGradient id="brandGradient" x1="10" y1="8" x2="54" y2="56" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#0ea5e9" />
+            <stop offset="1" stopColor="#6366f1" />
+          </linearGradient>
+          <linearGradient id="brandAccent" x1="18" y1="20" x2="44" y2="48" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#e0f2fe" stopOpacity="0.85" />
+            <stop offset="1" stopColor="#c7d2fe" stopOpacity="0.6" />
           </linearGradient>
         </defs>
-        <rect x="6" y="6" width="52" height="52" rx="14" fill="url(#brandGradient)" />
+        <rect x="8" y="8" width="48" height="48" rx="16" fill="url(#brandGradient)" />
         <path
-          d="M20 18h16c5.523 0 10 4.477 10 10s-4.477 10-10 10H28v8h-8V18Zm8 6v8h8a4 4 0 0 0 0-8h-8Z"
-          fill="white"
+          d="M20 16h18c5.523 0 10 4.477 10 10 0 5.153-3.92 9.417-8.99 9.95L34 36h-6v10h-8V16Z"
+          fill="url(#brandAccent)"
+          opacity="0.95"
         />
         <path
-          d="M34 28h4c3.866 0 7 3.134 7 7v11h-8V36a2 2 0 0 0-2-2h-1l-5.5 12H20l7.5-18H34Z"
+          d="M29.5 22H36c3.866 0 7 3.134 7 7v15h-8V32a3 3 0 0 0-3-3h-3l-4.9 11H18l6.7-15.3A4 4 0 0 1 29.5 22Z"
           fill="white"
-          opacity="0.92"
         />
+        <path d="M20 44h22v4H20z" fill="white" opacity="0.9" />
       </svg>
 
       {variant === "full" && (
@@ -55,7 +60,7 @@ const Brand: React.FC<BrandProps> = ({ variant = "full", size = "md", className 
             EasyRetailer
           </span>
           <span className="block text-[11px] uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
-            Inventory Suite
+            Retail OS
           </span>
         </div>
       )}

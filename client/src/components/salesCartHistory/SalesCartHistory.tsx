@@ -75,7 +75,8 @@ export default function SalesCartHistory() {
     if (!sale) return "#";
 
     // Build the bill message
-    let message = `🧾 *Your Bill*\n`;
+    let message = `Lotus World\n`;
+    message += `🧾 *Your Bill*\n`;
     message += `----------------------\n`;
 
     sale.products.forEach((product, index) => {
