@@ -28,14 +28,12 @@ export function Notification({ message, type, duration = 3000, onClose }: Notifi
 
   return isVisible ? (
     <div
-      className={`fixed top-4 left-4 right-4 sm:left-auto sm:right-4 z-[100] transform transition-transform duration-300 ease-in-out ${
-        isVisible ? "translate-x-0" : "translate-x-full"
-      }`}
+      className={`fixed top-20 left-0 right-0 z-[100] px-4 pointer-events-none`}
     >
       <div
-        className={`${bgColor} text-white px-4 py-3 rounded-lg shadow-lg flex items-center max-w-md mx-auto sm:mx-0`}
+        className={`${bgColor} text-white px-4 py-3 rounded-lg shadow-lg max-w-md mx-auto pointer-events-auto`}
       >
-        <p className="text-sm leading-relaxed">{message}</p>
+        <p className="text-sm leading-relaxed break-words">{message}</p>
       </div>
     </div>
   ) : null;
