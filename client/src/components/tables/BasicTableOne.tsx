@@ -331,6 +331,7 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
             sizes: [{ size: formData.size, quantity: formData.quantity }],
             cost_price: Number(formData.cost_price) || 0,
             unit_price: Number(formData.unit_price) || 0,
+            barcode: data.data?.barcode || "",
           };
           onSuccess(summary);
         }

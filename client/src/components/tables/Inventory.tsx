@@ -264,7 +264,7 @@ export default function Inventory({ limit }: InventoryProps) {
         <div className="px-4 mt-4 md:px-6">
           <BulkInventoryForm
             onSuccess={(result: any) => {
-              setSummaryProducts([result]);
+              setSummaryProducts(Array.isArray(result) ? result : [result]);
               setShowSummaryModal(true);
               fetchProducts();
               setShowBulkForm(false);

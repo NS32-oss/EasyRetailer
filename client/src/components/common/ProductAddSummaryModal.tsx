@@ -11,6 +11,7 @@ interface ProductAddedSummary {
   }>;
   cost_price: number;
   unit_price: number;
+  barcode?: string;
 }
 
 interface ProductAddSummaryModalProps {
@@ -99,11 +100,18 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
                 </div>
               </div>
 
-              {/* Sizes */}
+              {/* Sizes and Barcode */}
               <div>
-                <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 font-medium mb-3">
-                  Sizes Added
-                </p>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 font-medium">
+                    Sizes Added
+                  </p>
+                  {product?.barcode && (
+                    <span className="text-xs font-mono font-semibold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                      {product.barcode}
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {(Array.isArray(product?.sizes) ? product.sizes : []).map((size: any, idx: number) => (
                     <div

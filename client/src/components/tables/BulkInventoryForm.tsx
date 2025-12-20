@@ -354,14 +354,23 @@ export default function BulkInventoryForm({
       }
 
       if (onSuccess) {
-        const productsSummary = Object.entries(selectedSizes).map(([, entry]) => ({
-          brand: brandInputValue,
-          type: typeInputValue,
-          subtype: subtypeInputValue,
-          sizes: [{ size: entry.size, quantity: entry.quantity }],
-          cost_price: Number(formData.cost_price) || 0,
-          unit_price: Number(formData.unit_price) || 0,
-        }));
+        // Map created and updated products from API response to include barcodes
+        const createdProducts = body?.data?.created || [];
+        const updatedProducts = body?.data?.updated || [];
+        const allProducts = [...createdProducts, ...updatedProducts];
+        
+        const productsSummary = Object.entries(selectedSizes).map(([, entry]) => {
+          const productInfo = allProducts.find((p: any) => p.size?.toLowerCase() === entry.size?.toLowerCase());
+          return {
+            brand: brandInputValue,
+            type: typeInputValue,
+            subtype: subtypeInputValue,
+            sizes: [{ size: entry.size, quantity: entry.quantity }],
+            cost_price: Number(formData.cost_price) || 0,
+            unit_price: Number(formData.unit_price) || 0,
+            barcode: productInfo?.barcode || "",
+          };
+        });
         console.log("DEBUG BulkInventoryForm - onSuccess summary:", JSON.stringify(productsSummary, null, 2));
         console.log("DEBUG - brandInputValue:", brandInputValue, "typeInputValue:", typeInputValue, "formData.cost_price:", formData.cost_price);
         onSuccess(productsSummary);
