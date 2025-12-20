@@ -69,9 +69,11 @@ export default function SalesCart() {
         // Get the subtype name if available
         const subtypeName = typeof product.subtype === 'object' ? product.subtype.name : (product.subtype || '');
 
+        const brandName = typeof product.brand === 'object' ? product.brand.name : product.brand;
+
         const newItem: CartItem = {
           id: product._id,
-          brand: product.brand,
+          brand: brandName,
           size: product.size,
           type: subtypeName ? `${typeName} • ${subtypeName}` : typeName,
           quantity: 1,

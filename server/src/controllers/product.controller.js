@@ -2,6 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { Product } from "../models/product.model.js";
 import { Type } from "../models/type.model.js";
 import { Subtype } from "../models/subtype.model.js";
+import { Brand } from "../models/brand.model.js";
 import apiError from "../utils/apiError.js";
 import apiResponse from "../utils/apiResponse.js";
 import Joi from "joi";
@@ -122,7 +123,23 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
     }
   }
 
-  brand = brand.toLowerCase();
+  // Validate brand as ObjectId
+  if (!mongoose.Types.ObjectId.isValid(brand)) {
+    return res.status(400).json(
+      new apiResponse(400, "Validation failed", {
+        message: "Invalid brand ID",
+      })
+    );
+  }
+
+  const brandExists = await Brand.findById(brand);
+  if (!brandExists) {
+    return res.status(400).json(
+      new apiResponse(400, "Validation failed", {
+        message: "Brand does not exist",
+      })
+    );
+  }
 
   // --- BUILD OPS ---
   let ops = [];
@@ -226,17 +243,48 @@ export const createProduct = asyncHandler(async (req, res) => {
 
   let { brand, size, type, subtype, quantity, cost_price, unit_price } = value;
 
-  // Normalize
-  brand = brand.toLowerCase();
+  // Validate ObjectIds
+  if (!mongoose.Types.ObjectId.isValid(brand)) {
+    throw new apiError(400, "Invalid brand ID");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(type)) {
+    throw new apiError(400, "Invalid type ID");
+  }
+
+  if (subtype && !mongoose.Types.ObjectId.isValid(subtype)) {
+    throw new apiError(400, "Invalid subtype ID");
+  }
+
+  const brandExists = await Brand.findById(brand);
+  if (!brandExists) {
+    throw new apiError(400, "Brand does not exist");
+  }
+
+  const typeExists = await Type.findById(type);
+  if (!typeExists) {
+    throw new apiError(400, "Type does not exist");
+  }
+
+  let normalizedSubtype = subtype || null;
+  if (normalizedSubtype) {
+    const subtypeExists = await Subtype.findById(normalizedSubtype);
+    if (!subtypeExists) {
+      throw new apiError(400, "Subtype does not exist");
+    }
+    if (subtypeExists.type.toString() !== type) {
+      throw new apiError(400, "Subtype does not belong to the selected type");
+    }
+  }
+
+  // Normalize size
   size = size.toLowerCase();
-  type = type.toLowerCase();
-  subtype = subtype?.toLowerCase() || "";
 
   // Check for existing product
   const existingProduct = await Product.findOneAndUpdate(
-    { brand, size, type, subtype },
+    { brand, size, type, subtype: normalizedSubtype },
     {
-      $set: { cost_price, unit_price, subtype },
+      $set: { cost_price, unit_price, subtype: normalizedSubtype },
       $inc: { quantity },
     },
     { new: true }
@@ -258,7 +306,7 @@ export const createProduct = asyncHandler(async (req, res) => {
     brand,
     size,
     type,
-    subtype,
+    subtype: normalizedSubtype,
     quantity,
     cost_price,
     unit_price,
