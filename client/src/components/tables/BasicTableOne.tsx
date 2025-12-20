@@ -1,6 +1,6 @@
 "use client";
 interface InventoryFormProps {
-  onSuccess?: () => void;
+  onSuccess?: (result?: any) => void;
 }
 
 import type React from "react";

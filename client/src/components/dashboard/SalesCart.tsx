@@ -63,18 +63,24 @@ export default function SalesCart() {
         const product = data.data;
         const unitPrice = product.unit_price;
 
+        // Get the type name - handle both string and object formats
+        const typeName = typeof product.type === 'object' ? product.type.name : product.type;
+        
+        // Get the subtype name if available
+        const subtypeName = typeof product.subtype === 'object' ? product.subtype.name : (product.subtype || '');
+
         const newItem: CartItem = {
           id: product._id,
           brand: product.brand,
           size: product.size,
-          type: product.type,
+          type: subtypeName ? `${typeName} • ${subtypeName}` : typeName,
           quantity: 1,
           unitPrice: unitPrice,
           discount: 0,
           amountPayable: unitPrice,
           selected: false,
-          cost_price: unitPrice, // Assuming cost_price is the same as unit_price initially
-          selling_price: unitPrice, // Assuming selling_price is the same as unit_price initially
+          cost_price: product.cost_price || unitPrice,
+          selling_price: unitPrice,
         };
 
         // Check if item already exists and update quantity

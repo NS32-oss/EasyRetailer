@@ -14,6 +14,7 @@ import BulkInventoryForm from "./BulkInventoryForm";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import Loader, { SkeletonLoader } from "../common/Loader";
+import ProductAddSummaryModal from "../common/ProductAddSummaryModal";
 
 interface Product {
   id: string;
@@ -41,6 +42,8 @@ export default function Inventory({ limit }: InventoryProps) {
   const [bulkReport, setBulkReport] = useState<any | null>(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [summaryProducts, setSummaryProducts] = useState<any[]>([]);
 
   // Filter states
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -237,7 +240,9 @@ export default function Inventory({ limit }: InventoryProps) {
       {showInventoryForm && (
         <div className="px-4 mt-4 md:px-6">
           <InventoryForm
-            onSuccess={() => {
+            onSuccess={(result: any) => {
+              setSummaryProducts([result]);
+              setShowSummaryModal(true);
               setShowInventoryForm(false);
               fetchProducts();
             }}
@@ -255,9 +260,11 @@ export default function Inventory({ limit }: InventoryProps) {
       {showBulkForm && (
         <div className="px-4 mt-4 md:px-6">
           <BulkInventoryForm
-            onSuccess={(result) => {
-              setBulkReport(result);
+            onSuccess={(result: any) => {
+              setSummaryProducts([result]);
+              setShowSummaryModal(true);
               fetchProducts();
+              setShowBulkForm(false);
             }}
             onCancel={() => {
               setShowBulkForm(false);
@@ -958,6 +965,13 @@ export default function Inventory({ limit }: InventoryProps) {
           )}
         </div>
       </div>
+
+      {/* Product Summary Modal */}
+      <ProductAddSummaryModal
+        isOpen={showSummaryModal}
+        products={summaryProducts}
+        onClose={() => setShowSummaryModal(false)}
+      />
     </div>
   );
 }
