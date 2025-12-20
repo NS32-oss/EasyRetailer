@@ -24,12 +24,12 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
   products,
   onClose,
 }) => {
-  if (!isOpen || products.length === 0) return null;
+  if (!isOpen || !products || products.length === 0) return null;
 
-  const totalQuantity = products.reduce(
-    (sum, p) => sum + p.sizes.reduce((s, sz) => s + sz.quantity, 0),
-    0
-  );
+  const totalQuantity = products.reduce((sum, p: any) => {
+    const sizes = Array.isArray(p?.sizes) ? p.sizes : [];
+    return sum + sizes.reduce((s: number, sz: any) => s + (Number(sz?.quantity) || 0), 0);
+  }, 0);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -54,7 +54,7 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
 
         {/* Content */}
         <div className="px-6 py-6 space-y-4">
-          {products.map((product, index) => (
+          {products.map((product: any, index: number) => (
             <div
               key={index}
               className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-800/50 hover:shadow-md transition-shadow"
@@ -64,15 +64,17 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                      {product.brand}
+                      {product?.brand || "Unknown Brand"}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {product.type}
-                      {product.subtype && ` • ${product.subtype}`}
+                      {(product?.type || "")}
+                      {product?.subtype ? ` • ${product.subtype}` : ""}
                     </p>
                   </div>
                   <span className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-sm font-semibold rounded-full">
-                    {product.sizes.reduce((sum, sz) => sum + sz.quantity, 0)} units
+                    {Array.isArray(product?.sizes)
+                      ? product.sizes.reduce((sum: number, sz: any) => sum + (Number(sz?.quantity) || 0), 0)
+                      : 0} units
                   </span>
                 </div>
               </div>
@@ -84,7 +86,7 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
                     Cost Price
                   </p>
                   <p className="text-lg font-bold text-gray-900 dark:text-white">
-                    ₹{product.cost_price.toFixed(2)}
+                    ₹{Number(product?.cost_price || 0).toFixed(2)}
                   </p>
                 </div>
                 <div>
@@ -92,7 +94,7 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
                     Unit Price
                   </p>
                   <p className="text-lg font-bold text-gray-900 dark:text-white">
-                    ₹{product.unit_price.toFixed(2)}
+                    ₹{Number(product?.unit_price || 0).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -103,16 +105,16 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
                   Sizes Added
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((size, idx) => (
+                  {(Array.isArray(product?.sizes) ? product.sizes : []).map((size: any, idx: number) => (
                     <div
                       key={idx}
                       className="inline-flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
                     >
                       <span className="font-semibold text-gray-900 dark:text-white">
-                        {size.size}
+                        {size?.size || "?"}
                       </span>
                       <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                        {size.quantity} {size.quantity === 1 ? "unit" : "units"}
+                        {Number(size?.quantity || 0)} {Number(size?.quantity || 0) === 1 ? "unit" : "units"}
                       </span>
                     </div>
                   ))}

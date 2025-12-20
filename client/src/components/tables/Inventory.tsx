@@ -140,7 +140,7 @@ export default function Inventory({ limit }: InventoryProps) {
       const processedData = productsData
         .map((product: any) => ({
           id: product._id,
-          brand: product.brand,
+          brand: product.brand?.name || product.brand,
           size: product.size,
           type: product.type?.name || product.type,
           subtype: product.subtype?.name || product.subtype,
