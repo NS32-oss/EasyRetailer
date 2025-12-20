@@ -354,7 +354,7 @@ export default function BulkInventoryForm({
       }
 
       if (onSuccess) {
-        const productsSummary = Object.entries(selectedSizes).map(([ , entry]) => ({
+        const productsSummary = Object.entries(selectedSizes).map(([, entry]) => ({
           brand: brandInputValue,
           type: typeInputValue,
           subtype: subtypeInputValue,
@@ -362,6 +362,8 @@ export default function BulkInventoryForm({
           cost_price: Number(formData.cost_price) || 0,
           unit_price: Number(formData.unit_price) || 0,
         }));
+        console.log("DEBUG BulkInventoryForm - onSuccess summary:", JSON.stringify(productsSummary, null, 2));
+        console.log("DEBUG - brandInputValue:", brandInputValue, "typeInputValue:", typeInputValue, "formData.cost_price:", formData.cost_price);
         onSuccess(productsSummary);
       }
 
