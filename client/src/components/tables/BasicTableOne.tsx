@@ -321,8 +321,8 @@ export default function InventoryForm({ onSuccess }: InventoryFormProps) {
 
       const data = await response.json();
 
-      if (data.status === 201) {
-        setSuccess("Product added successfully!");
+      if (data.status === 201 || data.status === 200) {
+        setSuccess(data.status === 201 ? "Product added successfully!" : "Product updated successfully!");
         if (onSuccess) {
           const summary = {
             brand: brandInputValue,
