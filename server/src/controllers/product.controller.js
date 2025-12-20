@@ -313,6 +313,7 @@ export const getAllProducts = asyncHandler(async (req, res) => {
 
   // Retrieve products with applied filters, pagination, and sorting - OPTIMIZED with lean()
   const products = await Product.find(filter)
+    .populate("brand", "name")
     .populate("type", "name")
     .populate("subtype", "name")
     .sort(sortCriteria)

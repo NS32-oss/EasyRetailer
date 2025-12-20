@@ -151,6 +151,7 @@ export default function Inventory({ limit }: InventoryProps) {
         }))
         .filter((product: { quantity: number }) => product.quantity > 0);
       setTableData(limit ? processedData.slice(0, limit) : processedData);
+      console.log("Fetched products:", processedData);
     } catch (err) {
       console.error("Error fetching products data:", err);
     } finally {
