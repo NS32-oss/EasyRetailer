@@ -238,7 +238,7 @@ export default function SalesCart() {
 
   // Function to generate WhatsApp message and URL
   const generateWhatsAppUrl = (saleId: string) => {
-    let message = `🧾 *INVOICE*\n`;
+    let message = `🧾 *LOTUS WORLD - INVOICE*\n`;
     message += `───────────────\n`;
     message += `*Sale ID:* ${saleId}\n\n`;
 
@@ -263,7 +263,7 @@ export default function SalesCart() {
     message += `*Final Amount:* ₹${totalAmount.toFixed(2)}\n`;
     message += `*Paid Via:* ${paymentMethod}\n`;
 
-    message += `\n🛍️ *Thank you for shopping!*`;
+    message += `\n🛍️ *Thank you for shopping at Lotus World!*`;
 
     const encoded = encodeURIComponent(message);
     const phone = `91${customerMobile}`;
