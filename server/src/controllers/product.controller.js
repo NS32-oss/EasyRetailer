@@ -167,7 +167,7 @@ export const createProductsBulk = asyncHandler(async (req, res) => {
         type,
         subtype: subtype || null,
         size: lowerSize,
-      }).populate("type subtype");
+      }).populate("brand", "name").populate("type", "name").populate("subtype", "name");
 
       if (!product) {
         errors.push({ size, message: "Not found after upsert" });
@@ -321,6 +321,8 @@ export const getAllProducts = asyncHandler(async (req, res) => {
     .limit(limitNumber)
     .lean();
 
+  console.log("DEBUG getAllProducts - Raw products before response:", JSON.stringify(products.slice(0, 2), null, 2));
+
   // Return the result using the custom API response format
   return res.status(200).json(
     new apiResponse(200, "All products fetched successfully", {
@@ -336,7 +338,10 @@ export const getAllProducts = asyncHandler(async (req, res) => {
 
 // Retrieve a single product by ID
 export const getProductById = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id)
+    .populate("brand", "name")
+    .populate("type", "name")
+    .populate("subtype", "name");
   if (!product) {
     throw new apiError(404, "Product not found");
   }
@@ -358,7 +363,10 @@ export const updateProduct = asyncHandler(async (req, res) => {
     req.params.id,
     req.body,
     { new: true }
-  );
+  )
+    .populate("brand", "name")
+    .populate("type", "name")
+    .populate("subtype", "name");
   return res
     .status(200)
     .json(new apiResponse(200, "Product updated successfully", updatedProduct));
@@ -378,7 +386,10 @@ export const deleteProduct = asyncHandler(async (req, res) => {
 
 //get product by barcode
 export const getProductByBarcode = asyncHandler(async (req, res) => {
-  const product = await Product.findOne({ barcode: req.params.barcode });
+  const product = await Product.findOne({ barcode: req.params.barcode })
+    .populate("brand", "name")
+    .populate("type", "name")
+    .populate("subtype", "name");
   if (!product) {
     throw new apiError(404, "Product not found");
   }
