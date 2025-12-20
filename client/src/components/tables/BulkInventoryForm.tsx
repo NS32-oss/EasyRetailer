@@ -371,8 +371,6 @@ export default function BulkInventoryForm({
             barcode: productInfo?.barcode || "",
           };
         });
-        console.log("DEBUG BulkInventoryForm - onSuccess summary:", JSON.stringify(productsSummary, null, 2));
-        console.log("DEBUG - brandInputValue:", brandInputValue, "typeInputValue:", typeInputValue, "formData.cost_price:", formData.cost_price);
         onSuccess(productsSummary);
       }
 

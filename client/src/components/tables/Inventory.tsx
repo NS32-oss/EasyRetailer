@@ -137,7 +137,6 @@ export default function Inventory({ limit }: InventoryProps) {
       const response = await fetch(`${API_BASE_URL}/api/v1/product`);
       const responseData = await response.json();
       const productsData = responseData.data.products;
-      console.log("DEBUG fetchProducts - Raw API response (first 2):", JSON.stringify(productsData.slice(0, 2), null, 2));
       const processedData = productsData
         .map((product: any) => ({
           id: product._id,
@@ -151,9 +150,7 @@ export default function Inventory({ limit }: InventoryProps) {
           barcode: product.barcode,
         }))
         .filter((product: { quantity: number }) => product.quantity > 0);
-      console.log("DEBUG fetchProducts - Processed data (first 2):", JSON.stringify(processedData.slice(0, 2), null, 2));
       setTableData(limit ? processedData.slice(0, limit) : processedData);
-      console.log("Fetched products:", processedData);
     } catch (err) {
       console.error("Error fetching products data:", err);
     } finally {

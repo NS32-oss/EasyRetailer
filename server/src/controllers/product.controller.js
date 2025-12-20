@@ -369,8 +369,6 @@ export const getAllProducts = asyncHandler(async (req, res) => {
     .limit(limitNumber)
     .lean();
 
-  console.log("DEBUG getAllProducts - Raw products before response:", JSON.stringify(products.slice(0, 2), null, 2));
-
   // Return the result using the custom API response format
   return res.status(200).json(
     new apiResponse(200, "All products fetched successfully", {
