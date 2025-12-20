@@ -71,7 +71,7 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
                       {product?.subtype ? ` • ${product.subtype}` : ""}
                     </p>
                   </div>
-                  <span className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-sm font-semibold rounded-full">
+                  <span className="inline-block px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full">
                     {Array.isArray(product?.sizes)
                       ? product.sizes.reduce((sum: number, sz: any) => sum + (Number(sz?.quantity) || 0), 0)
                       : 0} units

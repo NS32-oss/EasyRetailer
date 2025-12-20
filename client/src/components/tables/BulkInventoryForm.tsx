@@ -354,11 +354,11 @@ export default function BulkInventoryForm({
       }
 
       if (onSuccess) {
-        const productsSummary = Object.values(selectedSizes).map((s) => ({
+        const productsSummary = Object.entries(selectedSizes).map(([ , entry]) => ({
           brand: brandInputValue,
           type: typeInputValue,
           subtype: subtypeInputValue,
-          sizes: [{ size: s.size, quantity: s.quantity }],
+          sizes: [{ size: entry.size, quantity: entry.quantity }],
           cost_price: Number(formData.cost_price) || 0,
           unit_price: Number(formData.unit_price) || 0,
         }));
