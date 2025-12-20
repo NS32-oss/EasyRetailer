@@ -72,10 +72,13 @@ const ProductAddSummaryModal: React.FC<ProductAddSummaryModalProps> = ({
                       {product?.subtype ? ` • ${product.subtype}` : ""}
                     </p>
                   </div>
-                  <span className="inline-block px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full">
-                    {Array.isArray(product?.sizes)
-                      ? product.sizes.reduce((sum: number, sz: any) => sum + (Number(sz?.quantity) || 0), 0)
-                      : 0} units
+                  <span className="inline-block px-1.5 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-[10px] font-semibold rounded-full whitespace-nowrap">
+                    {(() => {
+                      const qty = Array.isArray(product?.sizes)
+                        ? product.sizes.reduce((sum: number, sz: any) => sum + (Number(sz?.quantity) || 0), 0)
+                        : 0;
+                      return `${qty} ${qty === 1 ? 'unit' : 'units'}`;
+                    })()}
                   </span>
                 </div>
               </div>
