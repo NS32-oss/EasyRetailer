@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Notification } from "../toastNotification/Notification";
 
 interface SaleProduct {
@@ -27,12 +27,14 @@ interface Sale {
   bill_generated: boolean;
   createdAt: string;
   updatedAt: string;
+  returnStatus?: "none" | "partial" | "full";
 }
 
 const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
 
 export default function SalesCartHistory() {
   const { saleId } = useParams<{ saleId: string }>();
+  const navigate = useNavigate();
   const [sale, setSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -295,6 +297,24 @@ export default function SalesCartHistory() {
               >
                 <span>📱</span>
                 <span>Send Again</span>
+              </button>
+            )}
+            {(!sale.returnStatus || sale.returnStatus !== "full") && (
+              <button
+                onClick={() => navigate("/return")}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-xl hover:bg-orange-700 text-sm font-medium active:scale-95 transition-transform"
+              >
+                <span>↩️</span>
+                <span>Return Item</span>
+              </button>
+            )}
+            {sale.returnStatus === "full" && (
+              <button
+                disabled
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white rounded-xl text-sm font-medium cursor-not-allowed opacity-60"
+              >
+                <span>✓</span>
+                <span>Fully Returned</span>
               </button>
             )}
             <button

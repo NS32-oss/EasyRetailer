@@ -50,7 +50,7 @@ export default function App() {
     <>
       <Router>
         <ScrollToTop />
-        <Suspense fallback={<PageLoader message="Loading..." />}>
+        <Suspense fallback={<PageLoader message="" />}>
         <Routes>
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>

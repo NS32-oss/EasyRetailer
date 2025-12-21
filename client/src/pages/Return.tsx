@@ -16,6 +16,7 @@ interface ReturnProduct {
   selling_price: number
   refund_amount: number
   _id: string
+  isReturned?: boolean
 }
 
 interface Sale {
@@ -103,7 +104,7 @@ export default function Return() {
     }
   }
 
-  const handleSaleSelect = (sale: Sale) => {
+  const handleSaleSelect = async (sale: Sale) => {
     setSelectedSale(sale)
     // Initialize return products with 0 quantity
     const initialReturnProducts: ReturnProduct[] = sale.products.map((product) => ({
@@ -118,16 +119,47 @@ export default function Return() {
       selling_price: product.selling_price,
       refund_amount: 0,
       _id: product._id,
+      isReturned: false, // Track if this item was already returned
     }))
     setReturnProducts(initialReturnProducts)
     setReturnReason("")
+    
+    // Fetch return history to mark already-returned items
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/returns?sale_id=${sale._id}`)
+      const data = await response.json()
+      if (data.status === 200 && data.data?.returns) {
+        const returns = data.data.returns
+        const returnedItemIds = new Set<string>()
+        
+        // Collect all saleProductIds that have been returned
+        for (const ret of returns) {
+          if (ret.status === "approved" || ret.status === "processed") {
+            for (const item of (ret.items || [])) {
+              returnedItemIds.add(item.saleProductId?.toString() || "")
+            }
+          }
+        }
+        
+        // Update return products to mark already-returned items
+        setReturnProducts((prev) =>
+          prev.map((product) => ({
+            ...product,
+            isReturned: returnedItemIds.has(product._id),
+            original_quantity: sale.products.find((p) => p._id === product._id)?.quantity || 0,
+          }))
+        )
+      }
+    } catch (error) {
+      console.error("Error fetching return history:", error)
+    }
   }
 
   const handleReturnQuantityChange = (productId: string, quantity: number) => {
     setValidationError("")
     setReturnProducts((prev) =>
       prev.map((product) => {
-        if (product.product_id === productId) {
+        if (product.product_id === productId && !product.isReturned) {
           const returnQty = Math.min(Math.max(0, quantity), product.original_quantity)
           // Calculate refund proportionally based on selling price per unit
           // selling_price is the final price after discount, so we use it directly
@@ -249,7 +281,7 @@ export default function Return() {
     })
     .filter((sale) => {
       const status = sale.returnStatus || "none"
-      return status === "none" // hide partial and full returns from the list
+      return status !== "full" // hide only fully returned sales, keep partial and none visible
     })
 
   return (
@@ -411,18 +443,31 @@ export default function Return() {
                   {returnProducts.map((product) => (
                     <div
                       key={product.product_id}
-                      className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700"
+                      className={`p-4 rounded-xl border transition-opacity ${
+                        product.isReturned
+                          ? "bg-gray-100 dark:bg-gray-800/20 border-gray-300 dark:border-gray-700 opacity-60"
+                          : "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700"
+                      }`}
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{product.brand}</h4>
+                        <div className="flex-1">
+                          <h4 className={`font-semibold text-sm ${product.isReturned ? "line-through text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}`}>
+                            {product.brand}
+                          </h4>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             {product.type} • Size {product.size}
                           </p>
                         </div>
-                        <span className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium">
-                          Qty: {product.original_quantity}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium">
+                            Qty: {product.original_quantity}
+                          </span>
+                          {product.isReturned && (
+                            <span className="px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-xs font-medium">
+                              Returned
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-3">
@@ -436,7 +481,12 @@ export default function Return() {
                             onChange={(e) =>
                               handleReturnQuantityChange(product.product_id, Number.parseInt(e.target.value) || 0)
                             }
-                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            disabled={product.isReturned}
+                            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white ${
+                              product.isReturned
+                                ? "border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                                : "border-gray-300 dark:border-gray-600"
+                            }`}
                           />
                         </div>
                         <div className="flex-1">

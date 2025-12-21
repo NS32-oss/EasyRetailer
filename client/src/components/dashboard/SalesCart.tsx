@@ -27,7 +27,7 @@ export default function SalesCart() {
   const [showBillModal, setShowBillModal] = useState(false);
   const [customerMobile, setCustomerMobile] = useState("");
   const [mobileError, setMobileError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("Card");
+  const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [generatedSaleId, setGeneratedSaleId] = useState<string | null>(null);
   const [notification, setNotification] = useState<{

@@ -73,7 +73,7 @@ export function PageLoader({ message = "Loading..." }: { message?: string }) {
         </div>
 
         <p className="text-lg font-medium text-gray-700 dark:text-gray-300 animate-pulse">
-          {message}
+          {message && message}
         </p>
       </div>
     </div>
