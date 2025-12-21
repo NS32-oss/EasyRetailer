@@ -298,7 +298,7 @@ export default function SalesCartHistory() {
             )}
             {(!sale.returnStatus || sale.returnStatus !== "full") && (
               <button
-                onClick={() => navigate("/return")}
+                onClick={() => navigate(`/return?saleId=${sale._id}`)}
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-xl hover:bg-orange-700 text-sm font-medium active:scale-95 transition-transform"
               >
                 <span>↩️</span>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import { Notification } from "../components/toastNotification/Notification"
 import { useSidebar } from "../context/SidebarContext"
 import Loader from "../components/common/Loader"
@@ -58,6 +59,7 @@ const API_BASE_URL = import.meta.env.VITE_APP_API_URL
 
 export default function Return() {
   const { isMobileOpen } = useSidebar()
+  const [searchParams] = useSearchParams()
   const [sales, setSales] = useState<Sale[]>([])
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [returnProducts, setReturnProducts] = useState<ReturnProduct[]>([])
@@ -74,6 +76,17 @@ export default function Return() {
   useEffect(() => {
     fetchSales()
   }, [])
+
+  // Auto-select sale if saleId is in query params
+  useEffect(() => {
+    const saleId = searchParams.get("saleId")
+    if (saleId && sales.length > 0) {
+      const sale = sales.find((s) => s._id === saleId)
+      if (sale && (sale.returnStatus === "none" || sale.returnStatus === "partial")) {
+        handleSaleSelect(sale)
+      }
+    }
+  }, [sales, searchParams])
 
   // Close return drawer when sidebar opens on mobile
   useEffect(() => {
@@ -346,9 +359,8 @@ export default function Return() {
 
           <div className="p-4 sm:p-6 max-h-[600px] overflow-y-auto">
             {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
-                <p className="ml-4 text-gray-600 dark:text-gray-400 text-sm">Loading sales...</p>
+              <div className="h-64 flex items-center justify-center">
+                <Loader message="Loading sales..." />
               </div>
             ) : filteredSales.length === 0 ? (
               <div className="text-center py-12">
