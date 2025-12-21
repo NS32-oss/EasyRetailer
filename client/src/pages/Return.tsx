@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Notification } from "../components/toastNotification/Notification"
 import { useSidebar } from "../context/SidebarContext"
+import Loader from "../components/common/Loader"
 
 interface ReturnProduct {
   product_id: string
@@ -347,6 +348,7 @@ export default function Return() {
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 dark:border-white"></div>
+                <p className="ml-4 text-gray-600 dark:text-gray-400 text-sm">Loading sales...</p>
               </div>
             ) : filteredSales.length === 0 ? (
               <div className="text-center py-12">
@@ -358,7 +360,7 @@ export default function Return() {
                   <button
                     key={sale._id}
                     onClick={() => handleSaleSelect(sale)}
-                    disabled={(sale.returnStatus || "none") !== "none"}
+                    disabled={(sale.returnStatus || "none") === "full"}
                     className={`w-full text-left p-4 rounded-xl border transition-all active:scale-98 ${
                       selectedSale?._id === sale._id
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
