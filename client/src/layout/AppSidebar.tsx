@@ -59,6 +59,11 @@ const navItems: NavItem[] = [
     path: "/return",
   },
   {
+    name: "Return History",
+    icon: <PageIcon />,
+    path: "/return-history",
+  },
+  {
     name: "Employee",
     icon: <TableIcon />,
     path: "/employee",

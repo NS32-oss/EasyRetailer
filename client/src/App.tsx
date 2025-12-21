@@ -28,6 +28,7 @@ const SalesCart = lazy(() => import("./components/dashboard/SalesCart"));
 const SalesCartHistory = lazy(() => import("./components/salesCartHistory/SalesCartHistory"));
 const Barcode = lazy(() => import("./components/charts/bar/BarChartOne"));
 const Return = lazy(() => import("./pages/Return"));
+const ReturnHistory = lazy(() => import("./pages/ReturnHistory"));
 
 export default function App() {
   const [isAppReady, setIsAppReady] = useState(false);
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/scanner" element={<Barcode />} />
             <Route path="/return" element={<Return />} />
+            <Route path="/return-history" element={<ReturnHistory />} />
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />

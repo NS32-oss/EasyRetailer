@@ -167,7 +167,7 @@ export default function SalesCartHistory() {
   };
 
   if (loading) {
-    return <Loader fullScreen message="Loading sale details..." />;
+    return <Loader fullScreen={true} message="Loading sale details..." />;
   }
 
   if (error || !sale) {
@@ -270,14 +270,15 @@ export default function SalesCartHistory() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {!sale.bill_generated && (
               <button
                 onClick={() => setShowBillModal(true)}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 text-sm font-medium active:scale-95 transition-transform"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs sm:text-sm font-medium active:scale-95 transition-transform"
               >
-                <span>📄</span>
-                <span>Generate Bill</span>
+                <span className="text-sm">📄</span>
+                <span className="hidden sm:inline">Generate Bill</span>
+                <span className="inline sm:hidden">Bill</span>
               </button>
             )}
             {sale.bill_generated && sale.customer_mobile && (
@@ -290,33 +291,36 @@ export default function SalesCartHistory() {
                     type: "success",
                   });
                 }}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-sm font-medium active:scale-95 transition-transform"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs sm:text-sm font-medium active:scale-95 transition-transform"
               >
-                <span>📱</span>
-                <span>Send Again</span>
+                <span className="text-sm">📱</span>
+                <span className="hidden sm:inline">Send Again</span>
+                <span className="inline sm:hidden">Send</span>
               </button>
             )}
             {(!sale.returnStatus || sale.returnStatus !== "full") && (
               <button
                 onClick={() => navigate(`/return?saleId=${sale._id}`)}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-600 text-white rounded-xl hover:bg-orange-700 text-sm font-medium active:scale-95 transition-transform"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-xs sm:text-sm font-medium active:scale-95 transition-transform"
               >
-                <span>↩️</span>
-                <span>Return Item</span>
+                <span className="text-sm">↩️</span>
+                <span className="hidden sm:inline">Return Item</span>
+                <span className="inline sm:hidden">Return</span>
               </button>
             )}
             {sale.returnStatus === "full" && (
               <button
                 disabled
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-400 text-white rounded-xl text-sm font-medium cursor-not-allowed opacity-60"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-gray-400 text-white rounded-lg text-xs sm:text-sm font-medium cursor-not-allowed opacity-60"
               >
-                <span>✓</span>
-                <span>Fully Returned</span>
+                <span className="text-sm">✓</span>
+                <span className="hidden sm:inline">Fully Returned</span>
+                <span className="inline sm:hidden">Returned</span>
               </button>
             )}
             <button
               onClick={() => window.history.back()}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium active:scale-95 transition-transform"
+              className="inline-flex items-center justify-center gap-1 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-xs sm:text-sm font-medium active:scale-95 transition-transform"
             >
               Back
             </button>
