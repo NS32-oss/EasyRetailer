@@ -778,7 +778,6 @@ export default function Inventory({ limit }: InventoryProps) {
                   </span>
                 </div>
               </div>
-
               {/* Quantity and Price Row */}
               <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-800">
                 <div>
@@ -798,7 +797,6 @@ export default function Inventory({ limit }: InventoryProps) {
                   </p>
                 </div>
               </div>
-
               {/* Secondary Info */}
               <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
                 <div>
@@ -820,24 +818,6 @@ export default function Inventory({ limit }: InventoryProps) {
               </div>
             </div>
           ))}
-
-          {filteredData.length === 0 && !isLoading && (
-            <div className="text-center py-16">
-              <div className="text-4xl mb-4">📦</div>
-              <p className="text-gray-500 dark:text-gray-400">
-                No products found
-              </p>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="mt-4 text-blue-600 dark:text-blue-400 font-medium"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
-          )}
-
           {isLoading && (
             <div className="py-8">
               <Loader message="Loading inventory..." />

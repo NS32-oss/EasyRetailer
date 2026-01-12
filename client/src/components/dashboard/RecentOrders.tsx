@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Dialog } from "@headlessui/react";
 
 // Define the TypeScript interface for the table rows
 interface Sale {
@@ -21,6 +22,13 @@ const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
 
 export default function RecentOrders({ limit }: RecentOrdersProps) {
   const [tableData, setTableData] = useState<Sale[]>([]);
+  // Filter modal state
+  const [showFilter, setShowFilter] = useState(false);
+  // Filter options
+  const [filterPayment, setFilterPayment] = useState<string>("");
+  const [filterReturn, setFilterReturn] = useState<string>("");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
 
   useEffect(() => {
     // Fetch data from the API
@@ -65,6 +73,26 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
     window.location.href = `/sales-cart-history/${saleId}`;
   };
 
+  // Filtered data
+  const filteredData = tableData.filter((sale) => {
+    // Payment method filter
+    if (filterPayment && sale.paymentMethod !== filterPayment) return false;
+    // Return status filter
+    if (filterReturn && sale.returnStatus !== filterReturn) return false;
+    // Date range filter
+    if (filterDateFrom) {
+      const saleDate = new Date(sale.date).getTime();
+      const from = new Date(filterDateFrom).getTime();
+      if (saleDate < from) return false;
+    }
+    if (filterDateTo) {
+      const saleDate = new Date(sale.date).getTime();
+      const to = new Date(filterDateTo).getTime();
+      if (saleDate > to) return false;
+    }
+    return true;
+  });
+
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -73,12 +101,14 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
             Recent Orders
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {tableData.length} transactions
+            {filteredData.length} transactions
           </p>
         </div>
-
         <div className="flex items-center gap-2">
-          <button className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 active:scale-95 transition-transform sm:px-4 sm:py-2.5 sm:text-sm">
+          <button
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 active:scale-95 transition-transform sm:px-4 sm:py-2.5 sm:text-sm"
+            onClick={() => setShowFilter(true)}
+          >
             <svg
               className="stroke-current"
               width="18"
@@ -87,32 +117,10 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path
-                d="M2.29004 5.90393H17.7067"
-                stroke=""
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M17.7075 14.0961H2.29085"
-                stroke=""
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M12.0826 3.33331C13.5024 3.33331 14.6534 4.48431 14.6534 5.90414C14.6534 7.32398 13.5024 8.47498 12.0826 8.47498C10.6627 8.47498 9.51172 7.32398 9.51172 5.90415C9.51172 4.48432 10.6627 3.33331 12.0826 3.33331Z"
-                fill="currentColor"
-                stroke=""
-                strokeWidth="1.5"
-              />
-              <path
-                d="M7.91745 11.525C6.49762 11.525 5.34662 12.676 5.34662 14.0959C5.34661 15.5157 6.49762 16.6667 7.91745 16.6667C9.33728 16.6667 10.4883 15.5157 10.4883 14.0959C10.4883 12.676 9.33728 11.525 7.91745 11.525Z"
-                fill="currentColor"
-                stroke=""
-                strokeWidth="1.5"
-              />
+              <path d="M2.29004 5.90393H17.7067" stroke="" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M17.7075 14.0961H2.29085" stroke="" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12.0826 3.33331C13.5024 3.33331 14.6534 4.48431 14.6534 5.90414C14.6534 7.32398 13.5024 8.47498 12.0826 8.47498C10.6627 8.47498 9.51172 7.32398 9.51172 5.90415C9.51172 4.48432 10.6627 3.33331 12.0826 3.33331Z" fill="currentColor" stroke="" strokeWidth="1.5" />
+              <path d="M7.91745 11.525C6.49762 11.525 5.34662 12.676 5.34662 14.0959C5.34661 15.5157 6.49762 16.6667 7.91745 16.6667C9.33728 16.6667 10.4883 15.5157 10.4883 14.0959C10.4883 12.676 9.33728 11.525 7.91745 11.525Z" fill="currentColor" stroke="" strokeWidth="1.5" />
             </svg>
             <span className="hidden sm:inline">Filter</span>
           </button>
@@ -122,9 +130,51 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
         </div>
       </div>
 
+      {/* Filter Modal/Drawer */}
+      <Dialog open={showFilter} onClose={() => setShowFilter(false)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-xl mx-auto">
+            <Dialog.Title className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Filter Orders</Dialog.Title>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date From</label>
+                <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date To</label>
+                <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Method</label>
+                <select value={filterPayment} onChange={e => setFilterPayment(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                  <option value="">All</option>
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="upi">UPI</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Return Status</label>
+                <select value={filterReturn} onChange={e => setFilterReturn(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm">
+                  <option value="">All</option>
+                  <option value="none">None</option>
+                  <option value="partial">Partial</option>
+                  <option value="full">Returned</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => { setFilterDateFrom(""); setFilterDateTo(""); setFilterPayment(""); setFilterReturn(""); }} className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-medium">Clear</button>
+              <button onClick={() => setShowFilter(false)} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold shadow-lg">Apply</button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+
       {/* Mobile Card View */}
       <div className="flex flex-col gap-3 lg:hidden">
-        {tableData.map((sale) => (
+        {filteredData.map((sale) => (
           <div
             key={sale.id}
             onClick={() => handleRowClick(sale.id)}
@@ -221,7 +271,7 @@ export default function RecentOrders({ limit }: RecentOrdersProps) {
 
             {/* Table Body */}
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {tableData.map((sale) => (
+              {filteredData.map((sale) => (
                 <tr
                   key={sale.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
